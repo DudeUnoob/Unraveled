@@ -1,6 +1,14 @@
 export type TrendLabel = "Timeless" | "Trending" | "Fading" | "Dead";
 export type HealthLabel = "Safe" | "Caution" | "Avoid";
 export type SustainabilityGrade = "A" | "B" | "C" | "D" | "F";
+export type TrendDataSource = "google_trends";
+export type ScoreStateStatus = "ready" | "stale" | "error";
+export type ScoreErrorCode =
+  | "network"
+  | "timeout"
+  | "http_status"
+  | "invalid_contract"
+  | "source_unavailable";
 
 export interface ProductContext {
   productUrl: string;
@@ -50,6 +58,12 @@ export interface SustainabilityScore {
         ftiScore: string;
         remakeScore: string;
         scrapeSignals: string;
+        esgApi: {
+          provider: string;
+          score: number;
+          lastUpdated: string;
+          available: boolean;
+        };
       };
     };
     microTrendLongevity: {
@@ -66,6 +80,8 @@ export interface ScoreResult {
     label: TrendLabel;
     lifespanWeeks: number;
     confidence: number;
+    source: TrendDataSource;
+    lastUpdated: string;
   };
   healthScore: {
     label: HealthLabel;
@@ -77,6 +93,17 @@ export interface ScoreResult {
     trendAdjustedWears: number;
     trendAdjustedCpw: number;
   };
+  dataSources: {
+    googleTrends: {
+      available: boolean;
+      lastUpdated: string;
+    };
+    esgApi: {
+      available: boolean;
+      provider: string;
+      lastUpdated: string;
+    };
+  };
   webAppDeepLink: string;
 }
 
@@ -84,6 +111,14 @@ export interface ScoredProductPayload {
   product: ProductContext;
   score: ScoreResult;
   scoredAt: string;
+}
+
+export interface TabScoreState {
+  status: ScoreStateStatus;
+  payload?: ScoredProductPayload;
+  errorCode?: ScoreErrorCode;
+  errorMessage?: string;
+  cachedAt?: string;
 }
 
 export interface ManualSeedContext {
@@ -99,6 +134,8 @@ export interface ManualSeedContext {
 export type RuntimeMessage =
   | { type: "UNRAVEL_PRODUCT_DETECTED"; payload: ProductContext }
   | { type: "UNRAVEL_GET_SCORE_FOR_TAB"; tabId: number }
+  | { type: "UNRAVEL_REFRESH_SCORE_FOR_TAB"; tabId: number }
+  | { type: "UNRAVEL_EXTRACT_PRODUCT_CONTEXT" }
   | {
       type: "UNRAVEL_SCORE_MANUAL_FIBERS";
       tabId: number;
