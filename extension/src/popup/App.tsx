@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import type { RuntimeMessage, ScoredProductPayload } from "../types";
+import type { RuntimeMessage, TabScoreState } from "../types";
 
-type LoadState = "loading" | "ready" | "empty" | "error";
+type LoadState = "loading" | "ready" | "fatal";
 type ActiveTabContext = {
   url: string;
   title: string;
@@ -26,23 +26,50 @@ const gradeColor = (grade: string): string => {
   return "bg-rose-700";
 };
 
+const formatTimestamp = (value: string): string => {
+  const parsed = Date.parse(value);
+  if (Number.isNaN(parsed)) {
+    return "Unknown";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  }).format(new Date(parsed));
+};
+
 const App = () => {
   const [tabId, setTabId] = useState<number | null>(null);
   const [activeTabContext, setActiveTabContext] = useState<ActiveTabContext | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [payload, setPayload] = useState<ScoredProductPayload | null>(null);
+  const [tabScoreState, setTabScoreState] = useState<TabScoreState | null>(null);
   const [manualFiberText, setManualFiberText] = useState("");
   const [manualProductName, setManualProductName] = useState("");
   const [manualPrice, setManualPrice] = useState("");
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [manualError, setManualError] = useState("");
+
+  const applyTabState = (state: TabScoreState | null) => {
+    setTabScoreState(state);
+
+    if (!state?.payload) {
+      return;
+    }
+
+    setManualFiberText(state.payload.product.fiberText || "");
+    setManualProductName(state.payload.product.productName);
+    setManualPrice(state.payload.product.price ? String(state.payload.product.price) : "");
+  };
 
   const loadCurrentTabScore = async () => {
     setLoadState("loading");
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
-      setLoadState("error");
+      setLoadState("fatal");
       return;
     }
 
@@ -51,7 +78,10 @@ const App = () => {
       url: tab.url ?? "",
       title: tab.title ?? "Manual Product"
     });
-    setManualProductName(tab.title ?? "Manual Product");
+
+    if (!manualProductName) {
+      setManualProductName(tab.title ?? "Manual Product");
+    }
 
     const message: RuntimeMessage = {
       type: "UNRAVEL_GET_SCORE_FOR_TAB",
@@ -60,21 +90,11 @@ const App = () => {
 
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        setLoadState("error");
+        setLoadState("fatal");
         return;
       }
 
-      if (!response.data) {
-        setPayload(null);
-        setLoadState("empty");
-        return;
-      }
-
-      const scorePayload = response.data as ScoredProductPayload;
-      setPayload(scorePayload);
-      setManualFiberText(scorePayload.product.fiberText || "");
-      setManualProductName(scorePayload.product.productName);
-      setManualPrice(scorePayload.product.price ? String(scorePayload.product.price) : "");
+      applyTabState((response.data as TabScoreState | null) ?? null);
       setLoadState("ready");
     });
   };
@@ -83,13 +103,34 @@ const App = () => {
     void loadCurrentTabScore();
   }, []);
 
-  const scoreWidth = useMemo(() => {
-    if (!payload) {
-      return "0%";
+  const refreshScore = () => {
+    if (!tabId) {
+      return;
     }
 
-    return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
-  }, [payload]);
+    setRefreshing(true);
+    setManualError("");
+
+    const message: RuntimeMessage = {
+      type: "UNRAVEL_REFRESH_SCORE_FOR_TAB",
+      tabId
+    };
+
+    chrome.runtime.sendMessage(message, (response) => {
+      setRefreshing(false);
+
+      if (chrome.runtime.lastError || !response?.ok || !response?.data) {
+        setManualError("Could not refresh this product score.");
+        return;
+      }
+
+      const nextState = response.data as TabScoreState;
+      applyTabState(nextState);
+      if (nextState.status === "error") {
+        setManualError(nextState.errorMessage ?? "Backend score unavailable.");
+      }
+    });
+  };
 
   const submitManualFiber = () => {
     if (!tabId || !manualFiberText.trim()) {
@@ -106,7 +147,7 @@ const App = () => {
       type: "UNRAVEL_SCORE_MANUAL_FIBERS",
       tabId,
       fiberText: manualFiberText,
-      seed: payload
+      seed: tabScoreState?.payload
         ? undefined
         : {
             productUrl: activeTabContext?.url ?? "",
@@ -123,27 +164,53 @@ const App = () => {
         return;
       }
 
-      setPayload(response.data as ScoredProductPayload);
+      const nextState = response.data as TabScoreState;
+      applyTabState(nextState);
       setLoadState("ready");
+
+      if (nextState.status === "error") {
+        setManualError(nextState.errorMessage ?? "Backend score unavailable.");
+      }
     });
   };
+
+  const payload = tabScoreState?.payload ?? null;
+
+  const scoreWidth = useMemo(() => {
+    if (!payload) {
+      return "0%";
+    }
+
+    return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
+  }, [payload]);
 
   if (loadState === "loading") {
     return <div className="popup-shell">Analyzing this product...</div>;
   }
 
-  if (loadState === "error") {
+  if (loadState === "fatal") {
     return <div className="popup-shell">Could not load product score for this tab.</div>;
   }
 
   if (!payload) {
+    const isUnavailable = tabScoreState?.status === "error";
+
     return (
       <div className="popup-shell">
         <h1 className="text-lg font-semibold">Unravel</h1>
         <p className="mt-2 text-sm text-slate-700">
-          Auto-extraction has not produced a score yet. You can still score manually from the
-          visible composition text.
+          {isUnavailable
+            ? "Live Google Trends + ESG scoring is currently unavailable."
+            : "Auto-extraction has not produced a score yet. You can still score manually from the visible composition text."}
         </p>
+        <button
+          type="button"
+          className="mt-3 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
+          disabled={refreshing || manualSubmitting}
+          onClick={refreshScore}
+        >
+          {refreshing ? "Refreshing..." : "Retry live score"}
+        </button>
         <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
           Product Name
         </label>
@@ -188,6 +255,8 @@ const App = () => {
     ? currencyFormatter(payload.product.currency).format(payload.product.price)
     : "Price unavailable";
 
+  const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
+
   return (
     <main className="popup-shell">
       <header className="mb-3">
@@ -197,6 +266,12 @@ const App = () => {
           {payload.product.brand} · {priceDisplay}
         </p>
       </header>
+
+      {tabScoreState?.status === "stale" ? (
+        <section className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          Showing last real score (cached). Data may be stale.
+        </section>
+      ) : null}
 
       <section className="rounded-xl bg-unravel-card p-3 shadow-card">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
@@ -253,6 +328,16 @@ const App = () => {
         )}
       </section>
 
+      <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card">
+        <p className="text-[11px] uppercase tracking-wide text-slate-600">Data Sources</p>
+        <p className="mt-1 text-xs text-slate-700">
+          Trend: Google Trends · Updated {formatTimestamp(payload.score.trendScore.lastUpdated)}
+        </p>
+        <p className="mt-1 text-xs text-slate-700">
+          ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
+        </p>
+      </section>
+
       <button
         type="button"
         className="mt-3 w-full rounded-lg bg-unravel-accent px-3 py-2 text-sm font-semibold text-white"
@@ -264,7 +349,17 @@ const App = () => {
       </button>
 
       <section className="mt-3 rounded-xl border border-dashed border-slate-300 p-3">
-        <p className="text-[11px] uppercase tracking-wide text-slate-600">Manual Fiber Input</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] uppercase tracking-wide text-slate-600">Manual Fiber Input</p>
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
+            onClick={refreshScore}
+            disabled={refreshing || manualSubmitting}
+          >
+            {refreshing ? "Refreshing..." : "Retry live score"}
+          </button>
+        </div>
         <p className="mt-1 text-xs text-slate-600">
           If extraction is wrong, paste text like: <span className="font-medium">55% linen, 30% cotton, 15% polyester</span>.
         </p>
@@ -277,7 +372,7 @@ const App = () => {
         <button
           type="button"
           onClick={submitManualFiber}
-          disabled={manualSubmitting}
+          disabled={manualSubmitting || !manualFiberText.trim()}
           className="mt-2 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
         >
           {manualSubmitting ? "Scoring..." : "Re-score with manual fiber content"}
