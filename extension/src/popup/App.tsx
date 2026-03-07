@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-<<<<<<< Updated upstream
 import type { RuntimeMessage, ScoredProductPayload } from "../types";
-=======
-import { FIBER_DURABILITY_WEARS, FIBER_ALIASES } from "../config/fiberData";
-import { getRetailerConfigByHostname } from "../lib/url";
-import type { RuntimeMessage, TabScoreState } from "../types";
->>>>>>> Stashed changes
 
-type LoadState = "loading" | "ready" | "empty" | "error";
+import type { RuntimeMessage, TabScoreState } from "../types";
+
+type LoadState = "loading" | "ready" | "fatal";
 type ActiveTabContext = {
   url: string;
   title: string;
@@ -26,25 +22,6 @@ const gradeColor = (grade: string): string => {
   return "bg-rose-700";
 };
 
-<<<<<<< Updated upstream
-=======
-const progressBarColor = (grade: string): string => {
-  if (grade === "A" || grade === "B") return "bg-unravel-accent";
-  if (grade === "C" || grade === "D") return "bg-unravel-warn";
-  return "bg-unravel-danger";
-};
-
-const gradeCircle = (grade: string): string => {
-  if (grade === "A" || grade === "B") return "\uD83D\uDFE2";
-  if (grade === "C" || grade === "D") return "\uD83D\uDFE1";
-  return "\uD83D\uDD34";
-};
-
-const healthIcon = (label: string): string => {
-  if (label === "Safe") return "\u2705";
-  if (label === "Caution") return "\u26A0\uFE0F";
-  return "\uD83D\uDD34";
-};
 
 const formatTimestamp = (value: string): string => {
   const parsed = Date.parse(value);
@@ -60,40 +37,37 @@ const formatTimestamp = (value: string): string => {
   }).format(new Date(parsed));
 };
 
-const resolveDurabilityWears = (fiberName: string): number | null => {
-  const lower = fiberName.toLowerCase();
-
-  const directKey = Object.keys(FIBER_DURABILITY_WEARS).find((k) => k === lower);
-  if (directKey) return FIBER_DURABILITY_WEARS[directKey];
-
-  for (const [canonical, aliases] of Object.entries(FIBER_ALIASES)) {
-    if (aliases.some((a) => a === lower) && canonical in FIBER_DURABILITY_WEARS) {
-      return FIBER_DURABILITY_WEARS[canonical];
-    }
-  }
-
-  return null;
-};
-
->>>>>>> Stashed changes
 const App = () => {
   const [tabId, setTabId] = useState<number | null>(null);
   const [activeTabContext, setActiveTabContext] = useState<ActiveTabContext | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
-  const [payload, setPayload] = useState<ScoredProductPayload | null>(null);
+  const [tabScoreState, setTabScoreState] = useState<TabScoreState | null>(null);
   const [manualFiberText, setManualFiberText] = useState("");
   const [manualProductName, setManualProductName] = useState("");
   const [manualPrice, setManualPrice] = useState("");
   const [manualBrand, setManualBrand] = useState("");
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [manualError, setManualError] = useState("");
+
+  const applyTabState = (state: TabScoreState | null) => {
+    setTabScoreState(state);
+
+    if (!state?.payload) {
+      return;
+    }
+
+    setManualFiberText(state.payload.product.fiberText || "");
+    setManualProductName(state.payload.product.productName);
+    setManualPrice(state.payload.product.price ? String(state.payload.product.price) : "");
+  };
 
   const loadCurrentTabScore = async () => {
     setLoadState("loading");
 
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab?.id) {
-      setLoadState("error");
+      setLoadState("fatal");
       return;
     }
 
@@ -102,7 +76,10 @@ const App = () => {
       url: tab.url ?? "",
       title: tab.title ?? "Manual Product"
     });
-    setManualProductName(tab.title ?? "Manual Product");
+
+    if (!manualProductName) {
+      setManualProductName(tab.title ?? "Manual Product");
+    }
 
     const message: RuntimeMessage = {
       type: "UNRAVEL_GET_SCORE_FOR_TAB",
@@ -111,21 +88,11 @@ const App = () => {
 
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        setLoadState("error");
+        setLoadState("fatal");
         return;
       }
 
-      if (!response.data) {
-        setPayload(null);
-        setLoadState("empty");
-        return;
-      }
-
-      const scorePayload = response.data as ScoredProductPayload;
-      setPayload(scorePayload);
-      setManualFiberText(scorePayload.product.fiberText || "");
-      setManualProductName(scorePayload.product.productName);
-      setManualPrice(scorePayload.product.price ? String(scorePayload.product.price) : "");
+      applyTabState((response.data as TabScoreState | null) ?? null);
       setLoadState("ready");
     });
   };
@@ -134,13 +101,34 @@ const App = () => {
     void loadCurrentTabScore();
   }, []);
 
-  const scoreWidth = useMemo(() => {
-    if (!payload) {
-      return "0%";
+  const refreshScore = () => {
+    if (!tabId) {
+      return;
     }
 
-    return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
-  }, [payload]);
+    setRefreshing(true);
+    setManualError("");
+
+    const message: RuntimeMessage = {
+      type: "UNRAVEL_REFRESH_SCORE_FOR_TAB",
+      tabId
+    };
+
+    chrome.runtime.sendMessage(message, (response) => {
+      setRefreshing(false);
+
+      if (chrome.runtime.lastError || !response?.ok || !response?.data) {
+        setManualError("Could not refresh this product score.");
+        return;
+      }
+
+      const nextState = response.data as TabScoreState;
+      applyTabState(nextState);
+      if (nextState.status === "error") {
+        setManualError(nextState.errorMessage ?? "Backend score unavailable.");
+      }
+    });
+  };
 
   const submitManualFiber = () => {
     if (!tabId || !manualFiberText.trim()) {
@@ -157,7 +145,7 @@ const App = () => {
       type: "UNRAVEL_SCORE_MANUAL_FIBERS",
       tabId,
       fiberText: manualFiberText,
-      seed: payload
+      seed: tabScoreState?.payload
         ? undefined
         : {
             productUrl: activeTabContext?.url ?? "",
@@ -175,13 +163,16 @@ const App = () => {
         return;
       }
 
-      setPayload(response.data as ScoredProductPayload);
+      const nextState = response.data as TabScoreState;
+      applyTabState(nextState);
       setLoadState("ready");
+
+      if (nextState.status === "error") {
+        setManualError(nextState.errorMessage ?? "Backend score unavailable.");
+      }
     });
   };
 
-<<<<<<< Updated upstream
-=======
   const payload = tabScoreState?.payload ?? null;
 
   const scoreWidth = useMemo(() => {
@@ -191,6 +182,7 @@ const App = () => {
 
     return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
   }, [payload]);
+
 
   const insightTip = useMemo(() => {
     if (!payload?.product.price) return null;
@@ -211,68 +203,32 @@ const App = () => {
     };
   }, [payload]);
 
->>>>>>> Stashed changes
+
   if (loadState === "loading") {
     return <div className="popup-shell">Analyzing this product...</div>;
   }
 
-  if (loadState === "error") {
+  if (loadState === "fatal") {
     return <div className="popup-shell">Could not load product score for this tab.</div>;
   }
 
   if (!payload) {
-<<<<<<< Updated upstream
     return (
       <div className="popup-shell">
         <h1 className="text-lg font-semibold">Unravel</h1>
         <p className="mt-2 text-sm text-slate-700">
-          Auto-extraction has not produced a score yet. You can still score manually from the
-          visible composition text.
+          {isUnavailable
+            ? "Live Google Trends + ESG scoring is currently unavailable."
+            : "Auto-extraction has not produced a score yet. You can still score manually from the visible composition text."}
         </p>
-=======
-    const isUnavailable = tabScoreState?.status === "error";
-
-    let isUnsupportedSite = false;
-    try {
-      const hostname = new URL(activeTabContext?.url ?? "").hostname.toLowerCase();
-      isUnsupportedSite = !getRetailerConfigByHostname(hostname);
-    } catch {
-      isUnsupportedSite = true;
-    }
-
-    let fallbackMessage: string;
-    if (isUnavailable) {
-      fallbackMessage = "Live Google Trends + ESG scoring is currently unavailable. You can still paste fiber content below to score manually.";
-    } else if (isUnsupportedSite) {
-      fallbackMessage = "This site isn't supported for auto-extraction yet. Paste the fiber content from the product page below to score any item.";
-    } else {
-      fallbackMessage = "Auto-extraction didn't find fiber data on this page. You can paste the composition text below to score manually.";
-    }
-
-    return (
-      <div className="popup-shell">
-        <h1 className="text-lg font-semibold">{"\uD83E\uDDF5"} Unravel</h1>
-
-        {isUnsupportedSite ? (
-          <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
-            Supported sites: Zara, H&M, ASOS, Shein, Amazon Fashion. More coming soon.
-          </p>
-        ) : null}
-
-        <p className="mt-2 text-sm text-slate-700">{fallbackMessage}</p>
-
-        {!isUnsupportedSite ? (
-          <button
-            type="button"
-            className="mt-3 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
-            disabled={refreshing || manualSubmitting}
-            onClick={refreshScore}
-          >
-            {refreshing ? "Refreshing..." : "Retry live score"}
-          </button>
-        ) : null}
-
->>>>>>> Stashed changes
+        <button
+          type="button"
+          className="mt-3 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
+          disabled={refreshing || manualSubmitting}
+          onClick={refreshScore}
+        >
+          {refreshing ? "Refreshing..." : "Retry live score"}
+        </button>
         <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
           Product Name
         </label>
@@ -326,12 +282,9 @@ const App = () => {
     ? currencyFormatter(payload.product.currency).format(payload.product.price)
     : "Price unavailable";
 
-<<<<<<< Updated upstream
-=======
-  const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
-  const grade = payload.score.sustainabilityScore.grade;
 
->>>>>>> Stashed changes
+  const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
+
   return (
     <main className="popup-shell">
       <header className="mb-3">
@@ -343,6 +296,12 @@ const App = () => {
           {payload.product.brand} · {priceDisplay}
         </p>
       </header>
+
+      {tabScoreState?.status === "stale" ? (
+        <section className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          Showing last real score (cached). Data may be stale.
+        </section>
+      ) : null}
 
       <section className="rounded-xl bg-unravel-card p-3 shadow-card">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
@@ -404,18 +363,16 @@ const App = () => {
         )}
       </section>
 
-<<<<<<< Updated upstream
-=======
-      {insightTip ? (
-        <section className="mt-3 border-t border-slate-200 pt-3">
-          <p className="text-xs text-slate-700">
-            {"\uD83D\uDCA1"} A classic {insightTip.fiberName} item lasts ~{insightTip.wears} wears at{" "}
-            {currencyFormatter(payload.product.currency).format(insightTip.cpw)}/wear
-          </p>
-        </section>
-      ) : null}
+      <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card">
+        <p className="text-[11px] uppercase tracking-wide text-slate-600">Data Sources</p>
+        <p className="mt-1 text-xs text-slate-700">
+          Trend: Google Trends · Updated {formatTimestamp(payload.score.trendScore.lastUpdated)}
+        </p>
+        <p className="mt-1 text-xs text-slate-700">
+          ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
+        </p>
+      </section>
 
->>>>>>> Stashed changes
       <button
         type="button"
         className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-unravel-accent px-3 py-2 text-sm font-semibold text-white"
@@ -450,7 +407,17 @@ const App = () => {
       </details>
 
       <section className="mt-3 rounded-xl border border-dashed border-slate-300 p-3">
-        <p className="text-[11px] uppercase tracking-wide text-slate-600">Manual Fiber Input</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] uppercase tracking-wide text-slate-600">Manual Fiber Input</p>
+          <button
+            type="button"
+            className="rounded-md border border-slate-300 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
+            onClick={refreshScore}
+            disabled={refreshing || manualSubmitting}
+          >
+            {refreshing ? "Refreshing..." : "Retry live score"}
+          </button>
+        </div>
         <p className="mt-1 text-xs text-slate-600">
           If extraction is wrong, paste text like: <span className="font-medium">55% linen, 30% cotton, 15% polyester</span>.
         </p>
@@ -463,7 +430,7 @@ const App = () => {
         <button
           type="button"
           onClick={submitManualFiber}
-          disabled={manualSubmitting}
+          disabled={manualSubmitting || !manualFiberText.trim()}
           className="mt-2 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
         >
           {manualSubmitting ? "Scoring..." : "Re-score with manual fiber content"}

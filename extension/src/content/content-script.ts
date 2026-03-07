@@ -1,6 +1,6 @@
 import "./overlay.css";
 import { extractProductContext } from "../lib/productExtraction";
-import type { RuntimeMessage, ScoredProductPayload } from "../types";
+import type { RuntimeMessage, ScoredProductPayload, TabScoreState } from "../types";
 
 const SCAN_INTERVAL_MS = 1400;
 
@@ -38,6 +38,18 @@ const removeOverlay = () => {
   existing?.remove();
 };
 
+const formatCpw = (value: number, currency: string): string => {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2
+    }).format(value);
+  } catch {
+    return `$${value.toFixed(2)}`;
+  }
+};
+
 const renderOverlay = (payload: ScoredProductPayload) => {
   const anchor = getAnchorElement();
   if (!anchor) {
@@ -53,7 +65,7 @@ const renderOverlay = (payload: ScoredProductPayload) => {
 
   badge.innerHTML = [
     `<strong>🧵 Sust: ${payload.score.sustainabilityScore.value}/${payload.score.sustainabilityScore.grade}</strong>`,
-    `$${payload.score.cpwEstimate.costPerWear.toFixed(2)}/wear`,
+    `${formatCpw(payload.score.cpwEstimate.costPerWear, payload.product.currency)}/wear`,
     "Click the Unravel icon for details"
   ].join("<br>");
 
@@ -87,12 +99,27 @@ const detectAndScore = () => {
 
   chrome.runtime.sendMessage(message, (response) => {
     if (chrome.runtime.lastError || !response?.ok || !response?.data) {
+      removeOverlay();
       return;
     }
 
-    renderOverlay(response.data as ScoredProductPayload);
+    const state = response.data as TabScoreState;
+    if (!state.payload || state.status === "error") {
+      removeOverlay();
+      return;
+    }
+
+    renderOverlay(state.payload);
   });
 };
+
+chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResponse): boolean | void => {
+  if (message.type === "UNRAVEL_EXTRACT_PRODUCT_CONTEXT") {
+    const context = extractProductContext();
+    sendResponse({ ok: true, data: context ?? null });
+    return;
+  }
+});
 
 const boot = () => {
   detectAndScore();
