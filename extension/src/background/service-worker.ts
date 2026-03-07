@@ -35,7 +35,12 @@ const isCacheFresh = (cachedAt: string): boolean => {
   return Date.now() - timestamp <= CACHE_TTL_MS;
 };
 
-const setBadgeForScore = async (tabId: number, scoreValue: number, grade: string) => {
+const setBadgeForScore = async (
+  tabId: number,
+  scoreValue: number,
+  grade: string,
+  productName?: string
+) => {
   let color = "#9e2a2b";
   if (scoreValue >= 75) {
     color = "#136f50";
@@ -45,11 +50,35 @@ const setBadgeForScore = async (tabId: number, scoreValue: number, grade: string
 
   await chrome.action.setBadgeBackgroundColor({ color, tabId });
   await chrome.action.setBadgeText({ text: grade, tabId });
+
+  const title = productName
+    ? `Unravel: ${productName} — Score ${scoreValue}/100 (${grade})`
+    : `Unravel: Score ${scoreValue}/100 (${grade})`;
+  await chrome.action.setTitle({ title, tabId });
 };
+
+const tryRemoteScore = async (product: ProductContext) => {
+  const response = await fetch(SCORE_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      product_url: product.productUrl,
+      product_name: product.productName,
+      fiber_content: product.fiberContent,
+      price: product.price,
+      currency: product.currency,
+      image_url: product.imageUrl,
+      brand: product.brand,
+      category: product.category
+    })
+  });
 
 const clearBadge = async (tabId: number) => {
   await chrome.action.setBadgeText({ tabId, text: "" });
 };
+
 
 const setBadgeForState = async (tabId: number, state: TabScoreState) => {
   if (state.status === "error" || !state.payload) {

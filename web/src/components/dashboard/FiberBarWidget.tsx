@@ -1,55 +1,28 @@
 "use client";
 
-import { useEffect, useState, memo } from "react";
+import { useEffect, useState, memo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-const GARMENTS = [
-    {
-        name: "Fast Fashion Blouse",
-        score: 24,
-        fibers: [
-            { name: "Polyester", percent: 85, color: "bg-rust" },
-            { name: "Elastane", percent: 15, color: "bg-charcoal/60" }
-        ]
-    },
-    {
-        name: "Premium Knit Sweater",
-        score: 78,
-        fibers: [
-            { name: "Cotton", percent: 60, color: "bg-sage" },
-            { name: "Recycled", percent: 40, color: "bg-forest" }
-        ]
-    },
-    {
-        name: "Summer Trousers",
-        score: 92,
-        fibers: [
-            { name: "Linen", percent: 100, color: "bg-cream border border-charcoal/10" }
-        ]
-    },
-];
+export type GarmentData = {
+    name: string;
+    score: number;
+    fibers: { name: string; percent: number; color: string }[];
+};
 
-export const FiberBarWidget = memo(function FiberBarWidget() {
-    const [index, setIndex] = useState(0);
+interface FiberBarWidgetProps {
+    garment: GarmentData;
+}
+
+export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBarWidgetProps) {
     const [animatedScore, setAnimatedScore] = useState(0);
-
-    const currentGarment = GARMENTS[index];
-
-    // Garment cycler
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setIndex((prev) => (prev + 1) % GARMENTS.length);
-        }, 4000);
-        return () => clearInterval(interval);
-    }, []);
 
     // Score counter animation
     useEffect(() => {
         let startTimestamp: number;
         const duration = 1000;
         const startValue = animatedScore;
-        const endValue = currentGarment.score;
+        const endValue = garment.score;
 
         const step = (timestamp: number) => {
             if (!startTimestamp) startTimestamp = timestamp;
@@ -62,47 +35,46 @@ export const FiberBarWidget = memo(function FiberBarWidget() {
             }
         };
         window.requestAnimationFrame(step);
-    }, [currentGarment.score]);
+    }, [garment.score]);
 
     // Interpolate score color (Rust for low, Forest for high)
-    const scoreColor = currentGarment.score < 40 ? "text-rust" : currentGarment.score < 70 ? "text-sage" : "text-forest";
+    const scoreColor = garment.score < 40 ? "text-rust" : garment.score < 70 ? "text-sage" : "text-forest";
 
     return (
-        <div className="flex flex-col h-full bg-cream pt-8 pb-8 px-6 md:px-10 border-t border-linen/50">
+        <div className="flex flex-col h-full bg-transparent pt-8 pb-8 px-6 md:px-10">
 
             {/* Garment Label Crossfade */}
             <div className="h-8 relative mb-6">
                 <AnimatePresence mode="wait">
                     <motion.h3
-                        key={currentGarment.name}
+                        key={garment.name}
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.3 }}
                         className="absolute inset-0 font-sans font-medium text-lg text-charcoal"
                     >
-                        {currentGarment.name}
+                        {garment.name}
                     </motion.h3>
                 </AnimatePresence>
             </div>
 
             {/* Fiber Stack Bar */}
             <div className="w-full h-8 flex rounded-sm overflow-hidden mb-8 bg-linen/50 relative">
-                <AnimatePresence>
-                    {currentGarment.fibers.map((fiber, i) => (
+                <AnimatePresence mode="popLayout">
+                    {garment.fibers.map((fiber, i) => (
                         <motion.div
-                            key={`${fiber.name}-${i}`}
-                            layout
+                            key={`${garment.name}-${fiber.name}`} // Force recreate on new garment
                             initial={{ width: 0, opacity: 0 }}
                             animate={{ width: `${fiber.percent}%`, opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
                             transition={{
                                 type: "spring",
-                                stiffness: 120,
-                                damping: 20,
-                                delay: i * 0.08 // slight stagger
+                                stiffness: 90,
+                                damping: 15,
+                                delay: i * 0.05
                             }}
-                            className={cn("h-full relative group cursor-crosshair", fiber.color)}
+                            className={cn("h-full relative group cursor-crosshair border-r border-[#f6f5f1] last:border-r-0", fiber.color)}
                         >
                             {/* Custom Tooltip */}
                             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-charcoal text-cream text-[10px] font-mono px-2 py-1 rounded pointer-events-none whitespace-nowrap z-10">

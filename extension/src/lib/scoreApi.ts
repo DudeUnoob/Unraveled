@@ -156,12 +156,9 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
     "sustainability_score.feature_contributions.brand_reputation.sources.esg_api.available"
   );
 
-  if (!googleTrendsAvailable || !esgAvailable || !esgApiAvailableInSources) {
-    throw new ScoreApiError(
-      "source_unavailable",
-      "Backend returned score without required Google Trends or ESG source availability"
-    );
-  }
+  // Accept the response regardless of source availability — the backend now
+  // honestly reports when Google Trends fell back to keyword classification.
+  // Confidence scores already indicate data quality.
 
   return {
     sustainabilityScore: {

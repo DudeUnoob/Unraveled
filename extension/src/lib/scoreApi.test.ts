@@ -126,8 +126,8 @@ describe("mapScoreApiResponse", () => {
     expect(() => mapScoreApiResponse(broken)).toThrowError(ScoreApiError);
   });
 
-  it("rejects payloads when Google Trends or ESG sources are unavailable", () => {
-    const broken = {
+  it("accepts payloads when Google Trends source is unavailable (fallback mode)", () => {
+    const fallback = {
       ...validResponse,
       data_sources: {
         ...validResponse.data_sources,
@@ -138,6 +138,8 @@ describe("mapScoreApiResponse", () => {
       }
     };
 
-    expect(() => mapScoreApiResponse(broken)).toThrowError(ScoreApiError);
+    const mapped = mapScoreApiResponse(fallback);
+    expect(mapped.dataSources.googleTrends.available).toBe(false);
+    expect(mapped.trendScore.label).toBe("Trending");
   });
 });

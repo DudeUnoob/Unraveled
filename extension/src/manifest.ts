@@ -1,6 +1,5 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 
-const DEFAULT_API_BASE_URL = "http://localhost:8000";
 
 const resolveApiHostPermission = (): string => {
   const candidate = process.env.VITE_UNRAVEL_API_BASE_URL ?? DEFAULT_API_BASE_URL;
@@ -20,6 +19,7 @@ const retailerHostPermissions = [
   "https://www.shein.com/*",
   "https://www.amazon.com/*"
 ];
+
 
 export default defineManifest({
   manifest_version: 3,

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import type { RuntimeMessage, ScoredProductPayload } from "../types";
+
 import type { RuntimeMessage, TabScoreState } from "../types";
 
 type LoadState = "loading" | "ready" | "fatal";
@@ -15,16 +17,11 @@ const currencyFormatter = (currency: string) =>
   });
 
 const gradeColor = (grade: string): string => {
-  if (grade === "A" || grade === "B") {
-    return "bg-emerald-600";
-  }
-
-  if (grade === "C" || grade === "D") {
-    return "bg-amber-500";
-  }
-
+  if (grade === "A" || grade === "B") return "bg-emerald-600";
+  if (grade === "C" || grade === "D") return "bg-amber-500";
   return "bg-rose-700";
 };
+
 
 const formatTimestamp = (value: string): string => {
   const parsed = Date.parse(value);
@@ -48,6 +45,7 @@ const App = () => {
   const [manualFiberText, setManualFiberText] = useState("");
   const [manualProductName, setManualProductName] = useState("");
   const [manualPrice, setManualPrice] = useState("");
+  const [manualBrand, setManualBrand] = useState("");
   const [manualSubmitting, setManualSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [manualError, setManualError] = useState("");
@@ -152,6 +150,7 @@ const App = () => {
         : {
             productUrl: activeTabContext?.url ?? "",
             productName: manualProductName || "Manual Product",
+            brand: manualBrand || undefined,
             price: safeManualPrice
           }
     };
@@ -184,6 +183,27 @@ const App = () => {
     return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
   }, [payload]);
 
+
+  const insightTip = useMemo(() => {
+    if (!payload?.product.price) return null;
+
+    const breakdown = payload.score.sustainabilityScore.featureContributions.fiberComposition.breakdown;
+    if (breakdown.length === 0) return null;
+
+    const dominant = breakdown.reduce((a, b) => (b.pct > a.pct ? b : a));
+    const durabilityWears = resolveDurabilityWears(dominant.fiber);
+    if (!durabilityWears) return null;
+
+    const idealCpw = payload.product.price / durabilityWears;
+
+    return {
+      fiberName: dominant.fiber,
+      wears: durabilityWears,
+      cpw: idealCpw
+    };
+  }, [payload]);
+
+
   if (loadState === "loading") {
     return <div className="popup-shell">Analyzing this product...</div>;
   }
@@ -193,8 +213,6 @@ const App = () => {
   }
 
   if (!payload) {
-    const isUnavailable = tabScoreState?.status === "error";
-
     return (
       <div className="popup-shell">
         <h1 className="text-lg font-semibold">Unravel</h1>
@@ -220,6 +238,15 @@ const App = () => {
           onChange={(event) => setManualProductName(event.target.value)}
         />
         <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+          Brand
+        </label>
+        <input
+          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          value={manualBrand}
+          onChange={(event) => setManualBrand(event.target.value)}
+          placeholder="e.g. Zara, H&M, Everlane"
+        />
+        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
           Price (optional)
         </label>
         <input
@@ -243,7 +270,7 @@ const App = () => {
           type="button"
           onClick={submitManualFiber}
           disabled={manualSubmitting || !manualFiberText.trim()}
-          className="mt-2 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
+          className="mt-2 w-full rounded-md bg-unravel-accent px-2 py-1.5 text-xs font-semibold text-white"
         >
           {manualSubmitting ? "Scoring..." : "Score with manual fiber input"}
         </button>
@@ -255,12 +282,15 @@ const App = () => {
     ? currencyFormatter(payload.product.currency).format(payload.product.price)
     : "Price unavailable";
 
+
   const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
 
   return (
     <main className="popup-shell">
       <header className="mb-3">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-unravel-accent">Unravel</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-unravel-accent">
+          {"\uD83E\uDDF5"} UNRAVEL
+        </p>
         <h1 className="line-clamp-2 text-base font-semibold text-unravel-ink">{payload.product.productName}</h1>
         <p className="text-xs text-slate-600">
           {payload.product.brand} · {priceDisplay}
@@ -280,18 +310,21 @@ const App = () => {
         <div className="mt-2 flex items-end justify-between">
           <p className="text-3xl font-bold text-unravel-ink">
             {payload.score.sustainabilityScore.value}
-            <span className="ml-1 text-lg">/100</span>
+            <span className="ml-1 text-lg">
+              / {grade} {gradeCircle(grade)}
+            </span>
           </p>
           <span
-            className={`rounded-full px-2 py-1 text-xs font-semibold text-white ${gradeColor(
-              payload.score.sustainabilityScore.grade
-            )}`}
+            className={`rounded-full px-2 py-1 text-xs font-semibold text-white ${gradeColor(grade)}`}
           >
-            Grade {payload.score.sustainabilityScore.grade}
+            Grade {grade}
           </span>
         </div>
         <div className="mt-3 h-2 rounded-full bg-slate-200">
-          <div className="h-2 rounded-full bg-unravel-accent" style={{ width: scoreWidth }} />
+          <div
+            className={`h-2 rounded-full ${progressBarColor(grade)}`}
+            style={{ width: scoreWidth }}
+          />
         </div>
         <p className="mt-2 text-xs text-slate-600">
           Fiber {payload.score.sustainabilityScore.featureContributions.fiberComposition.featureValue} ·
@@ -320,7 +353,9 @@ const App = () => {
 
       <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card">
         <p className="text-[11px] uppercase tracking-wide text-slate-600">Health</p>
-        <p className="mt-1 text-base font-semibold text-unravel-ink">{payload.score.healthScore.label}</p>
+        <p className="mt-1 text-base font-semibold text-unravel-ink">
+          {healthIcon(payload.score.healthScore.label)} {payload.score.healthScore.label}
+        </p>
         {payload.score.healthScore.flags.length > 0 ? (
           <p className="mt-1 text-xs text-slate-600">Flags: {payload.score.healthScore.flags.join(", ")}</p>
         ) : (
@@ -340,13 +375,36 @@ const App = () => {
 
       <button
         type="button"
-        className="mt-3 w-full rounded-lg bg-unravel-accent px-3 py-2 text-sm font-semibold text-white"
+        className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-unravel-accent px-3 py-2 text-sm font-semibold text-white"
         onClick={() => {
           void chrome.tabs.create({ url: payload.score.webAppDeepLink });
         }}
       >
-        See Full Trend Analysis
+        {"\uD83D\uDD0D"} See Full Trend Analysis {"\u2192"}
       </button>
+
+      <button
+        type="button"
+        className="mt-2 w-full cursor-not-allowed rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-400"
+        disabled
+        title="Coming soon in Stage 2"
+      >
+        {"\uD83D\uDC55"} See Better Alternatives {"\u2192"}
+      </button>
+
+      <details className="mt-3">
+        <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+          Data Sources
+        </summary>
+        <div className="mt-1 rounded-xl bg-unravel-card p-3 shadow-card">
+          <p className="text-xs text-slate-700">
+            Trend: Google Trends · Updated {formatTimestamp(payload.score.trendScore.lastUpdated)}
+          </p>
+          <p className="mt-1 text-xs text-slate-700">
+            ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
+          </p>
+        </div>
+      </details>
 
       <section className="mt-3 rounded-xl border border-dashed border-slate-300 p-3">
         <div className="flex items-center justify-between gap-2">
@@ -378,6 +436,20 @@ const App = () => {
           {manualSubmitting ? "Scoring..." : "Re-score with manual fiber content"}
         </button>
       </section>
+
+      <footer className="mt-4 flex items-center justify-between border-t border-slate-200 pt-2 text-[10px] text-slate-500">
+        <span>Powered by Unravel</span>
+        <button
+          type="button"
+          className="flex items-center gap-1 text-slate-500 hover:text-slate-700"
+          title="Settings — coming soon"
+          onClick={() => {
+            /* Future: chrome.runtime.openOptionsPage() */
+          }}
+        >
+          Settings {"\u2699\uFE0F"}
+        </button>
+      </footer>
     </main>
   );
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRight, Asterisk } from "@phosphor-icons/react";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 
 const Tiers = [
@@ -36,80 +36,57 @@ const Tiers = [
 
 export function Footer() {
     return (
-        <footer className="w-full bg-charcoal text-cream mt-auto pt-32 pb-12 px-4 md:px-12 lg:px-24 rounded-t-[3rem] md:rounded-t-[4rem] flex flex-col items-center overflow-hidden">
-
-            {/* Membership Tiers Grid */}
-            <div className="w-full max-w-[1200px] mb-32">
-                <div className="text-center mb-16">
-                    <h2 className="font-serif italic text-4xl md:text-5xl text-cream mb-4">Choose your intelligence level.</h2>
-                    <p className="font-sans text-cream/70 text-lg">Invest in knowledge. Stop wasting money on dead trends.</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    {Tiers.map((tier, i) => (
-                        <motion.div
-                            key={tier.name}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-50px" }}
-                            transition={{ duration: 0.6, delay: i * 0.1 }}
-                            className={`p-8 md:p-12 border ${tier.primary ? 'border-rust bg-charcoal/50 shadow-[inset_0_0_80px_rgba(200,75,49,0.05)]' : 'border-cream/10 bg-transparent'} rounded-[2rem] flex flex-col h-full`}
-                        >
-                            <div className="mb-8">
-                                <h3 className="font-mono text-sm uppercase tracking-widest text-cream/70 mb-2">{tier.name}</h3>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="font-sans font-bold text-5xl tracking-tighter text-cream">{tier.price}</span>
-                                    <span className="font-sans text-cream/50">{tier.period}</span>
-                                </div>
-                                <p className="font-sans text-cream/60 mt-4">{tier.description}</p>
-                            </div>
-
-                            <ul className="flex-1 space-y-4 mb-12">
-                                {tier.features.map((feature, j) => (
-                                    <li key={j} className="flex items-start gap-3">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-sage mt-2 shrink-0" />
-                                        <span className="font-sans text-cream/80">{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-
-                            <MagneticButton
-                                strength={0.1}
-                                className={`w-full py-4 rounded-xl font-sans font-semibold text-charcoal transition-colors ${tier.primary ? 'bg-rust text-cream hover:bg-rust/90' : 'bg-cream hover:bg-white'}`}
-                            >
-                                {tier.buttonText}
-                            </MagneticButton>
-                        </motion.div>
-                    ))}
-                </div>
+        <footer className="relative w-full min-h-[600px] flex items-end overflow-hidden mt-0">
+            {/* Immersive Background */}
+            <div className="absolute inset-x-0 bottom-0 top-[-20%] z-0">
+                <img
+                    src="/background_1.avif"
+                    alt="Dark moody pastoral oil painting"
+                    className="w-full h-[120%] object-cover opacity-90 sepia-[0.2]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/60 to-transparent" />
+                <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-[#f6f5f1] to-transparent" />
             </div>
 
-            {/* Massive Typographic Footer */}
-            <div className="w-full border-t border-cream/10 pt-16 flex flex-col md:flex-row justify-between items-center md:items-end gap-12 text-center md:text-left">
+            <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 lg:px-0 pt-32 pb-12 flex flex-col justify-end">
 
-                <div>
-                    <h2 className="font-serif italic text-[12vw] md:text-[8rem] leading-none tracking-tight text-cream/90 select-none">Unravel.</h2>
-                </div>
-
-                <div className="flex flex-col gap-8 md:min-w-[300px]">
-                    <div className="flex flex-wrap justify-center md:justify-start gap-6 font-mono text-xs uppercase tracking-widest text-cream/50">
-                        <a href="#" className="hover:text-cream transition-colors flex items-center gap-1">Twitter <ArrowUpRight className="w-3 h-3" /></a>
-                        <a href="#" className="hover:text-cream transition-colors flex items-center gap-1">Instagram <ArrowUpRight className="w-3 h-3" /></a>
-                        <a href="#" className="hover:text-cream transition-colors flex items-center gap-1">Manifesto <ArrowUpRight className="w-3 h-3" /></a>
-                    </div>
-
-                    <div className="flex flex-col gap-2 font-mono text-[10px] uppercase tracking-widest text-cream/30">
-                        <span>© {new Date().getFullYear()} Unravel Intelligence Inc.</span>
-                        <span>Made to last.</span>
-                        <div className="flex gap-4 mt-2 justify-center md:justify-start">
-                            <a href="#" className="hover:text-cream/80">Privacy</a>
-                            <a href="#" className="hover:text-cream/80">Terms</a>
+                <div className="flex flex-col md:flex-row justify-between items-center w-full mb-24 md:mb-32 gap-12 text-center md:text-left">
+                    {/* Brand */}
+                    <div className="max-w-md">
+                        <div className="flex items-center gap-2 mb-6 text-cream/90">
+                            <Asterisk weight="bold" className="w-[4vw] h-[4vw] md:w-[6rem] md:h-[6rem]" />
+                            <h2 className="font-sans font-medium text-[10vw] md:text-[8rem] leading-none tracking-tight select-none">UNRAVEL</h2>
                         </div>
+                        <p className="font-sans text-cream/70 text-lg md:text-xl leading-relaxed">
+                            Empowering consumers with material truth. End the cycle of fast fashion.
+                        </p>
+                    </div>
+
+                    {/* Massive CTA */}
+                    <div className="flex flex-col items-center md:items-end gap-6">
+                        <MagneticButton
+                            strength={0.1}
+                            className={`px-12 py-5 rounded-full font-sans font-semibold text-lg text-charcoal bg-cream hover:bg-white hover:scale-105 transition-all`}
+                        >
+                            Get Started
+                        </MagneticButton>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="w-full flex flex-col md:flex-row justify-between items-center pt-8 border-t border-cream/10 text-cream/60 font-sans text-xs gap-4">
+                    <p>© {new Date().getFullYear()} Unravel Inc. All rights reserved.</p>
+                    <div className="flex items-center gap-6">
+                        <a href="#" className="hover:text-cream transition-colors">Privacy Policy</a>
+                        <a href="#" className="hover:text-cream transition-colors">Terms of Service</a>
+                        <a href="#" className="flex items-center gap-1 hover:text-cream transition-colors">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                            All systems operational
+                        </a>
                     </div>
                 </div>
 
             </div>
-
         </footer>
     );
 }

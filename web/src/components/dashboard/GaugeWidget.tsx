@@ -1,35 +1,23 @@
 "use client";
 
-import { useEffect, useState, memo } from "react";
-import { motion } from "framer-motion";
-
-const trendFeeds = [
-    "Barrel Jeans — Peaked 6 wks ago · Est. 8 wears · $11.25/wear",
-    "Mesh Ballet Flats — Peaked 3 wks ago · Est. 5 wears · $17.00/wear",
-    "Linen Trousers — Classic · Est. 40 wears · $1.88/wear"
-];
+import { memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const GAUGE_LABELS = ["TIMELESS", "CLASSIC", "TRENDING", "FADING", "DEAD"];
 
-export const GaugeWidget = memo(function GaugeWidget() {
-    const [rotation, setRotation] = useState(-90); // -90 is left, 90 is right
-    const [feedIndex, setFeedIndex] = useState(0);
+interface GaugeWidgetProps {
+    score: number; // 0 to 100
+    trendFeed: string;
+}
 
-    // Re-animate needle every 5 seconds
-    useEffect(() => {
-        // Initial random rotation
-        setRotation(Math.random() * 180 - 90);
-
-        const interval = setInterval(() => {
-            setRotation(Math.random() * 180 - 90);
-            setFeedIndex((prev) => (prev + 1) % trendFeeds.length);
-        }, 5000);
-
-        return () => clearInterval(interval);
-    }, []);
+export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: GaugeWidgetProps) {
+    // Map score (0-100) to rotation (-90 to 90)
+    // 100 score (Timeless) = -90 (far left)
+    // 0 score (Dead) = 90 (far right)
+    const rotation = -90 + ((100 - score) / 100) * 180;
 
     return (
-        <div className="flex flex-col h-full bg-cream border-t border-linen/50 pt-8 pb-4">
+        <div className="flex flex-col h-full bg-transparent pt-8 pb-4">
             {/* Live Indicator */}
             <div className="flex items-center gap-2 px-6 mb-8">
                 <div className="relative flex h-2 w-2">
@@ -76,11 +64,11 @@ export const GaugeWidget = memo(function GaugeWidget() {
 
                     {/* Animated Needle */}
                     <motion.g
-                        initial={{ rotate: -90 }}
                         animate={{ rotate: rotation }}
                         transition={{
-                            duration: 1.2,
-                            ease: [0.34, 1.56, 0.64, 1], // Custom spring bezier from prompt
+                            type: "spring",
+                            stiffness: 60,
+                            damping: 15,
                         }}
                         style={{ originX: "100px", originY: "100px" }}
                     >
@@ -108,16 +96,18 @@ export const GaugeWidget = memo(function GaugeWidget() {
 
             {/* Typewriter text feed */}
             <div className="mt-auto px-6 font-mono text-xs text-charcoal h-10 overflow-hidden relative">
-                <motion.p
-                    key={feedIndex}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.4 }}
-                    className="absolute inset-x-6 top-0"
-                >
-                    {trendFeeds[feedIndex]}
-                </motion.p>
+                <AnimatePresence mode="wait">
+                    <motion.p
+                        key={trendFeed}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.4 }}
+                        className="absolute inset-x-6 top-0"
+                    >
+                        {trendFeed}
+                    </motion.p>
+                </AnimatePresence>
             </div>
         </div>
     );
