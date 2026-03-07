@@ -63,6 +63,11 @@ export const DecayCurveChart = memo(function DecayCurveChart({
     const historicalData = curve.data_points.filter((p) => !p.projected);
     const projectedData = curve.data_points.filter((p) => p.projected);
 
+    // "You are here" = last historical data point
+    const currentWeek = historicalData.length > 0
+        ? historicalData[historicalData.length - 1].week
+        : null;
+
     // Build combined data with historical and projected as separate keys
     const chartData = curve.data_points.map((point) => ({
         week: point.week,
@@ -173,6 +178,23 @@ export const DecayCurveChart = memo(function DecayCurveChart({
                                 fontFamily: "var(--font-jetbrains-mono)",
                             }}
                         />
+
+                        {/* "You are here" marker */}
+                        {currentWeek && (
+                            <ReferenceLine
+                                x={currentWeek}
+                                stroke={phaseColor}
+                                strokeWidth={1.5}
+                                strokeDasharray="3 3"
+                                label={{
+                                    value: "← You are here",
+                                    position: "top",
+                                    fill: phaseColor,
+                                    fontSize: 9,
+                                    fontFamily: "var(--font-jetbrains-mono)",
+                                }}
+                            />
+                        )}
 
                         {/* Historical area */}
                         <Area

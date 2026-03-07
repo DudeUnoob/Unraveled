@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
@@ -10,18 +10,52 @@ import { TrendResults } from "@/components/analyzer/TrendResults";
 import { AnalyzerSkeleton } from "@/components/analyzer/AnalyzerSkeleton";
 import { AnalyzerEmptyState } from "@/components/analyzer/AnalyzerEmptyState";
 import { useAnalyze } from "@/hooks/useAnalyze";
+import type { ExtensionData } from "@/types/analysis";
 import { Asterisk } from "@phosphor-icons/react";
+
+function parseExtensionData(params: URLSearchParams): ExtensionData | null {
+    if (params.get("source") !== "extension") return null;
+
+    const score = parseFloat(params.get("sustainability_score") ?? "0");
+    const grade = params.get("sustainability_grade") ?? "";
+
+    // Need at least a product name to consider it valid extension data
+    const productName = params.get("product_name") ?? "";
+    if (!productName) return null;
+
+    return {
+        productName,
+        productUrl: params.get("product_url") ?? params.get("url") ?? "",
+        brand: params.get("brand") ?? "Unknown",
+        price: params.get("price") ? parseFloat(params.get("price")!) : null,
+        currency: params.get("currency") ?? "USD",
+        sustainabilityScore: isNaN(score) ? 0 : score,
+        sustainabilityGrade: grade,
+        trendLabel: params.get("trend_label") ?? "",
+        trendLifespanWeeks: parseInt(params.get("trend_lifespan_weeks") ?? "0", 10),
+        cpw: parseFloat(params.get("cpw") ?? "0"),
+        cpwAdjusted: parseFloat(params.get("cpw_adjusted") ?? "0"),
+        healthLabel: params.get("health_label") ?? "Safe",
+        fiberComposition: params.get("fiber_composition") ?? "",
+        brandRatingSources: params.get("brand_rating_sources") ?? "",
+        fiberDurabilityWears: parseInt(params.get("fiber_durability_wears") ?? "0", 10),
+    };
+}
 
 function AnalyzerContent() {
     const searchParams = useSearchParams();
-    const { state, data, error, analyze, reset } = useAnalyze();
+    const { state, data, error, price: analyzedPrice, analyze, reset } = useAnalyze();
 
-    // Deep-link params from Chrome extension
-    const source = searchParams.get("source");
-    const productName = searchParams.get("product_name");
-    const trendLabel = searchParams.get("trend_label");
-    const isFromExtension = source === "extension";
-    const initialQuery = productName ?? "";
+    // Parse extension data from URL params
+    const extensionData = useMemo(
+        () => parseExtensionData(searchParams),
+        [searchParams]
+    );
+
+    const isFromExtension = extensionData !== null;
+    const initialQuery = extensionData?.productName ?? searchParams.get("product_name") ?? "";
+    const initialPrice = extensionData?.price ?? undefined;
+
 
     return (
         <main className="flex min-h-[100dvh] flex-col items-center w-full overflow-hidden bg-[#f6f5f1] text-charcoal selection:bg-rust/30">
@@ -65,6 +99,7 @@ function AnalyzerContent() {
                             isLoading={state === "loading"}
                             error={error}
                             initialQuery={initialQuery}
+                            initialPrice={initialPrice ?? undefined}
                             autoTrigger={isFromExtension && Boolean(initialQuery)}
                         />
                     </motion.div>
@@ -109,7 +144,11 @@ function AnalyzerContent() {
                                 transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                                 className="mt-12"
                             >
-                                <TrendResults data={data} />
+                                <TrendResults
+                                    data={data}
+                                    extensionData={extensionData}
+                                    price={analyzedPrice ?? initialPrice}
+                                />
                             </motion.div>
                         )}
 
