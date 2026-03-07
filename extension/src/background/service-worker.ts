@@ -57,23 +57,6 @@ const setBadgeForScore = async (
   await chrome.action.setTitle({ title, tabId });
 };
 
-const tryRemoteScore = async (product: ProductContext) => {
-  const response = await fetch(SCORE_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      product_url: product.productUrl,
-      product_name: product.productName,
-      fiber_content: product.fiberContent,
-      price: product.price,
-      currency: product.currency,
-      image_url: product.imageUrl,
-      brand: product.brand,
-      category: product.category
-    })
-  });
 
 const clearBadge = async (tabId: number) => {
   await chrome.action.setBadgeText({ tabId, text: "" });
@@ -114,8 +97,8 @@ const buildHttpError = async (response: Response): Promise<ScoreApiError> => {
   const lowerBody = bodyText.toLowerCase();
   const errorCode: ScoreErrorCode =
     lowerBody.includes("source_unavailable") ||
-    lowerBody.includes("google_trends") ||
-    lowerBody.includes("esg")
+      lowerBody.includes("google_trends") ||
+      lowerBody.includes("esg")
       ? "source_unavailable"
       : "http_status";
 

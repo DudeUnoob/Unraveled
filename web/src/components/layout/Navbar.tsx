@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-
 import Link from "next/link";
 
 const navLinks = [
+    { name: "Analyze", href: "/analyze" },
     { name: "Platform", href: "#platform" },
     { name: "Methodology", href: "#methodology" },
     { name: "Brands", href: "#brands" },
@@ -49,13 +50,14 @@ export function Navbar() {
                     <ul className="hidden md:flex items-center gap-6 font-sans text-sm font-medium">
                         {navLinks.map((link) => (
                             <li key={link.name}>
-                                <button
+                                <Link
+                                    href={link.href}
                                     onClick={() => setActiveLink(link.name)}
                                     className="relative transition-opacity hover:opacity-100"
                                     style={{ opacity: activeLink === link.name ? 1 : 0.6 }}
                                 >
                                     {link.name}
-                                </button>
+                                </Link>
                             </li>
                         ))}
                     </ul>
