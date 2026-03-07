@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-import { Browser as ChromeIcon } from "@phosphor-icons/react";
+import { Browser as ChromeIcon, Asterisk } from "@phosphor-icons/react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
 
@@ -41,8 +41,9 @@ export function Navbar() {
                 )}
             >
                 <div className="flex items-center gap-x-12">
-                    <Link href="/" className="font-serif italic font-bold text-2xl tracking-wide shrink-0">
-                        Unravel.
+                    <Link href="/" className="flex items-center gap-1.5 font-sans font-medium text-lg tracking-tight uppercase shrink-0">
+                        <Asterisk weight="bold" className="w-5 h-5 text-charcoal/80" />
+                        UNRAVEL
                     </Link>
 
                     <ul className="hidden md:flex items-center gap-6 font-sans text-sm font-medium">

@@ -40,11 +40,13 @@ export function HeroSection() {
             {/* Immersive Painted Background */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                 <img
-                    src="file:///Users/dam_kamani/.gemini/antigravity/brain/2b4eaffc-f27a-4347-b751-bca39ee4f5a3/painted_landscape_hero_1772914744540.png"
+                    src="/background_2.avif"
                     alt="Pastoral oil painting landscape"
                     className="hero-bg w-full h-[120%] object-cover scale-105"
                 />
-                {/* Fade to white at the bottom to blend into the next section cleanly like Duna */}
+                {/* Dark overlay for text legibility */}
+                <div className="absolute inset-0 bg-charcoal/30 z-[5]" />
+                {/* Fade to base color at the bottom to blend into the next section */}
                 <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#f6f5f1] to-transparent z-10" />
             </div>
 
@@ -67,7 +69,7 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-[3.5rem] sm:text-[5rem] md:text-[6.5rem] leading-[0.95] tracking-tight text-charcoal mb-6 drop-shadow-sm"
+                    className="font-sans text-[3.5rem] sm:text-[5rem] md:text-[6.5rem] leading-[0.95] tracking-tight text-cream mb-6 drop-shadow-xl"
                     style={{ fontWeight: 500 }}
                 >
                     The new standard<br />in material truth
@@ -78,7 +80,7 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-lg md:text-xl text-charcoal/80 max-w-2xl leading-relaxed mb-10"
+                    className="font-sans text-lg md:text-xl text-cream/90 max-w-2xl leading-relaxed mb-10 drop-shadow-md"
                 >
                     Meet the data-native platform that accelerates ethical sourcing, automates supply chain audits, and uncovers the real cost of micro-trends.
                 </motion.p>
@@ -91,7 +93,7 @@ export function HeroSection() {
                 >
                     <MagneticButton
                         strength={0.1}
-                        className="px-8 py-4 bg-charcoal text-white rounded-full font-sans font-medium text-lg hover:scale-105 transition-transform"
+                        className="px-8 py-4 bg-cream text-charcoal rounded-full font-sans font-medium text-lg hover:scale-105 transition-transform"
                     >
                         Get started
                     </MagneticButton>

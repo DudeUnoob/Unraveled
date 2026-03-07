@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRight, Asterisk } from "@phosphor-icons/react";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 
 const Tiers = [
@@ -40,7 +40,7 @@ export function Footer() {
             {/* Immersive Background */}
             <div className="absolute inset-x-0 bottom-0 top-[-20%] z-0">
                 <img
-                    src="file:///Users/dam_kamani/.gemini/antigravity/brain/2b4eaffc-f27a-4347-b751-bca39ee4f5a3/woven_tapestry_footer_1772914757960.png"
+                    src="/background_1.avif"
                     alt="Dark moody pastoral oil painting"
                     className="w-full h-[120%] object-cover opacity-90 sepia-[0.2]"
                 />
@@ -53,7 +53,10 @@ export function Footer() {
                 <div className="flex flex-col md:flex-row justify-between items-center w-full mb-24 md:mb-32 gap-12 text-center md:text-left">
                     {/* Brand */}
                     <div className="max-w-md">
-                        <h2 className="font-serif italic text-[5rem] md:text-[8rem] leading-none tracking-tight text-cream/90 select-none mb-4">Unravel.</h2>
+                        <div className="flex items-center gap-2 mb-6 text-cream/90">
+                            <Asterisk weight="bold" className="w-[4vw] h-[4vw] md:w-[6rem] md:h-[6rem]" />
+                            <h2 className="font-sans font-medium text-[10vw] md:text-[8rem] leading-none tracking-tight select-none">UNRAVEL</h2>
+                        </div>
                         <p className="font-sans text-cream/70 text-lg md:text-xl leading-relaxed">
                             Empowering consumers with material truth. End the cycle of fast fashion.
                         </p>
