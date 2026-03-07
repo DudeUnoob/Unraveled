@@ -56,6 +56,9 @@ export const TrendLifespanBar = memo(function TrendLifespanBar({
                     <span className="font-sans text-sm font-semibold text-charcoal">
                         {lifespan.label}
                     </span>
+                    <span className="font-mono text-xs text-charcoal/40 tabular-nums">
+                        · {lifespan.score}/100
+                    </span>
                 </div>
             </div>
 
@@ -92,8 +95,8 @@ export const TrendLifespanBar = memo(function TrendLifespanBar({
                     <span
                         key={phase.label}
                         className={`font-mono text-[10px] tracking-wider uppercase transition-opacity ${phase.label === lifespan.label
-                                ? "text-charcoal font-semibold opacity-100"
-                                : "text-charcoal/30 opacity-70"
+                            ? "text-charcoal font-semibold opacity-100"
+                            : "text-charcoal/30 opacity-70"
                             }`}
                     >
                         {phase.label}
@@ -102,7 +105,7 @@ export const TrendLifespanBar = memo(function TrendLifespanBar({
             </div>
 
             {/* Stats row */}
-            <div className="grid grid-cols-3 gap-4 mt-8 pt-6 border-t border-charcoal/[0.06]">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-charcoal/[0.06]">
                 <div>
                     <span className="block font-mono text-[10px] text-charcoal/40 uppercase tracking-wider mb-1">
                         Peaked
@@ -125,6 +128,15 @@ export const TrendLifespanBar = memo(function TrendLifespanBar({
                     </span>
                     <span className="font-mono text-lg font-semibold text-charcoal tabular-nums">
                         {Math.round(lifespan.confidence * 100)}%
+                    </span>
+                </div>
+                <div>
+                    <span className="block font-mono text-[10px] text-charcoal/40 uppercase tracking-wider mb-1">
+                        Velocity
+                    </span>
+                    <span className="font-mono text-lg font-semibold tabular-nums" style={{ color: lifespan.velocity > 0 ? '#2C4A3E' : lifespan.velocity < -2 ? '#C84B31' : '#D4883C' }}>
+                        {lifespan.velocity > 0 ? '↗' : lifespan.velocity < -1 ? '↘' : '→'}{' '}
+                        {Math.abs(lifespan.velocity).toFixed(1)}/wk
                     </span>
                 </div>
             </div>
