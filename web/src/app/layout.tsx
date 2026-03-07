@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { DM_Sans, Playfair_Display, Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
+import { Outfit, Playfair_Display, Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { NoiseOverlay } from "@/components/ui/NoiseOverlay";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const playfair = Playfair_Display({
@@ -39,7 +39,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark scroll-smooth">
       <body
-        className={`${dmSans.variable} ${playfair.variable} ${cormorant.variable} ${jetbrainsMono.variable} font-sans antialiased relative`}
+        className={`${outfit.variable} ${playfair.variable} ${cormorant.variable} ${jetbrainsMono.variable} font-sans antialiased relative`}
       >
         <NoiseOverlay />
         {children}

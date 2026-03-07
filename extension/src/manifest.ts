@@ -1,5 +1,29 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 
+<<<<<<< Updated upstream
+=======
+const DEFAULT_API_BASE_URL = "https://fmndxwcgyzevetcoizwd.supabase.co";
+
+const resolveApiHostPermission = (): string => {
+  const candidate = process.env.VITE_UNRAVEL_API_BASE_URL ?? DEFAULT_API_BASE_URL;
+
+  try {
+    return `${new URL(candidate).origin}/*`;
+  } catch {
+    return `${new URL(DEFAULT_API_BASE_URL).origin}/*`;
+  }
+};
+
+const retailerHostPermissions = [
+  "https://www.zara.com/*",
+  "https://www2.hm.com/*",
+  "https://www.asos.com/*",
+  "https://us.shein.com/*",
+  "https://www.shein.com/*",
+  "https://www.amazon.com/*"
+];
+
+>>>>>>> Stashed changes
 export default defineManifest({
   manifest_version: 3,
   name: "Unravel",

@@ -25,50 +25,35 @@ export function Navbar() {
 
     return (
         <motion.header
-            initial={{ y: -100 }}
-            animate={{ y: 0 }}
-            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+            initial={{ y: -50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
-                "fixed top-6 left-1/2 -translate-x-1/2 z-[100] w-full max-w-[1400px] px-4 md:px-6 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                isScrolled
-                    ? "w-[90%] md:w-[70%]"
-                    : "w-full"
+                "fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-[1200px] px-4 md:px-0 transition-all duration-500",
             )}
         >
             <nav
                 className={cn(
-                    "flex items-center justify-between rounded-full px-4 py-3 md:px-6 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    "flex items-center justify-between rounded-full px-6 py-4 transition-all duration-500",
                     isScrolled
-                        ? "bg-secondary/75 backdrop-blur-xl border border-primary text-primary shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_8px_32px_rgba(44,74,62,0.1)]"
-                        : "bg-transparent border-transparent text-cream"
+                        ? "bg-white/90 backdrop-blur-md shadow-sm border border-slate-200/50 text-charcoal"
+                        : "bg-transparent text-charcoal"
                 )}
             >
-                <div className="flex items-center gap-x-8">
-                    <Link href="/" className="font-serif italic font-bold text-xl md:text-2xl tracking-wide shrink-0">
+                <div className="flex items-center gap-x-12">
+                    <Link href="/" className="font-serif italic font-bold text-2xl tracking-wide shrink-0">
                         Unravel.
                     </Link>
 
-                    <ul className="hidden md:flex items-center gap-2 font-mono text-xs uppercase tracking-wider">
+                    <ul className="hidden md:flex items-center gap-6 font-sans text-sm font-medium">
                         {navLinks.map((link) => (
                             <li key={link.name}>
                                 <button
                                     onClick={() => setActiveLink(link.name)}
-                                    className="relative px-4 py-2 hover:opacity-100 transition-opacity"
-                                    style={{ opacity: activeLink === link.name ? 1 : 0.7 }}
+                                    className="relative transition-opacity hover:opacity-100"
+                                    style={{ opacity: activeLink === link.name ? 1 : 0.6 }}
                                 >
                                     {link.name}
-                                    <AnimatePresence>
-                                        {activeLink === link.name && isScrolled && (
-                                            <motion.div
-                                                layoutId="active-nav-underline"
-                                                className="absolute bottom-1 left-4 right-4 h-[2px] bg-destructive"
-                                                initial={{ opacity: 0 }}
-                                                animate={{ opacity: 1 }}
-                                                exit={{ opacity: 0 }}
-                                                transition={{ duration: 0.2 }}
-                                            />
-                                        )}
-                                    </AnimatePresence>
                                 </button>
                             </li>
                         ))}
@@ -76,16 +61,10 @@ export function Navbar() {
                 </div>
 
                 <MagneticButton
-                    strength={0.15}
-                    className={cn(
-                        "rounded-full px-5 py-2.5 font-sans font-medium text-sm transition-colors duration-500",
-                        isScrolled
-                            ? "bg-primary text-cream"
-                            : "bg-cream text-charcoal"
-                    )}
+                    strength={0.1}
+                    className="rounded-full px-6 py-2.5 bg-charcoal text-cream font-sans font-medium text-sm transition-transform hover:scale-105"
                 >
-                    <ChromeIcon weight="bold" className="w-4 h-4" />
-                    <span className="hidden sm:inline">Get the Extension</span>
+                    Get the Extension
                 </MagneticButton>
             </nav>
         </motion.header>

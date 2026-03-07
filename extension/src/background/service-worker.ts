@@ -8,7 +8,12 @@ const SCORE_ENDPOINT = "http://localhost:8000/api/v1/score";
 
 const getStorageKey = (tabId: number): string => `${STORAGE_KEY_PREFIX}${tabId}`;
 
-const setBadgeForScore = async (tabId: number, scoreValue: number, grade: string) => {
+const setBadgeForScore = async (
+  tabId: number,
+  scoreValue: number,
+  grade: string,
+  productName?: string
+) => {
   let color = "#9e2a2b";
   if (scoreValue >= 75) {
     color = "#136f50";
@@ -18,8 +23,14 @@ const setBadgeForScore = async (tabId: number, scoreValue: number, grade: string
 
   await chrome.action.setBadgeBackgroundColor({ color, tabId });
   await chrome.action.setBadgeText({ text: grade, tabId });
+
+  const title = productName
+    ? `Unravel: ${productName} — Score ${scoreValue}/100 (${grade})`
+    : `Unravel: Score ${scoreValue}/100 (${grade})`;
+  await chrome.action.setTitle({ title, tabId });
 };
 
+<<<<<<< Updated upstream
 const tryRemoteScore = async (product: ProductContext) => {
   const response = await fetch(SCORE_ENDPOINT, {
     method: "POST",
@@ -37,6 +48,90 @@ const tryRemoteScore = async (product: ProductContext) => {
       category: product.category
     })
   });
+=======
+const clearBadge = async (tabId: number) => {
+  await chrome.action.setBadgeText({ tabId, text: "" });
+  await chrome.action.setTitle({ tabId, title: "Unravel" });
+};
+
+const setBadgeForState = async (tabId: number, state: TabScoreState) => {
+  if (state.status === "error" || !state.payload) {
+    await clearBadge(tabId);
+    return;
+  }
+
+  await setBadgeForScore(
+    tabId,
+    state.payload.score.sustainabilityScore.value,
+    state.payload.score.sustainabilityScore.grade,
+    state.payload.product.productName
+  );
+};
+
+const buildHttpError = async (response: Response): Promise<ScoreApiError> => {
+  let bodyText = "";
+  let parsedBody: unknown;
+
+  try {
+    bodyText = await response.text();
+    parsedBody = bodyText ? JSON.parse(bodyText) : undefined;
+  } catch {
+    parsedBody = undefined;
+  }
+
+  let message = `Score API responded ${response.status}`;
+  if (isObject(parsedBody) && typeof parsedBody.detail === "string" && parsedBody.detail.trim()) {
+    message = parsedBody.detail;
+  } else if (bodyText.trim().length > 0) {
+    message = bodyText;
+  }
+
+  const lowerBody = bodyText.toLowerCase();
+  const errorCode: ScoreErrorCode =
+    lowerBody.includes("source_unavailable") ||
+    lowerBody.includes("google_trends") ||
+    lowerBody.includes("esg")
+      ? "source_unavailable"
+      : "http_status";
+
+  return new ScoreApiError(errorCode, message, response.status);
+};
+
+const scoreProductRemotely = async (product: ProductContext) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UNRAVEL_SCORE_TIMEOUT_MS);
+
+  let response: Response;
+
+  try {
+    response = await fetch(UNRAVEL_SCORE_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        product_url: product.productUrl,
+        product_name: product.productName,
+        fiber_content: product.fiberContent,
+        description_text: product.descriptionText,
+        price: product.price,
+        currency: product.currency,
+        image_url: product.imageUrl,
+        brand: product.brand,
+        category: product.category
+      })
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ScoreApiError("timeout", "Score API request timed out");
+    }
+
+    throw new ScoreApiError("network", "Could not reach the score API");
+  } finally {
+    clearTimeout(timeoutId);
+  }
+>>>>>>> Stashed changes
 
   if (!response.ok) {
     throw new Error(`Score API responded ${response.status}`);
