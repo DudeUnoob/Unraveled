@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import type { RuntimeMessage, ScoredProductPayload } from "../types";
-
 import type { RuntimeMessage, TabScoreState } from "../types";
 
 type LoadState = "loading" | "ready" | "fatal";
@@ -22,6 +20,46 @@ const gradeColor = (grade: string): string => {
   return "bg-rose-700";
 };
 
+const progressBarColor = (grade: string): string => {
+  if (grade === "A" || grade === "B") return "bg-emerald-500";
+  if (grade === "C" || grade === "D") return "bg-amber-400";
+  return "bg-rose-600";
+};
+
+const gradeCircle = (grade: string): string => {
+  if (grade === "A") return "🟢";
+  if (grade === "B") return "🟡";
+  if (grade === "C" || grade === "D") return "🟠";
+  return "🔴";
+};
+
+const healthIcon = (label: string): string => {
+  if (label === "Safe") return "✅";
+  if (label === "Caution") return "⚠️";
+  return "🚫";
+};
+
+const FIBER_DURABILITY_WEARS: Record<string, number> = {
+  "organic linen": 90,
+  linen: 85,
+  hemp: 88,
+  "organic cotton": 82,
+  "tencel/lyocell": 74,
+  "recycled wool": 78,
+  wool: 75,
+  silk: 60,
+  cotton: 62,
+  "recycled polyester": 56,
+  "viscose/rayon": 45,
+  "nylon/spandex blend": 38,
+  polyester: 34,
+  acrylic: 28,
+};
+
+const resolveDurabilityWears = (fiber: string): number | null => {
+  const canonical = fiber.toLowerCase().trim();
+  return FIBER_DURABILITY_WEARS[canonical] ?? null;
+};
 
 const formatTimestamp = (value: string): string => {
   const parsed = Date.parse(value);
@@ -88,7 +126,7 @@ const App = () => {
 
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        setLoadState("fatal");
+        setLoadState("ready"); // show manual entry even on error
         return;
       }
 
@@ -148,11 +186,11 @@ const App = () => {
       seed: tabScoreState?.payload
         ? undefined
         : {
-            productUrl: activeTabContext?.url ?? "",
-            productName: manualProductName || "Manual Product",
-            brand: manualBrand || undefined,
-            price: safeManualPrice
-          }
+          productUrl: activeTabContext?.url ?? "",
+          productName: manualProductName || "Manual Product",
+          brand: manualBrand || undefined,
+          price: safeManualPrice
+        }
     };
 
     chrome.runtime.sendMessage(message, (response) => {
@@ -183,7 +221,6 @@ const App = () => {
     return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
   }, [payload]);
 
-
   const insightTip = useMemo(() => {
     if (!payload?.product.price) return null;
 
@@ -203,19 +240,38 @@ const App = () => {
     };
   }, [payload]);
 
-
   if (loadState === "loading") {
-    return <div className="popup-shell">Analyzing this product...</div>;
+    return (
+      <div className="popup-shell flex flex-col items-center justify-center gap-3 py-12">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-unravel-accent" />
+        <p className="text-xs text-slate-500">Analyzing this product...</p>
+      </div>
+    );
   }
 
   if (loadState === "fatal") {
-    return <div className="popup-shell">Could not load product score for this tab.</div>;
+    return (
+      <div className="popup-shell flex flex-col gap-2 py-6">
+        <p className="text-sm font-semibold text-unravel-ink">Could not load tab</p>
+        <p className="text-xs text-slate-600">Open a supported retailer page, then click the extension icon.</p>
+        <button
+          type="button"
+          className="mt-2 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs font-semibold"
+          onClick={() => void loadCurrentTabScore()}
+        >
+          Retry
+        </button>
+      </div>
+    );
   }
 
   if (!payload) {
+    const isUnavailable = tabScoreState?.status === "error" &&
+      (tabScoreState.errorCode === "source_unavailable" || tabScoreState.errorCode === "http_status");
+
     return (
       <div className="popup-shell">
-        <h1 className="text-lg font-semibold">Unravel</h1>
+        <h1 className="text-lg font-semibold text-unravel-ink">Unravel</h1>
         <p className="mt-2 text-sm text-slate-700">
           {isUnavailable
             ? "Live Google Trends + ESG scoring is currently unavailable."
@@ -270,7 +326,7 @@ const App = () => {
           type="button"
           onClick={submitManualFiber}
           disabled={manualSubmitting || !manualFiberText.trim()}
-          className="mt-2 w-full rounded-md bg-unravel-accent px-2 py-1.5 text-xs font-semibold text-white"
+          className="mt-2 w-full rounded-md bg-unravel-accent px-2 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
         >
           {manualSubmitting ? "Scoring..." : "Score with manual fiber input"}
         </button>
@@ -278,10 +334,10 @@ const App = () => {
     );
   }
 
+  const grade = payload.score.sustainabilityScore.grade;
   const priceDisplay = payload.product.price
     ? currencyFormatter(payload.product.currency).format(payload.product.price)
     : "Price unavailable";
-
 
   const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
 
@@ -289,7 +345,7 @@ const App = () => {
     <main className="popup-shell">
       <header className="mb-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-unravel-accent">
-          {"\uD83E\uDDF5"} UNRAVEL
+          🧵 UNRAVEL
         </p>
         <h1 className="line-clamp-2 text-base font-semibold text-unravel-ink">{payload.product.productName}</h1>
         <p className="text-xs text-slate-600">
@@ -327,11 +383,18 @@ const App = () => {
           />
         </div>
         <p className="mt-2 text-xs text-slate-600">
-          Fiber {payload.score.sustainabilityScore.featureContributions.fiberComposition.featureValue} ·
-          Brand {payload.score.sustainabilityScore.featureContributions.brandReputation.featureValue} ·
-          Trend {payload.score.sustainabilityScore.featureContributions.microTrendLongevity.featureValue}
+          Fiber {payload.score.sustainabilityScore.featureContributions.fiberComposition.featureValue.toFixed(2)} ·
+          Brand {payload.score.sustainabilityScore.featureContributions.brandReputation.featureValue.toFixed(2)} ·
+          Trend {payload.score.sustainabilityScore.featureContributions.microTrendLongevity.featureValue.toFixed(2)}
         </p>
       </section>
+
+      {insightTip ? (
+        <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card text-xs text-slate-700">
+          <span className="font-semibold">{insightTip.fiberName}</span> fiber lasts ~{insightTip.wears} wears.
+          Ideal CPW: {currencyFormatter(payload.product.currency).format(insightTip.cpw)}.
+        </section>
+      ) : null}
 
       <section className="mt-3 grid grid-cols-2 gap-2">
         <article className="rounded-xl bg-unravel-card p-3 shadow-card">
@@ -363,16 +426,6 @@ const App = () => {
         )}
       </section>
 
-      <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card">
-        <p className="text-[11px] uppercase tracking-wide text-slate-600">Data Sources</p>
-        <p className="mt-1 text-xs text-slate-700">
-          Trend: Google Trends · Updated {formatTimestamp(payload.score.trendScore.lastUpdated)}
-        </p>
-        <p className="mt-1 text-xs text-slate-700">
-          ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
-        </p>
-      </section>
-
       <button
         type="button"
         className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-unravel-accent px-3 py-2 text-sm font-semibold text-white"
@@ -380,7 +433,7 @@ const App = () => {
           void chrome.tabs.create({ url: payload.score.webAppDeepLink });
         }}
       >
-        {"\uD83D\uDD0D"} See Full Trend Analysis {"\u2192"}
+        🔍 See Full Trend Analysis →
       </button>
 
       <button
@@ -389,7 +442,7 @@ const App = () => {
         disabled
         title="Coming soon in Stage 2"
       >
-        {"\uD83D\uDC55"} See Better Alternatives {"\u2192"}
+        👕 See Better Alternatives →
       </button>
 
       <details className="mt-3">
@@ -431,7 +484,7 @@ const App = () => {
           type="button"
           onClick={submitManualFiber}
           disabled={manualSubmitting || !manualFiberText.trim()}
-          className="mt-2 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
+          className="mt-2 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold disabled:opacity-50"
         >
           {manualSubmitting ? "Scoring..." : "Re-score with manual fiber content"}
         </button>
@@ -447,7 +500,7 @@ const App = () => {
             /* Future: chrome.runtime.openOptionsPage() */
           }}
         >
-          Settings {"\u2699\uFE0F"}
+          Settings ⚙️
         </button>
       </footer>
     </main>

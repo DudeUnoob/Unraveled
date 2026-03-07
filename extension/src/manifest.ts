@@ -1,5 +1,6 @@
 import { defineManifest } from "@crxjs/vite-plugin";
 
+const DEFAULT_API_BASE_URL = "https://fmndxwcgyzevetcoizwd.supabase.co";
 
 const resolveApiHostPermission = (): string => {
   const candidate = process.env.VITE_UNRAVEL_API_BASE_URL ?? DEFAULT_API_BASE_URL;

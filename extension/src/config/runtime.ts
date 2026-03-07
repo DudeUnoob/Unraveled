@@ -31,7 +31,7 @@ const resolveApiBaseUrl = (): string => {
   }
 };
 
-const DEFAULT_WEB_APP_BASE_URL = "http://localhost:3000";
+const DEFAULT_WEB_APP_BASE_URL = "https://unraveled-kappa.vercel.app";
 
 const resolveWebAppBaseUrl = (): string => {
   const candidate = import.meta.env.VITE_UNRAVEL_WEB_APP_URL?.trim();

@@ -6,6 +6,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 import { ArrowRight } from "@phosphor-icons/react";
+import Link from "next/link";
 
 if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger);
@@ -91,12 +92,14 @@ export function HeroSection() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
                 >
-                    <MagneticButton
-                        strength={0.1}
-                        className="px-8 py-4 bg-cream text-charcoal rounded-full font-sans font-medium text-lg hover:scale-105 transition-transform"
-                    >
-                        Get started
-                    </MagneticButton>
+                    <Link href="/analyze">
+                        <MagneticButton
+                            strength={0.1}
+                            className="px-8 py-4 bg-cream text-charcoal rounded-full font-sans font-medium text-lg hover:scale-105 transition-transform"
+                        >
+                            Get started
+                        </MagneticButton>
+                    </Link>
                 </motion.div>
 
             </div>
