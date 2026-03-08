@@ -1,13 +1,15 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { TrendAnalysisResponse } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
 import { DecayCurveChart } from "./DecayCurveChart";
 import { ShareButton } from "./ShareButton";
 import { AlternativesSection } from "./AlternativesSection";
-import { TrendUp, Clock, ChartLine } from "@phosphor-icons/react";
+import { TrendUp, Clock, ChartLine, BookmarkSimple } from "@phosphor-icons/react";
+import { useUser } from "@/hooks/useUser";
+import { useSavedAnalyses } from "@/hooks/useSavedAnalyses";
 
 interface TrendResultsProps {
     data: TrendAnalysisResponse;
@@ -58,6 +60,28 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
         data.trend_lifespan.weeks_remaining
     );
 
+    const { user } = useUser();
+    const { isSaved, save, unsave } = useSavedAnalyses();
+    const [bookmarked, setBookmarked] = useState(false);
+
+    useEffect(() => {
+        setBookmarked(isSaved(data.analysis_id));
+    }, [isSaved, data.analysis_id]);
+
+    const handleBookmark = async () => {
+        if (bookmarked) {
+            const ok = await unsave(data.analysis_id);
+            if (ok) setBookmarked(false);
+        } else {
+            const ok = await save(
+                data.analysis_id,
+                data.query_normalized,
+                data.trend_lifespan.label,
+            );
+            if (ok) setBookmarked(true);
+        }
+    };
+
     return (
         <div className="w-full">
             {/* Verdict Banner */}
@@ -93,7 +117,22 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                                     {verdict}
                                 </p>
                             </div>
-                            <ShareButton shareableUrl={data.shareable_url} />
+                            <div className="flex items-center gap-2 shrink-0">
+                                {user && (
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={handleBookmark}
+                                        title={bookmarked ? "Remove from saved" : "Save to collection"}
+                                        className="p-2 rounded-full hover:bg-stone-100 transition-colors"
+                                    >
+                                        <BookmarkSimple
+                                            weight={bookmarked ? "fill" : "regular"}
+                                            className={`w-5 h-5 transition-colors ${bookmarked ? "text-charcoal" : "text-charcoal/40"}`}
+                                        />
+                                    </motion.button>
+                                )}
+                                <ShareButton shareableUrl={data.shareable_url} />
+                            </div>
                         </div>
                     </div>
                 </div>

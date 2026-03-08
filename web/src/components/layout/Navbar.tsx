@@ -3,27 +3,32 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-import { Browser as ChromeIcon, Asterisk } from "@phosphor-icons/react";
+import { Browser as ChromeIcon, Asterisk, List, X } from "@phosphor-icons/react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
+import { AuthButton } from "@/components/auth/AuthButton";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 const navLinks = [
     { name: "Analyze", href: "/analyze" },
     { name: "Gallery", href: "/gallery" },
-    { name: "Platform", href: "#platform" },
-    { name: "Methodology", href: "#methodology" },
-    { name: "Brands", href: "#brands" },
+    { name: "Brands", href: "/brands" },
+    { name: "Dashboard", href: "/dashboard", auth: true },
 ];
 
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [activeLink, setActiveLink] = useState("Platform");
+    const [activeLink, setActiveLink] = useState("");
+    const [mobileOpen, setMobileOpen] = useState(false);
     const { scrollY } = useScroll();
+    const { user, loading } = useUser();
 
-    // Strict avoidance of window.addEventListener per theme.md rules
     useMotionValueEvent(scrollY, "change", (latest) => {
         setIsScrolled(latest > 50);
     });
+
+    const visibleLinks = navLinks.filter((l) => !l.auth || user);
 
     return (
         <motion.header
@@ -49,7 +54,7 @@ export function Navbar() {
                     </Link>
 
                     <ul className="hidden md:flex items-center gap-6 font-sans text-sm font-medium">
-                        {navLinks.map((link) => (
+                        {visibleLinks.map((link) => (
                             <li key={link.name}>
                                 <Link
                                     href={link.href}
@@ -64,13 +69,49 @@ export function Navbar() {
                     </ul>
                 </div>
 
-                <MagneticButton
-                    strength={0.1}
-                    className="rounded-full px-6 py-2.5 bg-charcoal text-cream font-sans font-medium text-sm transition-transform hover:scale-105"
-                >
-                    Get the Extension
-                </MagneticButton>
+                <div className="flex items-center gap-3">
+                    {!loading && (user ? <UserMenu /> : <AuthButton />)}
+
+                    {/* Mobile menu toggle */}
+                    <button
+                        className="md:hidden p-2 rounded-full hover:bg-stone-100 transition-colors"
+                        onClick={() => setMobileOpen((p) => !p)}
+                    >
+                        {mobileOpen ? (
+                            <X weight="bold" className="w-5 h-5" />
+                        ) : (
+                            <List weight="bold" className="w-5 h-5" />
+                        )}
+                    </button>
+                </div>
             </nav>
+
+            {/* Mobile dropdown */}
+            <AnimatePresence>
+                {mobileOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.2 }}
+                        className="md:hidden mt-2 mx-2 rounded-2xl bg-white/95 backdrop-blur-md border border-stone-200 shadow-lg overflow-hidden"
+                    >
+                        <ul className="p-3 space-y-1">
+                            {visibleLinks.map((link) => (
+                                <li key={link.name}>
+                                    <Link
+                                        href={link.href}
+                                        onClick={() => setMobileOpen(false)}
+                                        className="block px-4 py-3 rounded-xl text-sm font-medium text-charcoal hover:bg-stone-50 transition-colors"
+                                    >
+                                        {link.name}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.header>
     );
 }
