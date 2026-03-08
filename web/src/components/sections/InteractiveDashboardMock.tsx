@@ -40,38 +40,40 @@ export function InteractiveDashboardMock() {
     const activeGarment = GARMENTS[activeIndex];
 
     return (
-        <div className="w-full h-full flex flex-col lg:flex-row gap-8 p-6 lg:p-12 items-center justify-center">
+        <div className="w-full h-full flex flex-col lg:flex-row gap-8 lg:gap-16 p-6 lg:p-12 items-center justify-center">
 
             {/* The Left Column (Menu) */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-3 justify-center">
-                <span className="font-mono text-[10px] uppercase tracking-widest text-charcoal/40 mb-2 pl-4">Select Item</span>
+            <div className="w-full lg:w-1/3 flex flex-col gap-2 justify-center pl-0 lg:pl-4">
+                <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-charcoal/40 mb-4 pl-4 font-semibold">Select Item</span>
                 {GARMENTS.map((garment, idx) => (
                     <button
                         key={garment.name}
                         onClick={() => setActiveIndex(idx)}
                         className={cn(
-                            "text-left px-5 py-3.5 rounded-full font-sans text-sm font-medium transition-all duration-300 flex items-center gap-4 w-full md:w-fit",
+                            "text-left px-5 py-4 rounded-full font-sans text-[13px] font-semibold transition-all duration-300 flex items-center gap-4 w-full cursor-pointer",
                             activeIndex === idx
-                                ? "bg-white text-charcoal shadow-sm border border-charcoal/10"
-                                : "text-charcoal/50 hover:text-charcoal hover:bg-white/40"
+                                ? "bg-white text-charcoal shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] border border-charcoal/5"
+                                : "text-charcoal/40 hover:text-charcoal pt-[17px] pb-[15px]" // Visual balancing
                         )}
                     >
-                        <div className={cn(
-                            "w-2.5 h-2.5 rounded-full transition-colors duration-300 shrink-0",
-                            activeIndex === idx ? "bg-charcoal" : "bg-transparent border-[1.5px] border-charcoal/30"
-                        )} />
+                        <div className="bg-transparent flex items-center justify-center relative w-3 h-3 shrink-0">
+                            {activeIndex === idx && (
+                                <motion.div layoutId="active-dot" className="w-[7px] h-[7px] bg-charcoal rounded-full absolute" />
+                            )}
+                            <div className={cn("w-3 h-3 rounded-full border-[1.5px] transition-colors duration-300 absolute", activeIndex === idx ? "border-transparent" : "border-charcoal/20")} />
+                        </div>
                         {garment.name}
                     </button>
                 ))}
             </div>
 
             {/* The Right Column (Widgets) */}
-            <div className="w-full lg:w-2/3 flex flex-col gap-6 justify-center max-w-[500px] lg:max-w-none">
+            <div className="w-full lg:w-2/3 flex flex-col gap-6 justify-center max-w-[450px]">
 
                 {/* Top Widget: Gauge */}
                 <motion.div
                     layoutId="gauge-card"
-                    className="w-full rounded-[2rem] bg-[#FDFCF8] shadow-sm border border-charcoal/5 overflow-hidden"
+                    className="w-full rounded-[2rem] bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.04)] border border-charcoal/[0.04] overflow-hidden"
                 >
                     <GaugeWidget score={activeGarment.score} trendFeed={activeGarment.trendFeed} />
                 </motion.div>
@@ -79,7 +81,7 @@ export function InteractiveDashboardMock() {
                 {/* Bottom Widget: Fiber Bar */}
                 <motion.div
                     layoutId="fiberbar-card"
-                    className="w-full rounded-[1.5rem] bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.08)] border border-charcoal/5 overflow-hidden"
+                    className="w-full rounded-[1.5rem] bg-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.04)] border border-charcoal/[0.04] overflow-hidden"
                 >
                     <FiberBarWidget garment={activeGarment} />
                 </motion.div>

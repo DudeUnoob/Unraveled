@@ -1,42 +1,44 @@
 "use client";
-
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "@phosphor-icons/react";
-import { MagneticButton } from "@/components/ui/MagneticButton";
+import { ArrowRight } from "@phosphor-icons/react";
 
 export function SecondaryBanner() {
     return (
-        <section className="w-full bg-[#f6f5f1] pb-24 md:pb-32 px-4 md:px-12 lg:px-24 flex justify-center">
+        <section className="w-full relative py-32 md:py-48 flex justify-center text-cream overflow-hidden">
+            {/* Background Color & Texture */}
+            <div className="absolute inset-0 bg-[#658896] z-0" /> {/* Using the Duna blue/sage tone */}
+            <div className="absolute inset-0 opacity-40 mix-blend-multiply texture-woven z-0 pointer-events-none" />
+            <div className="absolute inset-0 opacity-[0.15] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0 pointer-events-none mix-blend-overlay" />
 
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-[1200px] bg-sage rounded-[2rem] md:rounded-[3rem] p-12 md:p-24 flex flex-col items-center justify-center text-center relative overflow-hidden"
+                className="w-full max-w-[800px] px-6 flex flex-col items-center justify-center text-center relative z-10"
             >
-                {/* Subtle texture overlay for premium feel */}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
-
-                <div className="bg-charcoal/10 border border-charcoal/20 backdrop-blur-sm px-4 py-1.5 rounded-full mb-8 font-mono text-xs uppercase tracking-widest text-charcoal/80 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-charcoal"></span>
-                    Extension
+                {/* Pill */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full mb-6 font-sans text-[11px] font-semibold text-white flex items-center gap-2 shadow-sm">
+                    <div className="w-1.5 h-1.5 bg-[#D4F170] rounded-[1px]"></div>
+                    Artificial Intelligence
                 </div>
 
-                <h2 className="font-sans font-medium text-4xl md:text-5xl lg:text-[4rem] leading-tight text-charcoal max-w-2xl mb-12 tracking-tight">
+                {/* Headline */}
+                <h2 className="font-sans font-medium text-[2.5rem] md:text-[3.5rem] leading-[1.1] text-white mb-6 tracking-tight drop-shadow-sm">
                     Intelligence built for conscious consumers.
                 </h2>
 
-                <MagneticButton
-                    strength={0.2}
-                    className="group px-8 py-4 bg-charcoal text-cream rounded-[1.5rem] font-sans font-semibold text-lg hover:text-white inline-flex items-center transition-colors shadow-lg shadow-charcoal/20"
-                >
-                    <span>Install for Chrome</span>
-                    <ArrowUpRight weight="bold" className="w-5 h-5 ml-2 transition-transform group-hover:-translate-y-1 group-hover:translate-x-1" />
-                </MagneticButton>
+                {/* Subheadline */}
+                <p className="font-sans text-[15px] md:text-[17px] text-white/80 max-w-[600px] leading-relaxed mb-10 text-center">
+                    Unravel's AI engine multiplies your conscious choices, not your budget. Accelerate brand discovery, track real garment lifespans, and uncover automated transparency.
+                </p>
 
+                {/* CTA */}
+                <button className="px-6 py-2.5 bg-white text-charcoal rounded-full font-sans font-semibold text-[13px] flex items-center gap-2 hover:scale-105 transition-transform shadow-lg">
+                    Discover Unravel AI
+                    <ArrowRight weight="bold" className="w-3.5 h-3.5" />
+                </button>
             </motion.div>
-
         </section>
     );
 }
