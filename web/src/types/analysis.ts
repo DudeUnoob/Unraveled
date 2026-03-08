@@ -49,6 +49,13 @@ export interface TrendAnalysisResponse {
     shareable_url: string | null;
 }
 
+export interface ImageAnalysisResponse {
+  style_description: string;
+  category: string;
+  keywords: string[];
+  suggested_query: string;
+}
+
 export type AnalysisState = "idle" | "loading" | "success" | "error";
 
 export interface AnalysisStore {

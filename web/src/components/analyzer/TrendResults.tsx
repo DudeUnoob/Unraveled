@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import type { TrendAnalysisResponse } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
 import { DecayCurveChart } from "./DecayCurveChart";
+import { ShareButton } from "./ShareButton";
+import { AlternativesSection } from "./AlternativesSection";
 import { TrendUp, Clock, ChartLine } from "@phosphor-icons/react";
 
 interface TrendResultsProps {
@@ -79,15 +81,20 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                             <ChartLine weight="duotone" className="w-6 h-6" style={{ color: phaseColor }} />
                         )}
                     </div>
-                    <div>
-                        <h2 className="font-sans text-xl font-semibold text-charcoal mb-1 tracking-tight">
-                            <span className="capitalize">{data.query_normalized}</span>
-                            <span className="mx-2 text-charcoal/20">/</span>
-                            <span style={{ color: phaseColor }}>{data.trend_lifespan.label}</span>
-                        </h2>
-                        <p className="font-sans text-sm text-charcoal/50 leading-relaxed max-w-lg">
-                            {verdict}
-                        </p>
+                    <div className="flex-1">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="font-sans text-xl font-semibold text-charcoal mb-1 tracking-tight">
+                                    <span className="capitalize">{data.query_normalized}</span>
+                                    <span className="mx-2 text-charcoal/20">/</span>
+                                    <span style={{ color: phaseColor }}>{data.trend_lifespan.label}</span>
+                                </h2>
+                                <p className="font-sans text-sm text-charcoal/50 leading-relaxed max-w-lg">
+                                    {verdict}
+                                </p>
+                            </div>
+                            <ShareButton shareableUrl={data.shareable_url} />
+                        </div>
                     </div>
                 </div>
             </motion.div>
@@ -141,6 +148,20 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                         </div>
                     ))}
                 </div>
+            </motion.div>
+
+            {/* Sustainable Alternatives */}
+            <motion.div
+                custom={4}
+                initial="hidden"
+                animate="visible"
+                variants={sectionVariants}
+                className="mt-10 pt-10 border-t border-charcoal/[0.06]"
+            >
+                <AlternativesSection
+                    query={data.query_normalized}
+                    trendLabel={data.trend_lifespan.label}
+                />
             </motion.div>
         </div>
     );

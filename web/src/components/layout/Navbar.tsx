@@ -9,6 +9,7 @@ import Link from "next/link";
 
 const navLinks = [
     { name: "Analyze", href: "/analyze" },
+    { name: "Gallery", href: "/gallery" },
     { name: "Platform", href: "#platform" },
     { name: "Methodology", href: "#methodology" },
     { name: "Brands", href: "#brands" },
