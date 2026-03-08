@@ -2,7 +2,7 @@
 
 import { memo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import type { TrendAnalysisResponse } from "@/types/analysis";
+import type { TrendAnalysisResponse, ExtensionData, CpwData } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
 import { DecayCurveChart } from "./DecayCurveChart";
 import { ShareButton } from "./ShareButton";
@@ -13,6 +13,8 @@ import { useSavedAnalyses } from "@/hooks/useSavedAnalyses";
 
 interface TrendResultsProps {
     data: TrendAnalysisResponse;
+    extensionData?: ExtensionData | null;
+    price?: number;
 }
 
 function getPhaseColor(label: string): string {
@@ -40,6 +42,22 @@ function getPhaseVerdict(label: string, weeksRemaining: number): string {
     }
 }
 
+// PRD §6.4: CPW = price / min(standard_wears, wears_before_trend_death)
+// wears_before_trend_death = wears_per_week × weeks_remaining
+const WEARS_PER_WEEK = 2;       // PRD default assumption
+const STANDARD_WEARS = 60;      // fiber durability estimate (PRD example)
+
+function computeWears(weeksRemaining: number, trendLabel: string): { standard: number; adjusted: number } {
+    const wearsBeforeDeath = WEARS_PER_WEEK * weeksRemaining;
+    const adjusted = trendLabel === "Timeless"
+        ? STANDARD_WEARS                                    // no penalty for timeless
+        : Math.min(STANDARD_WEARS, Math.max(1, wearsBeforeDeath)); // capped by trend lifespan
+    return {
+        standard: STANDARD_WEARS,
+        adjusted,
+    };
+}
+
 const sectionVariants = {
     hidden: { opacity: 0, y: 24 },
     visible: (i: number) => ({
@@ -53,12 +71,61 @@ const sectionVariants = {
     }),
 };
 
-export const TrendResults = memo(function TrendResults({ data }: TrendResultsProps) {
+export const TrendResults = memo(function TrendResults({
+    data,
+    extensionData,
+    price,
+}: TrendResultsProps) {
     const phaseColor = getPhaseColor(data.trend_lifespan.label);
     const verdict = getPhaseVerdict(
         data.trend_lifespan.label,
         data.trend_lifespan.weeks_remaining
     );
+    const [copied, setCopied] = useState(false);
+
+    // Build CPW data if price is available
+    const effectivePrice = price ?? extensionData?.price ?? null;
+    let cpwData: CpwData | null = null;
+
+    if (effectivePrice && effectivePrice > 0) {
+        const wears = computeWears(data.trend_lifespan.weeks_remaining, data.trend_lifespan.label);
+
+        // Use extension CPW if available, otherwise compute
+        if (extensionData?.cpw && extensionData.cpw > 0) {
+            cpwData = {
+                price: effectivePrice,
+                currency: extensionData.currency || "USD",
+                standardCpw: extensionData.cpw,
+                standardWears: wears.standard,
+                trendAdjustedCpw: extensionData.cpwAdjusted || extensionData.cpw,
+                trendAdjustedWears: wears.adjusted,
+                trendLabel: data.trend_lifespan.label,
+            };
+        } else {
+            cpwData = {
+                price: effectivePrice,
+                currency: extensionData?.currency || "USD",
+                standardCpw: Math.round((effectivePrice / wears.standard) * 100) / 100,
+                standardWears: wears.standard,
+                trendAdjustedCpw: Math.round((effectivePrice / wears.adjusted) * 100) / 100,
+                trendAdjustedWears: wears.adjusted,
+                trendLabel: data.trend_lifespan.label,
+            };
+        }
+    }
+
+    const handleCopyLink = async () => {
+        const url = data.shareable_url || window.location.href;
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // fallback
+        }
+    };
+
+    let sectionIndex = 0;
 
     const { user } = useUser();
     const { isSaved, save, unsave } = useSavedAnalyses();
@@ -84,9 +151,21 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
 
     return (
         <div className="w-full">
+            {/* Extension Banner */}
+            {extensionData && (
+                <motion.div
+                    custom={sectionIndex++}
+                    initial="hidden"
+                    animate="visible"
+                    variants={sectionVariants}
+                >
+                    <ExtensionDataBanner extensionData={extensionData} />
+                </motion.div>
+            )}
+
             {/* Verdict Banner */}
             <motion.div
-                custom={0}
+                custom={sectionIndex++}
                 initial="hidden"
                 animate="visible"
                 variants={sectionVariants}
@@ -138,9 +217,9 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                 </div>
             </motion.div>
 
-            {/* Trend Lifespan Bar */}
+            {/* W-1.5: Trend Lifespan Bar */}
             <motion.div
-                custom={1}
+                custom={sectionIndex++}
                 initial="hidden"
                 animate="visible"
                 variants={sectionVariants}
@@ -149,9 +228,9 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                 <TrendLifespanBar lifespan={data.trend_lifespan} />
             </motion.div>
 
-            {/* Decay Curve Chart */}
+            {/* W-1.8: Decay Curve Chart */}
             <motion.div
-                custom={2}
+                custom={sectionIndex++}
                 initial="hidden"
                 animate="visible"
                 variants={sectionVariants}
@@ -160,12 +239,52 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                 <DecayCurveChart curve={data.trend_curve} phaseColor={phaseColor} />
             </motion.div>
 
+            {/* W-1.6: CPW Projection */}
+            {cpwData && (
+                <motion.div
+                    custom={sectionIndex++}
+                    initial="hidden"
+                    animate="visible"
+                    variants={sectionVariants}
+                    className="mb-10 pb-10 border-b border-charcoal/[0.06]"
+                >
+                    <CpwProjection cpw={cpwData} />
+                </motion.div>
+            )}
+
+            {/* W-1.7: Comparison Callout */}
+            {cpwData && (
+                <motion.div
+                    custom={sectionIndex++}
+                    initial="hidden"
+                    animate="visible"
+                    variants={sectionVariants}
+                    className="mb-10 pb-10 border-b border-charcoal/[0.06]"
+                >
+                    <ComparisonCallout cpw={cpwData} query={data.query_normalized} />
+                </motion.div>
+            )}
+
+            {/* W-1.10: Sustainability Score Display */}
+            {extensionData && extensionData.sustainabilityScore > 0 && (
+                <motion.div
+                    custom={sectionIndex++}
+                    initial="hidden"
+                    animate="visible"
+                    variants={sectionVariants}
+                    className="mb-10 pb-10 border-b border-charcoal/[0.06]"
+                >
+                    <SustainabilityScore extensionData={extensionData} />
+                </motion.div>
+            )}
+
             {/* Model Details */}
             <motion.div
-                custom={3}
+                custom={sectionIndex++}
                 initial="hidden"
                 animate="visible"
                 variants={sectionVariants}
+                className="mb-10 pb-10 border-b border-charcoal/[0.06]"
             >
                 <h3 className="font-sans text-sm font-semibold text-charcoal/60 uppercase tracking-widest mb-4">
                     Decay model parameters
@@ -174,8 +293,8 @@ export const TrendResults = memo(function TrendResults({ data }: TrendResultsPro
                     {[
                         { label: "Peak (K)", value: data.decay_params.K.toFixed(0) },
                         { label: "Growth rate", value: data.decay_params.r.toFixed(3) },
-                        { label: "Decay rate (\u03BB)", value: data.decay_params.lambda.toFixed(3) },
-                        { label: "R\u00B2 fit", value: `${(data.decay_params.r_squared * 100).toFixed(1)}%` },
+                        { label: "Decay rate (λ)", value: data.decay_params.lambda.toFixed(3) },
+                        { label: "R² fit", value: `${(data.decay_params.r_squared * 100).toFixed(1)}%` },
                     ].map((param) => (
                         <div key={param.label}>
                             <span className="block font-mono text-[10px] text-charcoal/35 uppercase tracking-wider mb-1">

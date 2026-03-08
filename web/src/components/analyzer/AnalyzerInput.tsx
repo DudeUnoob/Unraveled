@@ -11,6 +11,7 @@ interface AnalyzerInputProps {
     isLoading: boolean;
     error: string | null;
     initialQuery?: string;
+    initialPrice?: number;
     autoTrigger?: boolean;
 }
 
@@ -22,10 +23,13 @@ export function AnalyzerInput({
     isLoading,
     error,
     initialQuery = "",
+    initialPrice,
     autoTrigger = false,
 }: AnalyzerInputProps) {
     const [query, setQuery] = useState(initialQuery);
     const [inputMode, setInputMode] = useState<InputMode>("text");
+    const [price, setPrice] = useState<string>(initialPrice ? String(initialPrice) : "");
+    const [showPrice, setShowPrice] = useState(Boolean(initialPrice));
     const inputRef = useRef<HTMLInputElement>(null);
     const hasAutoTriggered = useRef(false);
 
@@ -36,16 +40,25 @@ export function AnalyzerInput({
     }, [initialQuery]);
 
     useEffect(() => {
+        if (initialPrice) {
+            setPrice(String(initialPrice));
+            setShowPrice(true);
+        }
+    }, [initialPrice]);
+
+    useEffect(() => {
         if (autoTrigger && initialQuery && !hasAutoTriggered.current) {
             hasAutoTriggered.current = true;
-            onAnalyze(initialQuery, "text");
+            const p = initialPrice || (price ? parseFloat(price) : undefined);
+            onAnalyze(initialQuery, "text", p);
         }
-    }, [autoTrigger, initialQuery, onAnalyze]);
+    }, [autoTrigger, initialQuery, initialPrice, onAnalyze, price]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!query.trim() || isLoading) return;
-        onAnalyze(query.trim(), inputMode);
+        const p = price ? parseFloat(price) : undefined;
+        onAnalyze(query.trim(), inputMode, p && p > 0 ? p : undefined);
     };
 
     const placeholders: Record<InputMode, string> = {
@@ -62,8 +75,8 @@ export function AnalyzerInput({
                     type="button"
                     onClick={() => setInputMode("text")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-xs font-medium transition-all duration-200 ${inputMode === "text"
-                            ? "bg-charcoal text-cream"
-                            : "text-charcoal/50 hover:text-charcoal/80"
+                        ? "bg-charcoal text-cream"
+                        : "text-charcoal/50 hover:text-charcoal/80"
                         }`}
                 >
                     <MagnifyingGlass weight="bold" className="w-3.5 h-3.5" />
@@ -73,8 +86,8 @@ export function AnalyzerInput({
                     type="button"
                     onClick={() => setInputMode("url")}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-xs font-medium transition-all duration-200 ${inputMode === "url"
-                            ? "bg-charcoal text-cream"
-                            : "text-charcoal/50 hover:text-charcoal/80"
+                        ? "bg-charcoal text-cream"
+                        : "text-charcoal/50 hover:text-charcoal/80"
                         }`}
                 >
                     <LinkSimple weight="bold" className="w-3.5 h-3.5" />

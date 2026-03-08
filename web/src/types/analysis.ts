@@ -44,6 +44,7 @@ export interface TrendAnalysisResponse {
             available: boolean;
             last_updated: string;
             from_cache: boolean;
+            note?: string;
         };
     };
     shareable_url: string | null;
@@ -63,4 +64,35 @@ export interface AnalysisStore {
     data: TrendAnalysisResponse | null;
     error: string | null;
     query: string;
+}
+
+// Extension deep-link data (parsed from URL query params)
+export interface ExtensionData {
+    productName: string;
+    productUrl: string;
+    brand: string;
+    price: number | null;
+    currency: string;
+    sustainabilityScore: number;
+    sustainabilityGrade: string;
+    trendLabel: string;
+    trendLifespanWeeks: number;
+    cpw: number;
+    cpwAdjusted: number;
+    healthLabel: string;
+    // W-1.10: detailed breakdown text
+    fiberComposition: string;       // e.g. "55% Linen · 30% Cotton · 15% Polyester"
+    brandRatingSources: string;     // e.g. "Good On You: 3/5 · FTI: 42% · Not B-Corp"
+    fiberDurabilityWears: number;   // e.g. 45
+}
+
+// CPW analysis data (computed client-side or from extension)
+export interface CpwData {
+    price: number;
+    currency: string;
+    standardCpw: number;
+    standardWears: number;
+    trendAdjustedCpw: number;
+    trendAdjustedWears: number;
+    trendLabel: string;
 }
