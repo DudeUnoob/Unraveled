@@ -96,6 +96,7 @@ function AnalyzerContent() {
                     >
                         <AnalyzerInput
                             onAnalyze={analyze}
+                            onImageAnalyzed={(query) => analyze(query, "image")}
                             isLoading={state === "loading"}
                             error={error}
                             initialQuery={initialQuery}

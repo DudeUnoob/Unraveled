@@ -1,16 +1,15 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import type { TrendAnalysisResponse, ExtensionData, CpwData } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
 import { DecayCurveChart } from "./DecayCurveChart";
-import { CpwProjection } from "./CpwProjection";
-import { ComparisonCallout } from "./ComparisonCallout";
-import { SustainabilityScore } from "./SustainabilityScore";
-import { ExtensionDataBanner } from "./ExtensionDataBanner";
-import { TrendUp, Clock, ChartLine, ShareNetwork, PuzzlePiece, LinkSimple, Check } from "@phosphor-icons/react";
-import { useState } from "react";
+import { ShareButton } from "./ShareButton";
+import { AlternativesSection } from "./AlternativesSection";
+import { TrendUp, Clock, ChartLine, BookmarkSimple } from "@phosphor-icons/react";
+import { useUser } from "@/hooks/useUser";
+import { useSavedAnalyses } from "@/hooks/useSavedAnalyses";
 
 interface TrendResultsProps {
     data: TrendAnalysisResponse;
@@ -128,6 +127,28 @@ export const TrendResults = memo(function TrendResults({
 
     let sectionIndex = 0;
 
+    const { user } = useUser();
+    const { isSaved, save, unsave } = useSavedAnalyses();
+    const [bookmarked, setBookmarked] = useState(false);
+
+    useEffect(() => {
+        setBookmarked(isSaved(data.analysis_id));
+    }, [isSaved, data.analysis_id]);
+
+    const handleBookmark = async () => {
+        if (bookmarked) {
+            const ok = await unsave(data.analysis_id);
+            if (ok) setBookmarked(false);
+        } else {
+            const ok = await save(
+                data.analysis_id,
+                data.query_normalized,
+                data.trend_lifespan.label,
+            );
+            if (ok) setBookmarked(true);
+        }
+    };
+
     return (
         <div className="w-full">
             {/* Extension Banner */}
@@ -163,15 +184,35 @@ export const TrendResults = memo(function TrendResults({
                             <ChartLine weight="duotone" className="w-6 h-6" style={{ color: phaseColor }} />
                         )}
                     </div>
-                    <div>
-                        <h2 className="font-sans text-xl font-semibold text-charcoal mb-1 tracking-tight">
-                            <span className="capitalize">{data.query_normalized}</span>
-                            <span className="mx-2 text-charcoal/20">/</span>
-                            <span style={{ color: phaseColor }}>{data.trend_lifespan.label}</span>
-                        </h2>
-                        <p className="font-sans text-sm text-charcoal/50 leading-relaxed max-w-lg">
-                            {verdict}
-                        </p>
+                    <div className="flex-1">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="font-sans text-xl font-semibold text-charcoal mb-1 tracking-tight">
+                                    <span className="capitalize">{data.query_normalized}</span>
+                                    <span className="mx-2 text-charcoal/20">/</span>
+                                    <span style={{ color: phaseColor }}>{data.trend_lifespan.label}</span>
+                                </h2>
+                                <p className="font-sans text-sm text-charcoal/50 leading-relaxed max-w-lg">
+                                    {verdict}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                                {user && (
+                                    <motion.button
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={handleBookmark}
+                                        title={bookmarked ? "Remove from saved" : "Save to collection"}
+                                        className="p-2 rounded-full hover:bg-stone-100 transition-colors"
+                                    >
+                                        <BookmarkSimple
+                                            weight={bookmarked ? "fill" : "regular"}
+                                            className={`w-5 h-5 transition-colors ${bookmarked ? "text-charcoal" : "text-charcoal/40"}`}
+                                        />
+                                    </motion.button>
+                                )}
+                                <ShareButton shareableUrl={data.shareable_url} />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </motion.div>
@@ -267,54 +308,18 @@ export const TrendResults = memo(function TrendResults({
                 </div>
             </motion.div>
 
-            {/* Share + CTA */}
+            {/* Sustainable Alternatives */}
             <motion.div
-                custom={sectionIndex++}
+                custom={4}
                 initial="hidden"
                 animate="visible"
                 variants={sectionVariants}
-                className="flex flex-col sm:flex-row items-center gap-3"
+                className="mt-10 pt-10 border-t border-charcoal/[0.06]"
             >
-                <button
-                    onClick={handleCopyLink}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-charcoal text-cream rounded-xl font-sans text-sm font-medium hover:bg-forest transition-colors"
-                >
-                    {copied ? (
-                        <>
-                            <Check weight="bold" className="w-4 h-4" />
-                            Copied!
-                        </>
-                    ) : (
-                        <>
-                            <ShareNetwork weight="bold" className="w-4 h-4" />
-                            Share this analysis
-                        </>
-                    )}
-                </button>
-
-                {!extensionData && (
-                    <a
-                        href="https://chromewebstore.google.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-5 py-2.5 border border-charcoal/10 text-charcoal/60 rounded-xl font-sans text-sm font-medium hover:border-charcoal/25 hover:text-charcoal transition-colors"
-                    >
-                        <PuzzlePiece weight="duotone" className="w-4 h-4" />
-                        Get the Chrome Extension
-                    </a>
-                )}
-
-                {data.shareable_url && (
-                    <a
-                        href={data.shareable_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-5 py-2.5 border border-charcoal/10 text-charcoal/60 rounded-xl font-sans text-sm font-medium hover:border-charcoal/25 hover:text-charcoal transition-colors"
-                    >
-                        <LinkSimple weight="duotone" className="w-4 h-4" />
-                        Permalink
-                    </a>
-                )}
+                <AlternativesSection
+                    query={data.query_normalized}
+                    trendLabel={data.trend_lifespan.label}
+                />
             </motion.div>
         </div>
     );
