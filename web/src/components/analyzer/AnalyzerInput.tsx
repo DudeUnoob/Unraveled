@@ -6,7 +6,7 @@ import { MagnifyingGlass, LinkSimple, ImageSquare, ArrowRight, Warning } from "@
 import { ImageUploadDropzone } from "./ImageUploadDropzone";
 
 interface AnalyzerInputProps {
-    onAnalyze: (query: string, inputType: string) => void;
+    onAnalyze: (query: string, inputType: string, price?: number) => void;
     onImageAnalyzed?: (query: string) => void;
     isLoading: boolean;
     error: string | null;
