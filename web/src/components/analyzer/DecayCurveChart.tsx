@@ -12,11 +12,12 @@ import {
     ReferenceLine,
     ResponsiveContainer,
 } from "recharts";
-import type { CurveDataPoint, TrendCurve } from "@/types/analysis";
+import type { CurveDataPoint, TrendCurve, TrendAnalysisResponse } from "@/types/analysis";
 
 interface DecayCurveChartProps {
     curve: TrendCurve;
     phaseColor: string;
+    data_sources?: TrendAnalysisResponse["data_sources"];
 }
 
 function CustomTooltip({
@@ -51,6 +52,7 @@ function CustomTooltip({
 export const DecayCurveChart = memo(function DecayCurveChart({
     curve,
     phaseColor,
+    data_sources,
 }: DecayCurveChartProps) {
     const [isVisible, setIsVisible] = useState(false);
 
@@ -235,7 +237,11 @@ export const DecayCurveChart = memo(function DecayCurveChart({
             {/* Source Attribution */}
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-charcoal/[0.06]">
                 <span className="font-mono text-[9px] text-charcoal/30 uppercase tracking-wider">
-                    Data: Google Trends via SerpAPI
+                    Data: {[
+                        "Google Trends",
+                        ...(data_sources?.tiktok?.available ? ["TikTok"] : []),
+                        ...(data_sources?.pinterest?.available ? ["Pinterest"] : []),
+                    ].join(" + ")}
                 </span>
                 <span className="text-charcoal/15">|</span>
                 <span className="font-mono text-[9px] text-charcoal/30 uppercase tracking-wider">
