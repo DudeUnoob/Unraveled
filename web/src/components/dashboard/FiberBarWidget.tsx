@@ -37,11 +37,11 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
         window.requestAnimationFrame(step);
     }, [garment.score]);
 
-    // Interpolate score color (Rust for low, Forest for high)
-    const scoreColor = garment.score < 40 ? "text-rust" : garment.score < 70 ? "text-sage" : "text-forest";
+    // Interpolate score color (Rust for low, Sage for mid, Forest for high)
+    const scoreColor = garment.score < 40 ? "text-[#C84B31]" : garment.score < 70 ? "text-[#899A8B]" : "text-[#4A6741]";
 
     return (
-        <div className="flex flex-col h-full bg-transparent pt-8 pb-8 px-6 md:px-10">
+        <div className="flex flex-col h-full bg-transparent pt-8 pb-8 px-8 md:px-12">
 
             {/* Garment Label Crossfade */}
             <div className="h-8 relative mb-6">
@@ -52,7 +52,7 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.3 }}
-                        className="absolute inset-0 font-sans font-medium text-lg text-charcoal"
+                        className="absolute inset-0 font-sans font-medium text-[16px] text-charcoal"
                     >
                         {garment.name}
                     </motion.h3>
@@ -60,11 +60,11 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
             </div>
 
             {/* Fiber Stack Bar */}
-            <div className="w-full h-8 flex rounded-sm overflow-hidden mb-8 bg-linen/50 relative">
+            <div className="w-full h-8 flex rounded-[4px] overflow-hidden mb-8 bg-[#EAE8E3] relative">
                 <AnimatePresence mode="popLayout">
                     {garment.fibers.map((fiber, i) => (
                         <motion.div
-                            key={`${garment.name}-${fiber.name}`} // Force recreate on new garment
+                            key={`${garment.name}-${fiber.name}`}
                             initial={{ width: 0, opacity: 0 }}
                             animate={{ width: `${fiber.percent}%`, opacity: 1 }}
                             exit={{ width: 0, opacity: 0 }}
@@ -74,10 +74,10 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
                                 damping: 15,
                                 delay: i * 0.05
                             }}
-                            className={cn("h-full relative group cursor-crosshair border-r border-[#f6f5f1] last:border-r-0", fiber.color)}
+                            className={cn("h-full relative group cursor-crosshair border-r border-white/20 last:border-r-0", fiber.color)}
                         >
                             {/* Custom Tooltip */}
-                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-charcoal text-cream text-[10px] font-mono px-2 py-1 rounded pointer-events-none whitespace-nowrap z-10">
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-[#1C1C1C] text-[#F6F5F1] text-[10px] font-mono px-2 py-1 rounded-[2px] pointer-events-none whitespace-nowrap z-10 shadow-sm">
                                 {fiber.percent}% {fiber.name}
                             </div>
                         </motion.div>
@@ -87,14 +87,14 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
 
             {/* Score Output */}
             <div className="mt-auto">
-                <p className="font-mono text-xs text-charcoal/50 uppercase tracking-widest mb-1">
+                <p className="font-mono text-[10px] text-charcoal/50 uppercase tracking-[0.2em] mb-2 font-semibold">
                     Fiber Score
                 </p>
                 <div className="flex items-baseline gap-2">
-                    <span className={cn("font-mono text-5xl md:text-6xl font-light tracking-tighter transition-colors duration-500", scoreColor)}>
+                    <span className={cn("font-mono text-[4rem] font-light leading-none tracking-tighter transition-colors duration-500", scoreColor)}>
                         {animatedScore}
                     </span>
-                    <span className="font-mono text-xl text-charcoal/30">/100</span>
+                    <span className="font-mono text-xl text-charcoal/30 font-light">/100</span>
                 </div>
             </div>
 

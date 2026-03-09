@@ -27,21 +27,20 @@ const newsItems = [
 export function NewsSection() {
     return (
         <section className="w-full bg-[#f6f5f1] pt-24 pb-32 flex justify-center border-t border-charcoal/5 pointer-events-auto">
-            <div className="w-full max-w-[1200px] px-6 lg:px-0">
+            <div className="w-full max-w-[1000px] mx-auto px-4 lg:px-0">
 
                 {/* Header */}
-                <div className="flex justify-between items-end mb-16">
-                    <h2 className="font-sans font-medium text-4xl lg:text-5xl text-charcoal tracking-tight">
-                        Editorial
+                <div className="flex justify-between items-end mb-12">
+                    <h2 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624]">
+                        News
                     </h2>
-                    <button className="hidden md:flex items-center gap-2 text-charcoal hover:text-rust font-sans text-sm font-semibold transition-colors group">
+                    <button className="hidden md:flex items-center gap-1.5 font-sans text-[13px] font-semibold text-charcoal transition-colors hover:text-charcoal/70">
                         See more
-                        <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </button>
                 </div>
 
                 {/* Cards Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                     {newsItems.map((item, i) => (
                         <motion.div
                             key={i}
@@ -52,23 +51,23 @@ export function NewsSection() {
                             className="flex flex-col group cursor-pointer"
                         >
                             {/* Image Container */}
-                            <div className="w-full aspect-[4/3] rounded-[1.5rem] overflow-hidden bg-charcoal/5 mb-6 relative">
-                                <div className="absolute inset-0 bg-charcoal/20 group-hover:bg-transparent transition-colors duration-500 z-10" />
+                            <div className="w-full aspect-[4/3] rounded-[4px] overflow-hidden bg-charcoal/5 mb-5 relative">
+                                <div className="absolute inset-0 bg-charcoal/10 group-hover:bg-transparent transition-colors duration-500 z-10" />
                                 <img
                                     src={item.image}
                                     alt={item.title}
-                                    className="w-full h-full object-cover scale-105 group-hover:scale-100 transition-transform duration-700 ease-out grayscale-[0.5] group-hover:grayscale-0"
+                                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
                                 />
                             </div>
 
                             {/* Content */}
-                            <h3 className="font-sans font-medium text-lg leading-snug text-charcoal mb-4 group-hover:text-rust transition-colors">
+                            <h3 className="font-sans font-medium text-[16px] leading-[1.35] text-charcoal mb-4">
                                 {item.title}
                             </h3>
 
-                            <div className="flex items-center gap-2 font-mono text-xs tracking-wider uppercase text-charcoal/50 mt-auto">
+                            <div className="flex items-center gap-2 font-mono text-[10px] tracking-wider uppercase text-charcoal/40 mt-auto">
                                 <span>{item.category}</span>
-                                <span className="w-4 border-t border-charcoal/30"></span>
+                                <span className="w-3 border-t border-charcoal/20"></span>
                                 <span>{item.readTime}</span>
                             </div>
                         </motion.div>
@@ -76,9 +75,8 @@ export function NewsSection() {
                 </div>
 
                 <div className="mt-12 flex justify-center md:hidden">
-                    <button className="flex items-center gap-2 text-charcoal hover:text-rust font-sans text-sm font-semibold transition-colors group">
+                    <button className="flex items-center gap-1.5 font-sans text-[13px] font-semibold text-charcoal transition-colors hover:text-charcoal/70">
                         See more
-                        <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                     </button>
                 </div>
 

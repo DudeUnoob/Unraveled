@@ -43,23 +43,21 @@ export function HeroSection() {
                 <img
                     src="/background_2.avif"
                     alt="Pastoral oil painting landscape"
-                    className="hero-bg w-full h-[120%] object-cover scale-105"
+                    className="hero-bg w-full h-[120%] object-cover scale-105 origin-top"
                 />
-                {/* Dark overlay for text legibility */}
-                <div className="absolute inset-0 bg-charcoal/30 z-[5]" />
-                {/* Fade to base color at the bottom to blend into the next section */}
-                <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#f6f5f1] to-transparent z-10" />
+                {/* Fade to base color starting higher up to make text legible */}
+                <div className="absolute inset-x-0 bottom-0 h-[60vh] bg-gradient-to-t from-[#f6f5f1] via-[#f6f5f1]/90 to-transparent z-10" />
             </div>
 
             {/* Duna-inspired Centered Content */}
-            <div ref={contentRef} className="relative z-20 max-w-4xl mx-auto text-center flex flex-col items-center mt-24">
+            <div ref={contentRef} className="relative z-20 max-w-[1000px] w-full px-4 mx-auto flex flex-col items-center mt-[15vh] md:mt-[25vh]">
 
                 {/* Pill Update Badge */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex items-center gap-2 bg-charcoal/40 backdrop-blur-md border border-white/20 text-cream px-4 py-1.5 rounded-full font-sans text-xs font-medium mb-8 cursor-pointer hover:bg-charcoal/60 transition-colors"
+                    className="flex items-center gap-2 bg-charcoal/60 backdrop-blur-md border border-white/10 text-cream px-4 py-1.5 rounded-full font-sans text-[13px] font-medium mb-6 cursor-pointer hover:bg-charcoal/80 transition-colors shadow-sm"
                 >
                     <span>Unravel Engine v2.0 Live</span>
                     <ArrowRight weight="bold" className="w-3 h-3" />
@@ -70,8 +68,8 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-[3.5rem] sm:text-[5rem] md:text-[6.5rem] leading-[0.95] tracking-tight text-cream mb-6 drop-shadow-xl"
-                    style={{ fontWeight: 500 }}
+                    className="font-sans text-[2.75rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem] leading-[1] tracking-[-0.06em] text-charcoal mb-8 text-center"
+                    style={{ fontWeight: 400 }}
                 >
                     The new standard<br />in material truth
                 </motion.h1>
@@ -81,7 +79,7 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-lg md:text-xl text-cream/90 max-w-2xl leading-relaxed mb-10 drop-shadow-md"
+                    className="font-sans text-[1.15rem] md:text-[1.35rem] text-charcoal/60 max-w-[640px] leading-[1.4] mb-12 tracking-tight text-center"
                 >
                     Meet the data-native platform that accelerates ethical sourcing, automates supply chain audits, and uncovers the real cost of micro-trends.
                 </motion.p>
@@ -95,7 +93,7 @@ export function HeroSection() {
                     <Link href="/analyze">
                         <MagneticButton
                             strength={0.1}
-                            className="px-8 py-4 bg-cream text-charcoal rounded-full font-sans font-medium text-lg hover:scale-105 transition-transform"
+                            className="px-8 py-3.5 bg-charcoal text-cream rounded-full font-sans font-medium text-[15px] transition-transform hover:bg-charcoal/90"
                         >
                             Get started
                         </MagneticButton>

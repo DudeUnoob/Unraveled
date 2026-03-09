@@ -141,6 +141,10 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    zoom: 1.1;
+  }
+
   body {
     @apply bg-background text-foreground antialiased selection:bg-primary/20;
   }
