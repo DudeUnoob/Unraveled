@@ -6,7 +6,7 @@ import { MagnifyingGlass, LinkSimple, ImageSquare, ArrowRight, Warning } from "@
 import { ImageUploadDropzone } from "./ImageUploadDropzone";
 
 interface AnalyzerInputProps {
-    onAnalyze: (query: string, inputType: string, price?: number) => void;
+    onAnalyze: (query: string, inputType: string, price?: number, wearsPerWeek?: number) => void;
     onImageAnalyzed?: (query: string) => void;
     isLoading: boolean;
     error: string | null;
@@ -29,7 +29,7 @@ export function AnalyzerInput({
     const [query, setQuery] = useState(initialQuery);
     const [inputMode, setInputMode] = useState<InputMode>("text");
     const [price, setPrice] = useState<string>(initialPrice ? String(initialPrice) : "");
-    const [showPrice, setShowPrice] = useState(Boolean(initialPrice));
+    const [wearsPerWeek, setWearsPerWeek] = useState<string>("2");
     const inputRef = useRef<HTMLInputElement>(null);
     const hasAutoTriggered = useRef(false);
 
@@ -42,7 +42,6 @@ export function AnalyzerInput({
     useEffect(() => {
         if (initialPrice) {
             setPrice(String(initialPrice));
-            setShowPrice(true);
         }
     }, [initialPrice]);
 
@@ -58,7 +57,8 @@ export function AnalyzerInput({
         e.preventDefault();
         if (!query.trim() || isLoading) return;
         const p = price ? parseFloat(price) : undefined;
-        onAnalyze(query.trim(), inputMode, p && p > 0 ? p : undefined);
+        const w = wearsPerWeek ? parseInt(wearsPerWeek, 10) : undefined;
+        onAnalyze(query.trim(), inputMode, p && p > 0 ? p : undefined, w && w > 0 ? w : undefined);
     };
 
     const placeholders: Record<InputMode, string> = {
@@ -152,6 +152,33 @@ export function AnalyzerInput({
                         </motion.button>
                     </div>
                 </form>
+            )}
+
+            {/* Price & Wears/Week Inputs */}
+            {inputMode !== "image" && (
+                <div className="flex items-center gap-3 mt-3">
+                    <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="Item price ($)"
+                        disabled={isLoading}
+                        className="w-36 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200 disabled:opacity-50"
+                    />
+                    <input
+                        type="number"
+                        min="1"
+                        max="7"
+                        value={wearsPerWeek}
+                        onChange={(e) => setWearsPerWeek(e.target.value)}
+                        placeholder="Wears/week"
+                        disabled={isLoading}
+                        className="w-32 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200 disabled:opacity-50"
+                    />
+                    <span className="font-sans text-xs text-charcoal/30">wears / week</span>
+                </div>
             )}
 
             {/* Error Message */}
