@@ -1,9 +1,9 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import type { CpwData } from "@/types/analysis";
-import { ArrowRight, Scales } from "@phosphor-icons/react";
+import { ArrowRight, Scales, PencilSimple, Check } from "@phosphor-icons/react";
 
 interface ComparisonCalloutProps {
     cpw: CpwData;
@@ -45,21 +45,44 @@ export const ComparisonCallout = memo(function ComparisonCallout({
     query,
 }: ComparisonCalloutProps) {
     const classicDesc = getClassicEquivalent(query);
-    // Classic gets full material durability (no trend penalty)
-    const classicPrice = Math.round(cpw.price * 1.07); // slightly higher for classic quality
-    const classicCpw = Math.round((classicPrice / cpw.standardWears) * 100) / 100;
-    const classicWears = cpw.standardWears;
-    const multiplier = cpw.trendAdjustedCpw / classicCpw;
-    const isSignificant = multiplier > 1.3;
+    const autoClassicPrice = Math.round(cpw.price * 1.07);
+    const autoClassicWears = cpw.standardWears;
+
+    const [editMode, setEditMode] = useState(false);
+    const [customClassicPrice, setCustomClassicPrice] = useState<string>("");
+    const [customClassicWears, setCustomClassicWears] = useState<string>("");
+    const hasCustom = customClassicPrice !== "" || customClassicWears !== "";
+
+    const classicPrice = customClassicPrice ? parseFloat(customClassicPrice) : autoClassicPrice;
+    const classicWears = customClassicWears ? parseInt(customClassicWears, 10) : autoClassicWears;
+    const classicCpw = classicWears > 0 ? Math.round((classicPrice / classicWears) * 100) / 100 : 0;
+    const multiplier = classicCpw > 0 ? cpw.trendAdjustedCpw / classicCpw : 0;
+    const isSignificant = hasCustom || multiplier > 1.3;
 
     if (!isSignificant) return null;
 
     return (
         <div className="w-full">
             <div className="flex items-baseline justify-between mb-6">
-                <h3 className="font-sans text-sm font-semibold text-charcoal/60 uppercase tracking-widest">
-                    Trendy vs. Classic
-                </h3>
+                <div className="flex items-center gap-3">
+                    <h3 className="font-sans text-sm font-semibold text-charcoal/60 uppercase tracking-widest">
+                        Trendy vs. Classic
+                    </h3>
+                    <button
+                        onClick={() => setEditMode((p) => !p)}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-charcoal/40 hover:text-charcoal/70 hover:bg-charcoal/[0.04] transition-colors"
+                        title="Customize classic comparison"
+                    >
+                        {editMode ? (
+                            <Check weight="bold" className="w-3 h-3" />
+                        ) : (
+                            <PencilSimple weight="bold" className="w-3 h-3" />
+                        )}
+                        <span className="font-mono text-[10px] uppercase tracking-wider">
+                            {editMode ? "Done" : "Customize"}
+                        </span>
+                    </button>
+                </div>
                 <div className="flex items-center gap-1.5">
                     <Scales weight="duotone" className="w-3.5 h-3.5 text-charcoal/30" />
                     <span className="font-mono text-[10px] text-charcoal/35 uppercase tracking-wider">
@@ -67,6 +90,34 @@ export const ComparisonCallout = memo(function ComparisonCallout({
                     </span>
                 </div>
             </div>
+
+            {/* Custom inputs */}
+            {editMode && (
+                <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex items-center gap-3 mb-4"
+                >
+                    <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={customClassicPrice}
+                        onChange={(e) => setCustomClassicPrice(e.target.value)}
+                        placeholder={`Classic price ($${autoClassicPrice})`}
+                        className="w-40 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200"
+                    />
+                    <input
+                        type="number"
+                        min="1"
+                        value={customClassicWears}
+                        onChange={(e) => setCustomClassicWears(e.target.value)}
+                        placeholder={`Estimated wears (${autoClassicWears})`}
+                        className="w-44 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200"
+                    />
+                </motion.div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Trendy Item */}
@@ -101,7 +152,6 @@ export const ComparisonCallout = memo(function ComparisonCallout({
                         </div>
                     </div>
 
-                    {/* Mini bar */}
                     <div className="mt-3 w-full h-1.5 bg-charcoal/[0.06] rounded-full overflow-hidden">
                         <motion.div
                             initial={{ width: 0 }}
@@ -144,11 +194,10 @@ export const ComparisonCallout = memo(function ComparisonCallout({
                         </div>
                     </div>
 
-                    {/* Mini bar */}
                     <div className="mt-3 w-full h-1.5 bg-charcoal/[0.06] rounded-full overflow-hidden">
                         <motion.div
                             initial={{ width: 0 }}
-                            animate={{ width: `${Math.min(100, (classicCpw / cpw.trendAdjustedCpw) * 100)}%` }}
+                            animate={{ width: `${cpw.trendAdjustedCpw > 0 ? Math.min(100, (classicCpw / cpw.trendAdjustedCpw) * 100) : 100}%` }}
                             transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
                             className="h-full rounded-full bg-[#2C4A3E]/60"
                         />
@@ -157,21 +206,23 @@ export const ComparisonCallout = memo(function ComparisonCallout({
             </div>
 
             {/* Verdict */}
-            <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6, duration: 0.4 }}
-                className="mt-4 flex items-center gap-3 p-4 rounded-xl bg-charcoal/[0.03] border border-charcoal/[0.06]"
-            >
-                <ArrowRight weight="bold" className="w-4 h-4 text-[#C84B31] shrink-0" />
-                <p className="font-sans text-sm text-charcoal/60 leading-relaxed">
-                    The trendy version costs{" "}
-                    <span className="font-semibold text-[#C84B31]">
-                        {multiplier.toFixed(1)}x more per wear
-                    </span>{" "}
-                    than a classic equivalent with the same material quality.
-                </p>
-            </motion.div>
+            {multiplier > 1 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.4 }}
+                    className="mt-4 flex items-center gap-3 p-4 rounded-xl bg-charcoal/[0.03] border border-charcoal/[0.06]"
+                >
+                    <ArrowRight weight="bold" className="w-4 h-4 text-[#C84B31] shrink-0" />
+                    <p className="font-sans text-sm text-charcoal/60 leading-relaxed">
+                        The trendy version costs{" "}
+                        <span className="font-semibold text-[#C84B31]">
+                            {multiplier.toFixed(1)}x more per wear
+                        </span>{" "}
+                        than a classic equivalent with the same material quality.
+                    </p>
+                </motion.div>
+            )}
         </div>
     );
 });

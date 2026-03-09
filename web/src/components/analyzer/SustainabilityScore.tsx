@@ -3,10 +3,13 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import type { ExtensionData } from "@/types/analysis";
-import { Leaf, Star, ChartLine, Heartbeat } from "@phosphor-icons/react";
+import { Leaf, Star, ChartLine, Heartbeat, PuzzlePiece } from "@phosphor-icons/react";
+import { computeClientSustainabilityScore } from "@/lib/sustainability";
 
 interface SustainabilityScoreProps {
-    extensionData: ExtensionData;
+    extensionData?: ExtensionData | null;
+    trendLabel: string;
+    weeksRemaining?: number;
 }
 
 function getGradeColor(grade: string): string {
@@ -34,17 +37,17 @@ function getGradeLabel(grade: string): string {
 function getHealthIcon(label: string) {
     switch (label.toLowerCase()) {
         case "safe":
-            return { icon: "✅", color: "#2C4A3E", bg: "#2C4A3E12" };
+            return { color: "#2C4A3E", bg: "#2C4A3E12" };
         case "caution":
-            return { icon: "⚠️", color: "#D4883C", bg: "#D4883C12" };
+            return { color: "#D4883C", bg: "#D4883C12" };
         case "avoid":
-            return { icon: "🚫", color: "#C84B31", bg: "#C84B3112" };
+            return { color: "#C84B31", bg: "#C84B3112" };
         default:
-            return { icon: "—", color: "#888", bg: "#88888812" };
+            return { color: "#888", bg: "#88888812" };
     }
 }
 
-// Approximate feature values from score and label
+// Approximate feature values from score and label (extension mode)
 function estimateFeatureContributions(score: number, trendLabel: string) {
     const trendFeatureMap: Record<string, number> = {
         "Timeless": 1.0,
@@ -55,9 +58,7 @@ function estimateFeatureContributions(score: number, trendLabel: string) {
     const trendFeature = trendFeatureMap[trendLabel] ?? 0.75;
     const trendContribution = trendFeature * 0.2 * 100;
 
-    // Reverse-engineer approximate fiber and brand from remaining score
     const remaining = score - trendContribution;
-    // Assume ~60/40 split between fiber and brand for the remaining
     const fiberContribution = remaining * 0.625;
     const brandContribution = remaining * 0.375;
 
@@ -70,16 +71,41 @@ function estimateFeatureContributions(score: number, trendLabel: string) {
 
 export const SustainabilityScore = memo(function SustainabilityScore({
     extensionData,
+    trendLabel,
+    weeksRemaining,
 }: SustainabilityScoreProps) {
-    const { sustainabilityScore, sustainabilityGrade, trendLabel, healthLabel } = extensionData;
-    const gradeColor = getGradeColor(sustainabilityGrade);
-    const gradeLabel = getGradeLabel(sustainabilityGrade);
-    const healthInfo = getHealthIcon(healthLabel);
-    const features = estimateFeatureContributions(sustainabilityScore, trendLabel);
+    const isExtensionMode = extensionData != null && extensionData.sustainabilityScore > 0;
 
+    // Compute score values depending on mode
+    let score: number;
+    let grade: string;
+    let gradeLabel: string;
+    let features: ReturnType<typeof estimateFeatureContributions>;
+    let effectiveTrendLabel: string;
+
+    if (isExtensionMode) {
+        score = extensionData.sustainabilityScore;
+        grade = extensionData.sustainabilityGrade;
+        gradeLabel = getGradeLabel(grade);
+        effectiveTrendLabel = extensionData.trendLabel || trendLabel;
+        features = estimateFeatureContributions(score, effectiveTrendLabel);
+    } else {
+        const result = computeClientSustainabilityScore(trendLabel);
+        score = result.score;
+        grade = result.grade;
+        gradeLabel = result.gradeLabel;
+        effectiveTrendLabel = trendLabel;
+        features = {
+            fiber: { value: result.fiberFeature, weight: 0.5, points: Math.round(result.fiberFeature * 50) },
+            brand: { value: result.brandFeature, weight: 0.3, points: Math.round(result.brandFeature * 30) },
+            trend: { value: result.trendFeature, weight: 0.2, points: Math.round(result.trendFeature * 20) },
+        };
+    }
+
+    const gradeColor = getGradeColor(grade);
     const radius = 54;
     const circumference = 2 * Math.PI * radius;
-    const progress = (sustainabilityScore / 100) * circumference;
+    const progress = (score / 100) * circumference;
 
     return (
         <div className="w-full">
@@ -91,7 +117,7 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                 <div className="flex items-center gap-1.5">
                     <Leaf weight="duotone" className="w-3.5 h-3.5 text-charcoal/30" />
                     <span className="font-mono text-[10px] text-charcoal/35 uppercase tracking-wider">
-                        ML-generated
+                        {isExtensionMode ? "ML-generated" : "Estimated"}
                     </span>
                 </div>
             </div>
@@ -105,14 +131,12 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                     className="relative w-[148px] h-[148px] mx-auto sm:mx-0"
                 >
                     <svg viewBox="0 0 120 120" className="w-full h-full -rotate-90">
-                        {/* Background track */}
                         <circle
                             cx="60" cy="60" r={radius}
                             fill="none"
                             stroke="rgba(28,28,28,0.06)"
                             strokeWidth="8"
                         />
-                        {/* Score arc */}
                         <motion.circle
                             cx="60" cy="60" r={radius}
                             fill="none"
@@ -125,7 +149,6 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                             transition={{ delay: 0.4, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                         />
                     </svg>
-                    {/* Center text */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <motion.span
                             initial={{ opacity: 0 }}
@@ -134,13 +157,13 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                             className="font-mono text-3xl font-bold tabular-nums"
                             style={{ color: gradeColor }}
                         >
-                            {sustainabilityScore}
+                            {score}
                         </motion.span>
                         <span
                             className="font-mono text-sm font-semibold uppercase tracking-wider"
                             style={{ color: gradeColor }}
                         >
-                            {sustainabilityGrade} · {gradeLabel}
+                            {grade} · {gradeLabel}
                         </span>
                     </div>
                 </motion.div>
@@ -172,11 +195,15 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                                 className="h-full rounded-full bg-[#2C4A3E]"
                             />
                         </div>
-                        {extensionData.fiberComposition && (
+                        {isExtensionMode && extensionData.fiberComposition ? (
                             <p className="font-mono text-[10px] text-charcoal/40 tracking-wide pl-6">
                                 {extensionData.fiberComposition}
                             </p>
-                        )}
+                        ) : !isExtensionMode ? (
+                            <p className="font-mono text-[10px] text-charcoal/30 tracking-wide pl-6">
+                                Category default — install extension for exact fiber data
+                            </p>
+                        ) : null}
                     </motion.div>
 
                     {/* Brand Reputation */}
@@ -204,13 +231,17 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                                 className="h-full rounded-full bg-[#7A9E8E]"
                             />
                         </div>
-                        {extensionData.brandRatingSources ? (
+                        {isExtensionMode && extensionData.brandRatingSources ? (
                             <p className="font-mono text-[10px] text-charcoal/40 tracking-wide pl-6">
                                 {extensionData.brandRatingSources}
                             </p>
-                        ) : extensionData.brand && extensionData.brand !== "Unknown" ? (
+                        ) : isExtensionMode && extensionData.brand && extensionData.brand !== "Unknown" ? (
                             <p className="font-mono text-[10px] text-charcoal/30 tracking-wide pl-6">
                                 Brand data unavailable — mid-range prior applied
+                            </p>
+                        ) : !isExtensionMode ? (
+                            <p className="font-mono text-[10px] text-charcoal/30 tracking-wide pl-6">
+                                Mid-range prior — install extension for brand ratings
                             </p>
                         ) : null}
                     </motion.div>
@@ -241,39 +272,65 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                             />
                         </div>
                         <p className="font-mono text-[10px] text-charcoal/40 tracking-wide pl-6">
-                            Status: {trendLabel || "Unknown"}
-                            {extensionData.trendLifespanWeeks > 0 && (
-                                <> (~{extensionData.trendLifespanWeeks} wks remaining)</>)}
+                            Status: {effectiveTrendLabel || "Unknown"}
+                            {isExtensionMode && extensionData.trendLifespanWeeks > 0 && (
+                                <> (~{extensionData.trendLifespanWeeks} wks remaining)</>
+                            )}
+                            {!isExtensionMode && weeksRemaining != null && weeksRemaining > 0 && (
+                                <> (~{weeksRemaining} wks remaining)</>
+                            )}
                         </p>
                     </motion.div>
 
-                    {/* Health + Durability Row */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8 }}
-                        className="flex flex-wrap items-center gap-3 pt-3 border-t border-charcoal/[0.06]"
-                    >
-                        <div
-                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
-                            style={{ backgroundColor: healthInfo.bg }}
+                    {/* Health + Durability Row (extension only) */}
+                    {isExtensionMode && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.8 }}
+                            className="flex flex-wrap items-center gap-3 pt-3 border-t border-charcoal/[0.06]"
                         >
-                            <Heartbeat weight="duotone" className="w-3.5 h-3.5" style={{ color: healthInfo.color }} />
-                            <span className="font-mono text-[10px] font-semibold uppercase tracking-wider" style={{ color: healthInfo.color }}>
-                                {healthLabel}
-                            </span>
-                        </div>
-                        {extensionData.fiberDurabilityWears > 0 && (
-                            <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">
-                                Fiber Durability: ~{extensionData.fiberDurabilityWears} wears
-                            </span>
-                        )}
-                        {extensionData.brand && extensionData.brand !== "Unknown" && (
-                            <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">
-                                Brand: {extensionData.brand}
-                            </span>
-                        )}
-                    </motion.div>
+                            {(() => {
+                                const healthInfo = getHealthIcon(extensionData.healthLabel);
+                                return (
+                                    <div
+                                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                                        style={{ backgroundColor: healthInfo.bg }}
+                                    >
+                                        <Heartbeat weight="duotone" className="w-3.5 h-3.5" style={{ color: healthInfo.color }} />
+                                        <span className="font-mono text-[10px] font-semibold uppercase tracking-wider" style={{ color: healthInfo.color }}>
+                                            {extensionData.healthLabel}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
+                            {extensionData.fiberDurabilityWears > 0 && (
+                                <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">
+                                    Fiber Durability: ~{extensionData.fiberDurabilityWears} wears
+                                </span>
+                            )}
+                            {extensionData.brand && extensionData.brand !== "Unknown" && (
+                                <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">
+                                    Brand: {extensionData.brand}
+                                </span>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* Direct mode note */}
+                    {!isExtensionMode && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.8 }}
+                            className="flex items-start gap-2 pt-3 border-t border-charcoal/[0.06]"
+                        >
+                            <PuzzlePiece weight="duotone" className="w-4 h-4 text-charcoal/30 shrink-0 mt-0.5" />
+                            <p className="font-sans text-xs text-charcoal/40 leading-relaxed">
+                                Estimated from trend data — install the Chrome Extension for detailed fiber and brand analysis.
+                            </p>
+                        </motion.div>
+                    )}
                 </div>
             </div>
         </div>
