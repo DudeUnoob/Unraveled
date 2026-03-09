@@ -97,7 +97,7 @@ export function TrustedBySection() {
                 viewport={{ once: true }}
                 className="w-full max-w-[1000px] px-4 lg:px-0"
             >
-                <div className="relative w-full h-[650px] md:h-[500px] bg-[#F6F5F1] rounded-[4px] overflow-hidden flex flex-col md:flex-row shadow-sm">
+                <div className="relative w-full h-[650px] md:h-[500px] bg-[#F6F5F1] rounded-[4px] overflow-hidden flex flex-col md:flex-row">
                     <AnimatePresence>
                         <motion.div
                             key={activeIndex}
@@ -109,7 +109,7 @@ export function TrustedBySection() {
                         >
                             {/* Left Text Box */}
                             <div className="w-full md:w-[55%] h-1/2 md:h-full p-8 md:p-14 flex flex-col justify-center bg-[#F6F5F1] z-10 relative">
-                                <p className="font-sans text-[1.25rem] md:text-[1.75rem] font-medium leading-[1.35] text-charcoal tracking-tight mb-8">
+                                <p className="font-sans text-[1.5rem] md:text-[1.75rem] font-normal leading-[1.2] tracking-[-0.03em] text-[#292421] mb-10 text-left">
                                     "{testimonials[activeIndex].quote}"
                                 </p>
                                 <div className="mt-auto flex flex-col gap-1">

@@ -31,7 +31,7 @@ export function NewsSection() {
 
                 {/* Header */}
                 <div className="flex justify-between items-end mb-12">
-                    <h2 className="font-sans text-2xl md:text-[2rem] text-charcoal tracking-tight">
+                    <h2 className="font-sans text-2xl md:text-[2rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624]">
                         News
                     </h2>
                     <button className="hidden md:flex items-center gap-1.5 font-sans text-[13px] font-semibold text-charcoal transition-colors hover:text-charcoal/70">

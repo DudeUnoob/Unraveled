@@ -17,7 +17,7 @@ export function ProductJourney() {
                 <div className="w-full flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex flex-col items-start max-w-2xl">
                         <span className="font-mono text-[10px] uppercase tracking-widest bg-charcoal/5 text-charcoal/60 px-3 py-1.5 rounded-full mb-6">Intercept</span>
-                        <h3 className="font-sans text-[2.25rem] md:text-[3rem] font-medium leading-[1.1] tracking-tight mb-4">
+                        <h3 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624] mb-4 text-left">
                             Drive better decisions with Unravel Engine
                         </h3>
                         <p className="font-sans text-[14px] md:text-[16px] text-charcoal/60 leading-relaxed pr-4">
@@ -80,7 +80,7 @@ export function ProductJourney() {
                 <div className="w-full flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex flex-col items-start max-w-2xl">
                         <span className="font-mono text-[10px] uppercase tracking-widest bg-charcoal/5 text-charcoal/60 px-3 py-1.5 rounded-full mb-6">Analyze</span>
-                        <h3 className="font-sans text-[2.25rem] md:text-[3rem] font-medium leading-[1.1] tracking-tight mb-4">
+                        <h3 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624] mb-4 text-left">
                             Unlock material intelligence
                         </h3>
                         <p className="font-sans text-[14px] md:text-[16px] text-charcoal/60 leading-relaxed pr-4">

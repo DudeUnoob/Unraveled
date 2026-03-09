@@ -24,7 +24,7 @@ export function SecondaryBanner() {
                 </div>
 
                 {/* Headline */}
-                <h2 className="font-sans font-medium text-[2.5rem] md:text-[3.5rem] leading-[1.1] text-white mb-6 tracking-tight drop-shadow-sm">
+                <h2 className="font-sans font-normal text-[2.5rem] md:text-[3.5rem] leading-[1.1] tracking-[-0.05em] text-white mb-6 drop-shadow-sm">
                     Intelligence built for conscious consumers.
                 </h2>
 

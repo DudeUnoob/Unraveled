@@ -30,7 +30,7 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
             </div>
 
             {/* Semicircular Arc Gauge */}
-            <div className="relative w-full px-8 md:px-12 object-contain aspect-[2/1] overflow-visible flex flex-col items-center justify-end mb-2">
+            <div className="relative w-full px-2 lg:px-6 object-contain aspect-[2/1] overflow-visible mb-10 mt-2">
                 <svg viewBox="0 0 200 100" className="w-full h-full overflow-visible">
                     {/* Gradient Definition */}
                     <defs>
@@ -76,20 +76,21 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                     </motion.g>
                     {/* Center Dot (on top of line) */}
                     <circle cx="100" cy="100" r="6" fill="#1C1C1C" />
+
+                    {/* SVG text labels that scale perfectly with the gauge */}
+                    {/* Font size 9.5 is mathematically the largest size possible on 1 line for these 5 specific words */}
+                    <g fill="#1C1C1C" opacity="0.4" fontFamily="var(--font-mono)" fontSize="9.5" letterSpacing="0" className="uppercase font-medium">
+                        <text x="0" y="125" textAnchor="start">Timeless</text>
+                        <text x="48.5" y="125" textAnchor="start">Classic</text>
+                        <text x="91.5" y="125" textAnchor="start">Trending</text>
+                        <text x="140" y="125" textAnchor="start">Fading</text>
+                        <text x="200" y="125" textAnchor="end">Dead</text>
+                    </g>
                 </svg>
             </div>
 
-            {/* Labels under arc */}
-            <div className="w-full px-8 md:px-12 flex justify-between text-charcoal/40 mb-8 font-mono text-[8px] tracking-[0.1em] uppercase">
-                <span>Timeless</span>
-                <span>Classic</span>
-                <span>Trending</span>
-                <span>Fading</span>
-                <span>Dead</span>
-            </div>
-
             {/* Typewriter text feed */}
-            <div className="px-8 font-mono text-[11px] md:text-xs text-charcoal leading-relaxed min-h-[48px] relative">
+            <div className="px-8 font-mono text-[11px] md:text-xs text-charcoal leading-relaxed min-h-[64px] pb-3 relative">
                 <AnimatePresence mode="wait">
                     <motion.p
                         key={trendFeed}

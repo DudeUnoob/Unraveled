@@ -15,7 +15,7 @@ export function SafeAndSecureSection() {
                     viewport={{ once: true }}
                     className="max-w-xl text-center md:text-left"
                 >
-                    <h2 className="font-sans font-medium tracking-tight text-3xl md:text-[2.25rem] text-charcoal mb-4">
+                    <h2 className="font-sans font-normal tracking-[-0.05em] text-3xl md:text-[2.25rem] leading-[1.1] text-[#1b0624] mb-4 text-left">
                         Safe and secure
                     </h2>
                     <p className="font-sans text-charcoal/50 text-[14px] leading-relaxed mb-8 max-w-sm">

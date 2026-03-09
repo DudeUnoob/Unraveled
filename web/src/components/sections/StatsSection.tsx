@@ -6,7 +6,7 @@ import { TrendUp, ShieldCheck, MinusCircle } from "@phosphor-icons/react";
 export function StatsSection() {
     return (
         <section className="w-full bg-[#f6f5f1] text-charcoal py-24 px-4 bg-white border-b border-charcoal/5">
-            <div className="max-w-[1000px] mx-auto flex flex-col pt-12 pb-12">
+            <div className="max-w-[1100px] mx-auto flex flex-col pt-16 pb-16">
 
                 {/* Top: Heading */}
                 <motion.h2
@@ -14,7 +14,7 @@ export function StatsSection() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-100px" }}
                     transition={{ duration: 0.8 }}
-                    className="font-sans text-[2.5rem] md:text-[4rem] tracking-tight font-medium leading-[1.05] mb-20"
+                    className="font-sans text-[2.25rem] md:text-[2.75rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624] mb-10 text-left"
                 >
                     Designed for truth.<br />Built to scale.
                 </motion.h2>
@@ -28,7 +28,12 @@ export function StatsSection() {
                         transition={{ duration: 0.8, delay: 0.1 }}
                         className="flex flex-col gap-2.5 min-w-[180px]"
                     >
-                        <span className="font-sans text-[4.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-none">83%</span>
+                        <span
+                            className="font-sans text-[3rem] font-medium leading-[1.2] text-black text-left"
+                            style={{ fontFeatureSettings: '"zero","tnum"' }}
+                        >
+                            83%
+                        </span>
                         <span className="font-sans text-[15px] font-medium text-charcoal/60 tracking-tight">Items rated unsustainable</span>
                     </motion.div>
 
@@ -39,7 +44,12 @@ export function StatsSection() {
                         transition={{ duration: 0.8, delay: 0.2 }}
                         className="flex flex-col gap-2.5 min-w-[180px]"
                     >
-                        <span className="font-sans text-[4.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-none">7x</span>
+                        <span
+                            className="font-sans text-[3rem] font-medium leading-[1.2] text-black text-left"
+                            style={{ fontFeatureSettings: '"zero","tnum"' }}
+                        >
+                            7x
+                        </span>
                         <span className="font-sans text-[15px] font-medium text-charcoal/60 tracking-tight">Avg wears before discard</span>
                     </motion.div>
 
@@ -50,7 +60,12 @@ export function StatsSection() {
                         transition={{ duration: 0.8, delay: 0.3 }}
                         className="flex flex-col gap-2.5 min-w-[180px]"
                     >
-                        <span className="font-sans text-[4.5rem] lg:text-[6.5rem] font-medium tracking-tighter leading-none">65%</span>
+                        <span
+                            className="font-sans text-[3rem] font-medium leading-[1.2] text-black text-left"
+                            style={{ fontFeatureSettings: '"zero","tnum"' }}
+                        >
+                            65%
+                        </span>
                         <span className="font-sans text-[15px] font-medium text-charcoal/60 tracking-tight">Shopping efficiency</span>
                     </motion.div>
                 </div>

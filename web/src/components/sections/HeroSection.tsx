@@ -68,7 +68,7 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-[3rem] sm:text-[3.75rem] md:text-[4.25rem] lg:text-[4.75rem] leading-[1] tracking-[-0.06em] text-charcoal mb-8"
+                    className="font-sans text-[2.75rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem] leading-[1] tracking-[-0.06em] text-charcoal mb-8"
                     style={{ fontWeight: 400 }}
                 >
                     The new standard<br />in material truth

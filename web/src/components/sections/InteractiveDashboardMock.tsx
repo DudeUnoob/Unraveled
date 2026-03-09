@@ -40,10 +40,10 @@ export function InteractiveDashboardMock() {
     const activeGarment = GARMENTS[activeIndex];
 
     return (
-        <div className="w-full h-full flex flex-col lg:flex-row gap-8 lg:gap-16 p-6 lg:p-12 items-center justify-center">
+        <div className="w-full h-full flex flex-col lg:flex-row gap-8 lg:gap-16 p-8 lg:p-12 items-center justify-center">
 
             {/* The Left Column (Menu) */}
-            <div className="w-full lg:w-1/3 flex flex-col gap-2 justify-center pl-0 lg:pl-4">
+            <div className="w-full lg:w-2/5 flex flex-col gap-3 justify-center pl-0 lg:pl-4">
                 <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-charcoal/40 mb-4 pl-4 font-semibold">Select Item</span>
                 {GARMENTS.map((garment, idx) => (
                     <button
@@ -52,7 +52,7 @@ export function InteractiveDashboardMock() {
                         className={cn(
                             "text-left px-5 py-4 rounded-full font-sans text-[13px] font-semibold transition-all duration-300 flex items-center gap-4 w-full cursor-pointer",
                             activeIndex === idx
-                                ? "bg-white text-charcoal shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] border border-charcoal/5"
+                                ? "bg-white text-charcoal border border-charcoal/5"
                                 : "text-charcoal/40 hover:text-charcoal pt-[17px] pb-[15px]" // Visual balancing
                         )}
                     >
@@ -68,7 +68,7 @@ export function InteractiveDashboardMock() {
             </div>
 
             {/* The Right Column (Widgets) */}
-            <div className="w-full lg:w-2/3 flex flex-col gap-6 justify-center max-w-[450px]">
+            <div className="w-full lg:w-3/5 flex flex-col gap-6 justify-center">
 
                 {/* Top Widget: Gauge */}
                 <motion.div
