@@ -250,7 +250,7 @@ export const TrendResults = memo(function TrendResults({
                 variants={sectionVariants}
                 className="mb-10 pb-10 border-b border-charcoal/[0.06]"
             >
-                <DecayCurveChart curve={data.trend_curve} phaseColor={phaseColor} />
+                <DecayCurveChart curve={data.trend_curve} phaseColor={phaseColor} data_sources={data.data_sources} />
             </motion.div>
 
             {/* W-1.6: CPW Projection */}
