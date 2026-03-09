@@ -50,7 +50,7 @@ export function HeroSection() {
             </div>
 
             {/* Duna-inspired Centered Content */}
-            <div ref={contentRef} className="relative z-20 max-w-4xl mx-auto text-center flex flex-col items-center mt-[15vh] md:mt-[25vh]">
+            <div ref={contentRef} className="relative z-20 max-w-[1000px] w-full px-4 mx-auto flex flex-col items-center mt-[15vh] md:mt-[25vh]">
 
                 {/* Pill Update Badge */}
                 <motion.div
@@ -68,7 +68,7 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-[2.75rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem] leading-[1] tracking-[-0.06em] text-charcoal mb-8"
+                    className="font-sans text-[2.75rem] sm:text-[3.5rem] md:text-[4rem] lg:text-[4.5rem] leading-[1] tracking-[-0.06em] text-charcoal mb-8 text-center"
                     style={{ fontWeight: 400 }}
                 >
                     The new standard<br />in material truth
@@ -79,7 +79,7 @@ export function HeroSection() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="font-sans text-[1.15rem] md:text-[1.35rem] text-charcoal/60 max-w-[640px] leading-[1.4] mb-12 tracking-tight"
+                    className="font-sans text-[1.15rem] md:text-[1.35rem] text-charcoal/60 max-w-[640px] leading-[1.4] mb-12 tracking-tight text-center"
                 >
                     Meet the data-native platform that accelerates ethical sourcing, automates supply chain audits, and uncovers the real cost of micro-trends.
                 </motion.p>

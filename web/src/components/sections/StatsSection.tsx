@@ -5,8 +5,8 @@ import { TrendUp, ShieldCheck, MinusCircle } from "@phosphor-icons/react";
 
 export function StatsSection() {
     return (
-        <section className="w-full bg-[#f6f5f1] text-charcoal py-24 px-4 bg-white border-b border-charcoal/5">
-            <div className="max-w-[1100px] mx-auto flex flex-col pt-16 pb-16">
+        <section className="w-full bg-[#f6f5f1] text-charcoal py-24 bg-white border-b border-charcoal/5">
+            <div className="max-w-[1000px] w-full px-4 mx-auto flex flex-col pt-16 pb-16">
 
                 {/* Top: Heading */}
                 <motion.h2
@@ -86,8 +86,8 @@ export function StatsSection() {
                         <div className="w-10 h-10 mb-6 text-charcoal">
                             <TrendUp weight="light" className="w-full h-full" />
                         </div>
-                        <h3 className="font-sans text-[15px] font-medium text-charcoal mb-3">Uncover reality</h3>
-                        <p className="font-sans text-[13px] leading-relaxed text-charcoal/60">
+                        <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Uncover reality</h3>
+                        <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
                             Unravel's platform is built to help consumers see past greenwashing. Optimized to eliminate marketing fiction and instantly deliver transparent tracking.
                         </p>
                     </motion.div>
@@ -103,8 +103,8 @@ export function StatsSection() {
                         <div className="w-10 h-10 mb-6 text-charcoal">
                             <ShieldCheck weight="light" className="w-full h-full" />
                         </div>
-                        <h3 className="font-sans text-[15px] font-medium text-charcoal mb-3">Future-proof style</h3>
-                        <p className="font-sans text-[13px] leading-relaxed text-charcoal/60">
+                        <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Future-proof style</h3>
+                        <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
                             A powerful data engine translates sustainability metrics into simple insights, enabling the industry's most detailed consumer wardrobe analysis.
                         </p>
                     </motion.div>
@@ -120,8 +120,8 @@ export function StatsSection() {
                         <div className="w-10 h-10 mb-6 text-charcoal">
                             <MinusCircle weight="light" className="w-full h-full" />
                         </div>
-                        <h3 className="font-sans text-[15px] font-medium text-charcoal mb-3">Reduce waste</h3>
-                        <p className="font-sans text-[13px] leading-relaxed text-charcoal/60">
+                        <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Reduce waste</h3>
+                        <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
                             Eliminate impulse buys, endless returns, and low-quality fabrics by automating material checks with intelligent AI processing.
                         </p>
                     </motion.div>

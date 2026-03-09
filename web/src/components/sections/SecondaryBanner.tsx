@@ -15,7 +15,7 @@ export function SecondaryBanner() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="w-full max-w-[800px] px-6 flex flex-col items-center justify-center text-center relative z-10"
+                className="w-full max-w-[1000px] mx-auto px-4 flex flex-col items-center justify-center text-center relative z-10"
             >
                 {/* Pill */}
                 <div className="bg-white/10 backdrop-blur-md border border-white/20 px-3 py-1 rounded-full mb-6 font-sans text-[11px] font-semibold text-white flex items-center gap-2 shadow-sm">
@@ -25,7 +25,7 @@ export function SecondaryBanner() {
 
                 {/* Headline */}
                 <h2 className="font-sans font-normal text-[2.5rem] md:text-[3.5rem] leading-[1.1] tracking-[-0.05em] text-white mb-6 drop-shadow-sm">
-                    Intelligence built for conscious consumers.
+                    Intelligence built for <br />conscious consumers.
                 </h2>
 
                 {/* Subheadline */}

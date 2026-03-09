@@ -6,23 +6,23 @@ import { ArrowRight, ShieldCheck, LockKey, FileDashed } from "@phosphor-icons/re
 export function SafeAndSecureSection() {
     return (
         <section className="w-full bg-[#f9f8f6] py-32 flex justify-center border-t border-charcoal/5">
-            <div className="w-full max-w-[1000px] px-6 lg:px-0 flex flex-col md:flex-row justify-between items-center md:items-start gap-16">
+            <div className="w-full max-w-[1000px] mx-auto px-4 lg:px-0 flex flex-col md:flex-row justify-between items-center md:items-start gap-16">
 
                 {/* Text Block */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="max-w-xl text-center md:text-left"
+                    className="max-w-xl text-left"
                 >
-                    <h2 className="font-sans font-normal tracking-[-0.05em] text-3xl md:text-[2.25rem] leading-[1.1] text-[#1b0624] mb-4 text-left">
+                    <h2 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624] mb-4 text-left">
                         Safe and secure
                     </h2>
-                    <p className="font-sans text-charcoal/50 text-[14px] leading-relaxed mb-8 max-w-sm">
+                    <p className="font-sans text-[14px] md:text-[16px] text-charcoal/60 leading-relaxed mb-8 max-w-sm">
                         Your trust is our foundation. Unravel operates completely on-device, meaning your browsing history and shopping data never touch our servers. Visit our trust page and security center to learn more.
                     </p>
 
-                    <button className="flex items-center justify-center md:justify-start gap-1.5 px-5 py-2 border border-charcoal/20 rounded-full font-sans text-[12px] font-semibold text-charcoal transition-colors hover:bg-charcoal/5 mx-auto md:mx-0">
+                    <button className="flex items-center justify-start gap-1.5 px-5 py-2 border border-charcoal/20 rounded-full font-sans text-[12px] font-semibold text-charcoal transition-colors hover:bg-charcoal/5 mx-0">
                         Explore <ArrowRight weight="bold" className="w-3 h-3" />
                     </button>
                 </motion.div>

@@ -57,7 +57,7 @@ export function TrustedBySection() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="w-full max-w-[1000px] px-6 lg:px-0 mb-12 text-center"
+                className="w-full max-w-[1000px] mx-auto px-4 lg:px-0 mb-12 text-center"
             >
                 <h2 className="font-sans text-[1.75rem] md:text-[2.25rem] font-medium tracking-tight text-charcoal mb-3">
                     Trusted by leaders
@@ -109,7 +109,7 @@ export function TrustedBySection() {
                         >
                             {/* Left Text Box */}
                             <div className="w-full md:w-[55%] h-1/2 md:h-full p-8 md:p-14 flex flex-col justify-center bg-[#F6F5F1] z-10 relative">
-                                <p className="font-sans text-[1.5rem] md:text-[1.75rem] font-normal leading-[1.2] tracking-[-0.03em] text-[#292421] mb-10 text-left">
+                                <p className="font-sans text-[1.25rem] md:text-[1.75rem] font-normal leading-[1.35] tracking-tight text-charcoal/90 mb-8">
                                     "{testimonials[activeIndex].quote}"
                                 </p>
                                 <div className="mt-auto flex flex-col gap-1">

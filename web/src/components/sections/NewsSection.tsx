@@ -27,11 +27,11 @@ const newsItems = [
 export function NewsSection() {
     return (
         <section className="w-full bg-[#f6f5f1] pt-24 pb-32 flex justify-center border-t border-charcoal/5 pointer-events-auto">
-            <div className="w-full max-w-[1200px] px-6 lg:px-0">
+            <div className="w-full max-w-[1000px] mx-auto px-4 lg:px-0">
 
                 {/* Header */}
                 <div className="flex justify-between items-end mb-12">
-                    <h2 className="font-sans text-2xl md:text-[2rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624]">
+                    <h2 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624]">
                         News
                     </h2>
                     <button className="hidden md:flex items-center gap-1.5 font-sans text-[13px] font-semibold text-charcoal transition-colors hover:text-charcoal/70">
