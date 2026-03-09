@@ -77,6 +77,7 @@ export function Footer() {
                 <div className="w-full flex flex-col md:flex-row justify-between items-center pt-8 border-t border-cream/10 text-cream/60 font-sans text-xs gap-4">
                     <p>© {new Date().getFullYear()} Unravel Inc. All rights reserved.</p>
                     <div className="flex items-center gap-6">
+                        <a href="/about" className="hover:text-cream transition-colors">About</a>
                         <a href="#" className="hover:text-cream transition-colors">Privacy Policy</a>
                         <a href="#" className="hover:text-cream transition-colors">Terms of Service</a>
                         <a href="#" className="flex items-center gap-1 hover:text-cream transition-colors">

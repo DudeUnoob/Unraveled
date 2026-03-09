@@ -44,7 +44,7 @@ function parseExtensionData(params: URLSearchParams): ExtensionData | null {
 
 function AnalyzerContent() {
     const searchParams = useSearchParams();
-    const { state, data, error, price: analyzedPrice, analyze, reset } = useAnalyze();
+    const { state, data, error, price: analyzedPrice, wearsPerWeek, analyze, reset } = useAnalyze();
 
     // Parse extension data from URL params
     const extensionData = useMemo(
@@ -149,6 +149,7 @@ function AnalyzerContent() {
                                     data={data}
                                     extensionData={extensionData}
                                     price={analyzedPrice ?? initialPrice}
+                                    wearsPerWeek={wearsPerWeek}
                                 />
                             </motion.div>
                         )}

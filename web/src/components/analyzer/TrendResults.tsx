@@ -19,6 +19,7 @@ interface TrendResultsProps {
     data: TrendAnalysisResponse;
     extensionData?: ExtensionData | null;
     price?: number;
+    wearsPerWeek?: number;
 }
 
 function getPhaseColor(label: string): string {
@@ -46,18 +47,22 @@ function getPhaseVerdict(label: string, weeksRemaining: number): string {
     }
 }
 
+import { getStandardWears, DEFAULT_WEARS_PER_WEEK } from "@/lib/durability";
+
 // PRD §6.4: CPW = price / min(standard_wears, wears_before_trend_death)
 // wears_before_trend_death = wears_per_week × weeks_remaining
-const WEARS_PER_WEEK = 2;       // PRD default assumption
-const STANDARD_WEARS = 60;      // fiber durability estimate (PRD example)
-
-function computeWears(weeksRemaining: number, trendLabel: string): { standard: number; adjusted: number } {
-    const wearsBeforeDeath = WEARS_PER_WEEK * weeksRemaining;
+function computeWears(
+    weeksRemaining: number,
+    trendLabel: string,
+    standardWears: number,
+    wearsPerWeek: number,
+): { standard: number; adjusted: number } {
+    const wearsBeforeDeath = wearsPerWeek * weeksRemaining;
     const adjusted = trendLabel === "Timeless"
-        ? STANDARD_WEARS                                    // no penalty for timeless
-        : Math.min(STANDARD_WEARS, Math.max(1, wearsBeforeDeath)); // capped by trend lifespan
+        ? standardWears                                    // no penalty for timeless
+        : Math.min(standardWears, Math.max(1, wearsBeforeDeath)); // capped by trend lifespan
     return {
-        standard: STANDARD_WEARS,
+        standard: standardWears,
         adjusted,
     };
 }
@@ -79,6 +84,7 @@ export const TrendResults = memo(function TrendResults({
     data,
     extensionData,
     price,
+    wearsPerWeek: wearsPerWeekProp,
 }: TrendResultsProps) {
     const phaseColor = getPhaseColor(data.trend_lifespan.label);
     const verdict = getPhaseVerdict(
@@ -89,10 +95,14 @@ export const TrendResults = memo(function TrendResults({
 
     // Build CPW data if price is available
     const effectivePrice = price ?? extensionData?.price ?? null;
+    const effectiveWearsPerWeek = wearsPerWeekProp ?? DEFAULT_WEARS_PER_WEEK;
+    const smartStandardWears = extensionData?.fiberDurabilityWears && extensionData.fiberDurabilityWears > 0
+        ? extensionData.fiberDurabilityWears
+        : getStandardWears(data.query_normalized);
     let cpwData: CpwData | null = null;
 
     if (effectivePrice && effectivePrice > 0) {
-        const wears = computeWears(data.trend_lifespan.weeks_remaining, data.trend_lifespan.label);
+        const wears = computeWears(data.trend_lifespan.weeks_remaining, data.trend_lifespan.label, smartStandardWears, effectiveWearsPerWeek);
 
         // Use extension CPW if available, otherwise compute
         if (extensionData?.cpw && extensionData.cpw > 0) {
@@ -270,17 +280,19 @@ export const TrendResults = memo(function TrendResults({
             )}
 
             {/* W-1.10: Sustainability Score Display */}
-            {extensionData && extensionData.sustainabilityScore > 0 && (
-                <motion.div
-                    custom={sectionIndex++}
-                    initial="hidden"
-                    animate="visible"
-                    variants={sectionVariants}
-                    className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-                >
-                    <SustainabilityScore extensionData={extensionData} />
-                </motion.div>
-            )}
+            <motion.div
+                custom={sectionIndex++}
+                initial="hidden"
+                animate="visible"
+                variants={sectionVariants}
+                className="mb-10 pb-10 border-b border-charcoal/[0.06]"
+            >
+                <SustainabilityScore
+                    extensionData={extensionData}
+                    trendLabel={data.trend_lifespan.label}
+                    weeksRemaining={data.trend_lifespan.weeks_remaining}
+                />
+            </motion.div>
 
             {/* Model Details */}
             <motion.div

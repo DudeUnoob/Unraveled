@@ -4,18 +4,19 @@ import { useState, useCallback } from "react";
 import { SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
 import type { AnalysisStore, TrendAnalysisResponse } from "@/types/analysis";
 
-const INITIAL_STATE: AnalysisStore & { price?: number } = {
+const INITIAL_STATE: AnalysisStore & { price?: number; wearsPerWeek?: number } = {
     state: "idle",
     data: null,
     error: null,
     query: "",
     price: undefined,
+    wearsPerWeek: undefined,
 };
 
 export function useAnalyze() {
-    const [store, setStore] = useState<AnalysisStore & { price?: number }>(INITIAL_STATE);
+    const [store, setStore] = useState<AnalysisStore & { price?: number; wearsPerWeek?: number }>(INITIAL_STATE);
 
-    const analyze = useCallback(async (query: string, inputType = "text", price?: number) => {
+    const analyze = useCallback(async (query: string, inputType = "text", price?: number, wearsPerWeek?: number) => {
         if (!query.trim()) {
             setStore((prev) => ({
                 ...prev,
@@ -25,7 +26,7 @@ export function useAnalyze() {
             return;
         }
 
-        setStore({ state: "loading", data: null, error: null, query: query.trim(), price });
+        setStore({ state: "loading", data: null, error: null, query: query.trim(), price, wearsPerWeek });
 
         try {
             const body: Record<string, unknown> = {
@@ -49,7 +50,7 @@ export function useAnalyze() {
 
             const data: TrendAnalysisResponse = await res.json();
 
-            setStore({ state: "success", data, error: null, query: query.trim(), price });
+            setStore({ state: "success", data, error: null, query: query.trim(), price, wearsPerWeek });
         } catch (err) {
             const message = err instanceof Error ? err.message : "Something went wrong";
             setStore((prev) => ({ ...prev, state: "error", error: message }));

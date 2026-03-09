@@ -1,30 +1,29 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowUpRight, ShieldCheck, LockKey, FileDashed } from "@phosphor-icons/react";
+import { ArrowRight, ShieldCheck, LockKey, FileDashed } from "@phosphor-icons/react";
 
 export function SafeAndSecureSection() {
     return (
-        <section className="w-full bg-[#f6f5f1] py-24 md:py-32 flex justify-center border-t border-charcoal/5">
-            <div className="w-full max-w-[1200px] px-6 lg:px-0 flex flex-col md:flex-row justify-between items-center md:items-start gap-16">
+        <section className="w-full bg-[#f9f8f6] py-32 flex justify-center border-t border-charcoal/5">
+            <div className="w-full max-w-[1000px] mx-auto px-4 lg:px-0 flex flex-col md:flex-row justify-between items-center md:items-start gap-16">
 
                 {/* Text Block */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    className="max-w-xl text-center md:text-left"
+                    className="max-w-xl text-left"
                 >
-                    <h2 className="font-sans font-medium tracking-tight text-4xl md:text-5xl text-charcoal mb-6">
-                        Private by design.
+                    <h2 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624] mb-4 text-left">
+                        Safe and secure
                     </h2>
-                    <p className="font-sans text-charcoal/70 text-lg leading-relaxed mb-8">
-                        Your trust is our foundation. Unravel operates completely on-device, meaning your browsing history and shopping data never touch our servers. Visit our privacy center to learn how we protect consumers.
+                    <p className="font-sans text-[14px] md:text-[16px] text-charcoal/60 leading-relaxed mb-8 max-w-sm">
+                        Your trust is our foundation. Unravel operates completely on-device, meaning your browsing history and shopping data never touch our servers. Visit our trust page and security center to learn more.
                     </p>
 
-                    <button className="flex items-center justify-center md:justify-start gap-2 text-charcoal hover:text-rust font-sans text-sm font-semibold uppercase tracking-widest transition-colors group">
-                        Explore our security
-                        <ArrowUpRight className="w-4 h-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    <button className="flex items-center justify-start gap-1.5 px-5 py-2 border border-charcoal/20 rounded-full font-sans text-[12px] font-semibold text-charcoal transition-colors hover:bg-charcoal/5 mx-0">
+                        Explore <ArrowRight weight="bold" className="w-3 h-3" />
                     </button>
                 </motion.div>
 
@@ -34,24 +33,25 @@ export function SafeAndSecureSection() {
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.6, delay: 0.2 }}
-                    className="flex flex-wrap justify-center md:justify-end gap-6 md:gap-8"
+                    className="flex flex-wrap justify-center md:justify-end gap-5"
                 >
                     {/* Badge 1 */}
-                    <div className="w-32 h-32 rounded-full border border-charcoal/10 bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center text-charcoal shadow-sm">
-                        <ShieldCheck weight="duotone" className="w-8 h-8 mb-2 opacity-80" />
-                        <span className="font-mono text-xs font-bold tracking-widest">GDPR</span>
+                    <div className="w-[100px] h-[100px] rounded-full border border-charcoal/10 bg-transparent flex flex-col items-center justify-center text-charcoal/80">
+                        <span className="font-sans text-[11px] font-bold tracking-wider mb-1">AICPA</span>
+                        <span className="font-sans text-[13px] font-bold tracking-tight">SOC2</span>
                     </div>
 
                     {/* Badge 2 */}
-                    <div className="w-32 h-32 rounded-full border border-charcoal/10 bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center text-charcoal shadow-sm">
-                        <LockKey weight="duotone" className="w-8 h-8 mb-2 opacity-80" />
-                        <span className="font-mono text-xs font-bold tracking-widest">E2E</span>
+                    <div className="w-[100px] h-[100px] rounded-full border border-charcoal/10 bg-transparent flex flex-col items-center justify-center text-charcoal/80">
+                        <ShieldCheck weight="fill" className="w-[45px] h-[45px] text-charcoal/20 absolute" />
+                        <span className="font-sans text-[13px] font-bold tracking-widest z-10">GDPR</span>
                     </div>
 
                     {/* Badge 3 */}
-                    <div className="w-32 h-32 rounded-full border border-charcoal/10 bg-white/50 backdrop-blur-sm flex flex-col items-center justify-center text-charcoal shadow-sm">
-                        <FileDashed weight="duotone" className="w-8 h-8 mb-2 opacity-80" />
-                        <span className="font-mono text-xs font-bold tracking-widest text-center leading-tight">NO LOGS</span>
+                    <div className="w-[100px] h-[100px] rounded-full border border-charcoal/10 bg-transparent flex flex-col items-center justify-center text-charcoal/80 relative">
+                        <LockKey weight="fill" className="w-[45px] h-[45px] text-charcoal/20 absolute" />
+                        <span className="font-sans text-[11px] font-bold tracking-wider z-10 mb-0.5">ON</span>
+                        <span className="font-sans text-[12px] font-bold tracking-tight z-10 leading-none">DEVICE</span>
                     </div>
                 </motion.div>
 

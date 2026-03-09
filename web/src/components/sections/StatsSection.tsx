@@ -1,45 +1,56 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { TrendUp, ShieldCheck, MinusCircle } from "@phosphor-icons/react";
 
 export function StatsSection() {
     return (
-        <section className="w-full bg-white text-charcoal py-32 md:py-48 px-4 border-b border-charcoal/5">
-            <div className="max-w-[1200px] mx-auto text-center md:text-left flex flex-col md:flex-row gap-16 lg:gap-32">
+        <section className="w-full bg-[#f6f5f1] text-charcoal py-24 bg-white border-b border-charcoal/5">
+            <div className="max-w-[1000px] w-full px-4 mx-auto flex flex-col pt-16 pb-16">
 
-                {/* Left Column: Vision Statement */}
-                <div className="md:w-[40%] flex flex-col justify-start">
-                    <motion.h2
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: "-100px" }}
-                        transition={{ duration: 0.8 }}
-                        className="font-sans text-3xl sm:text-4xl leading-tight font-medium mb-6"
-                    >
-                        Designed for truth.<br />Built for the planet.
-                    </motion.h2>
-                    <motion.p
+                {/* Top: Heading */}
+                <motion.h2
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.8 }}
+                    className="font-sans text-[2.25rem] md:text-[2.75rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624] mb-10 text-left"
+                >
+                    Designed for truth.<br />Built to scale.
+                </motion.h2>
+
+                {/* Middle: Huge Numbers Row */}
+                <div className="flex flex-wrap md:flex-nowrap gap-x-12 md:gap-x-20 gap-y-12 mb-20">
+                    <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={{ duration: 0.8, delay: 0.1 }}
-                        className="font-sans text-charcoal/60 leading-relaxed max-w-sm mx-auto md:mx-0"
+                        className="flex flex-col gap-2.5 min-w-[180px]"
                     >
-                        Unravel's intelligence platform is built to help consumers avoid greenwashing and buy timeless pieces, ending the fast fashion cycle.
-                    </motion.p>
-                </div>
+                        <span
+                            className="font-sans text-[3rem] font-medium leading-[1.2] text-black text-left"
+                            style={{ fontFeatureSettings: '"zero","tnum"' }}
+                        >
+                            83%
+                        </span>
+                        <span className="font-sans text-[15px] font-medium text-charcoal/60 tracking-tight">Items rated unsustainable</span>
+                    </motion.div>
 
-                {/* Right Column: Oversized Stats */}
-                <div className="md:w-[60%] flex flex-wrap gap-x-12 lg:gap-x-24 gap-y-16">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={{ duration: 0.8, delay: 0.2 }}
-                        className="flex flex-col gap-2"
+                        className="flex flex-col gap-2.5 min-w-[180px]"
                     >
-                        <span className="font-sans text-6xl lg:text-8xl font-medium tracking-tighter">83%</span>
-                        <span className="font-mono text-xs uppercase tracking-widest text-charcoal/50">Items rated unsustainable</span>
+                        <span
+                            className="font-sans text-[3rem] font-medium leading-[1.2] text-black text-left"
+                            style={{ fontFeatureSettings: '"zero","tnum"' }}
+                        >
+                            7x
+                        </span>
+                        <span className="font-sans text-[15px] font-medium text-charcoal/60 tracking-tight">Avg wears before discard</span>
                     </motion.div>
 
                     <motion.div
@@ -47,21 +58,72 @@ export function StatsSection() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={{ duration: 0.8, delay: 0.3 }}
-                        className="flex flex-col gap-2"
+                        className="flex flex-col gap-2.5 min-w-[180px]"
                     >
-                        <span className="font-sans text-6xl lg:text-8xl font-medium tracking-tighter">7x</span>
-                        <span className="font-mono text-xs uppercase tracking-widest text-charcoal/50">Avg wears before discard</span>
+                        <span
+                            className="font-sans text-[3rem] font-medium leading-[1.2] text-black text-left"
+                            style={{ fontFeatureSettings: '"zero","tnum"' }}
+                        >
+                            65%
+                        </span>
+                        <span className="font-sans text-[15px] font-medium text-charcoal/60 tracking-tight">Shopping efficiency</span>
                     </motion.div>
+                </div>
 
+                {/* Divider */}
+                <div className="w-full h-px bg-charcoal/[0.05] mb-16" />
+
+                {/* Bottom: Feature Columns */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+                    {/* Feature 1 */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={{ duration: 0.8, delay: 0.4 }}
-                        className="flex flex-col gap-2"
+                        className="flex flex-col"
                     >
-                        <span className="font-sans text-6xl lg:text-8xl font-medium tracking-tighter">$14.50</span>
-                        <span className="font-mono text-xs uppercase tracking-widest text-charcoal/50">Avg fast-fashion CPW</span>
+                        <div className="w-10 h-10 mb-6 text-charcoal">
+                            <TrendUp weight="light" className="w-full h-full" />
+                        </div>
+                        <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Uncover reality</h3>
+                        <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
+                            Unravel's platform is built to help consumers see past greenwashing. Optimized to eliminate marketing fiction and instantly deliver transparent tracking.
+                        </p>
+                    </motion.div>
+
+                    {/* Feature 2 */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8, delay: 0.5 }}
+                        className="flex flex-col border-t pt-8 md:pt-0 md:border-t-0 md:border-l border-charcoal/[0.08] md:pl-8"
+                    >
+                        <div className="w-10 h-10 mb-6 text-charcoal">
+                            <ShieldCheck weight="light" className="w-full h-full" />
+                        </div>
+                        <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Future-proof style</h3>
+                        <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
+                            A powerful data engine translates sustainability metrics into simple insights, enabling the industry's most detailed consumer wardrobe analysis.
+                        </p>
+                    </motion.div>
+
+                    {/* Feature 3 */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-100px" }}
+                        transition={{ duration: 0.8, delay: 0.6 }}
+                        className="flex flex-col border-t pt-8 md:pt-0 md:border-t-0 md:border-l border-charcoal/[0.08] md:pl-8"
+                    >
+                        <div className="w-10 h-10 mb-6 text-charcoal">
+                            <MinusCircle weight="light" className="w-full h-full" />
+                        </div>
+                        <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Reduce waste</h3>
+                        <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
+                            Eliminate impulse buys, endless returns, and low-quality fabrics by automating material checks with intelligent AI processing.
+                        </p>
                     </motion.div>
                 </div>
 
