@@ -69,7 +69,7 @@ export default function AboutPage() {
                         <div className="space-y-4 font-sans text-sm text-charcoal/60 leading-relaxed pl-[52px]">
                             <p>
                                 We pull normalized search interest from Google Trends, cross-referenced with
-                                social signals from TikTok and Pinterest, to build a time-series of trend
+                                TikTok engagement data and Pinterest search signals, to build a time-series of trend
                                 velocity for any fashion keyword.
                             </p>
                             <p>

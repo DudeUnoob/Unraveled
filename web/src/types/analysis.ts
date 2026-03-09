@@ -46,6 +46,17 @@ export interface TrendAnalysisResponse {
             from_cache: boolean;
             note?: string;
         };
+        tiktok?: {
+            available: boolean;
+            last_updated: string;
+            hashtag_views?: number;
+            post_count?: number;
+        };
+        pinterest?: {
+            available: boolean;
+            last_updated: string;
+            total_results?: number;
+        };
     };
     shareable_url: string | null;
 }
