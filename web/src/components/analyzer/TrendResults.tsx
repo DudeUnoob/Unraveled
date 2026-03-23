@@ -91,6 +91,8 @@ export const TrendResults = memo(function TrendResults({
         data.trend_lifespan.label,
         data.trend_lifespan.weeks_remaining
     );
+    const isFallback = data.trend_curve.model_type === "keyword_fallback"
+        || !data.data_sources.google_trends.available;
     const [copied, setCopied] = useState(false);
 
     // Build CPW data if price is available
@@ -231,6 +233,23 @@ export const TrendResults = memo(function TrendResults({
                 </div>
             </motion.div>
 
+            {/* Data Quality Warning */}
+            {isFallback && (
+                <motion.div
+                    custom={sectionIndex++}
+                    initial="hidden"
+                    animate="visible"
+                    variants={sectionVariants}
+                    className="mb-6 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200"
+                >
+                    <p className="font-mono text-[11px] text-amber-800 leading-relaxed">
+                        {data.data_sources.google_trends.serp_key_configured === false
+                            ? "⚠️ Real-time trend data unavailable. Metrics below are keyword-based estimates, not derived from Google Trends. Configure SERP_API_KEY for live analysis."
+                            : "⚠️ Google Trends has insufficient data for this query. Metrics below are keyword-based estimates — try a broader search term for live analysis."}
+                    </p>
+                </motion.div>
+            )}
+
             {/* W-1.5: Trend Lifespan Bar */}
             <motion.div
                 custom={sectionIndex++}
@@ -308,9 +327,9 @@ export const TrendResults = memo(function TrendResults({
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {[
                         { label: "Peak (K)", value: data.decay_params.K.toFixed(0) },
-                        { label: "Growth rate", value: data.decay_params.r.toFixed(3) },
-                        { label: "Decay rate (λ)", value: data.decay_params.lambda.toFixed(3) },
-                        { label: "R² fit", value: `${(data.decay_params.r_squared * 100).toFixed(1)}%` },
+                        { label: "Growth rate", value: isFallback ? "—" : data.decay_params.r.toFixed(3) },
+                        { label: "Decay rate (λ)", value: isFallback ? "—" : data.decay_params.lambda.toFixed(3) },
+                        { label: "R² fit", value: isFallback ? "N/A" : `${(data.decay_params.r_squared * 100).toFixed(1)}%` },
                     ].map((param) => (
                         <div key={param.label}>
                             <span className="block font-mono text-[10px] text-charcoal/35 uppercase tracking-wider mb-1">

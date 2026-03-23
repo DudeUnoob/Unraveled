@@ -42,6 +42,7 @@ export interface TrendAnalysisResponse {
     data_sources: {
         google_trends: {
             available: boolean;
+            serp_key_configured?: boolean;
             last_updated: string;
             from_cache: boolean;
             note?: string;

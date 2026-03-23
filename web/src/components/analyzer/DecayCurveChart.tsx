@@ -237,15 +237,19 @@ export const DecayCurveChart = memo(function DecayCurveChart({
             {/* Source Attribution */}
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-charcoal/[0.06]">
                 <span className="font-mono text-[9px] text-charcoal/30 uppercase tracking-wider">
-                    Data: {[
-                        "Google Trends",
-                        ...(data_sources?.tiktok?.available ? ["TikTok"] : []),
-                        ...(data_sources?.pinterest?.available ? ["Pinterest"] : []),
-                    ].join(" + ")}
+                    {curve.model_type === "keyword_fallback"
+                        ? "Data: Keyword estimate — configure SERP_API_KEY for real data"
+                        : `Data: ${[
+                            "Google Trends",
+                            ...(data_sources?.tiktok?.available ? ["TikTok"] : []),
+                            ...(data_sources?.pinterest?.available ? ["Pinterest"] : []),
+                        ].join(" + ")}`}
                 </span>
                 <span className="text-charcoal/15">|</span>
                 <span className="font-mono text-[9px] text-charcoal/30 uppercase tracking-wider">
-                    Model: Logistic Decay (R\u00B2 {(curve.r_squared * 100).toFixed(0)}%)
+                    {curve.model_type === "keyword_fallback"
+                        ? "Model: Keyword estimate (no trend data)"
+                        : `Model: Logistic Decay (R\u00B2 ${(curve.r_squared * 100).toFixed(0)}%)`}
                 </span>
             </div>
         </motion.div>
