@@ -339,6 +339,11 @@ const App = () => {
     ? currencyFormatter(payload.product.currency).format(payload.product.price)
     : "Price unavailable";
 
+  const isManualMode = payload.manualMode === true ||
+    payload.score.sustainabilityScore.scoringMode === "fiber_only";
+  const hasFiberData = payload.score.cpwEstimate.fiberDataAvailable;
+  const hasBrandData = payload.score.sustainabilityScore.featureContributions.brandReputation.brandDataAvailable;
+
   const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
 
   return (
@@ -383,9 +388,14 @@ const App = () => {
           />
         </div>
         <p className="mt-2 text-xs text-slate-600">
-          Fiber {payload.score.sustainabilityScore.featureContributions.fiberComposition.featureValue.toFixed(2)} ·
-          Brand {payload.score.sustainabilityScore.featureContributions.brandReputation.featureValue.toFixed(2)} ·
-          Trend {payload.score.sustainabilityScore.featureContributions.microTrendLongevity.featureValue.toFixed(2)}
+          Fiber {payload.score.sustainabilityScore.featureContributions.fiberComposition.featureValue.toFixed(2)}
+          {!isManualMode && (
+            <> · Brand {payload.score.sustainabilityScore.featureContributions.brandReputation.featureValue.toFixed(2)}</>
+          )}
+          {" "}· Trend {payload.score.sustainabilityScore.featureContributions.microTrendLongevity.featureValue.toFixed(2)}
+          {isManualMode && (
+            <span className="ml-1 text-slate-400">(fiber-only mode)</span>
+          )}
         </p>
       </section>
 
@@ -405,12 +415,21 @@ const App = () => {
 
         <article className="rounded-xl bg-unravel-card p-3 shadow-card">
           <p className="text-[11px] uppercase tracking-wide text-slate-600">Cost / Wear</p>
-          <p className="mt-1 text-base font-semibold text-unravel-ink">
-            {currencyFormatter(payload.product.currency).format(payload.score.cpwEstimate.costPerWear)}
-          </p>
-          <p className="text-xs text-slate-600">
-            adj {currencyFormatter(payload.product.currency).format(payload.score.cpwEstimate.trendAdjustedCpw)}
-          </p>
+          {hasFiberData ? (
+            <>
+              <p className="mt-1 text-base font-semibold text-unravel-ink">
+                {currencyFormatter(payload.product.currency).format(payload.score.cpwEstimate.costPerWear)}
+              </p>
+              <p className="text-xs text-slate-600">
+                adj {currencyFormatter(payload.product.currency).format(payload.score.cpwEstimate.trendAdjustedCpw)}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-base font-semibold text-slate-400">N/A</p>
+              <p className="text-xs text-slate-500">Fiber data unavailable</p>
+            </>
+          )}
         </article>
       </section>
 
@@ -453,9 +472,16 @@ const App = () => {
           <p className="text-xs text-slate-700">
             Trend: Google Trends · Updated {formatTimestamp(payload.score.trendScore.lastUpdated)}
           </p>
-          <p className="mt-1 text-xs text-slate-700">
-            ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
-          </p>
+          {!isManualMode && hasBrandData && (
+            <p className="mt-1 text-xs text-slate-700">
+              ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
+            </p>
+          )}
+          {!isManualMode && !hasBrandData && (
+            <p className="mt-1 text-xs text-slate-400">
+              ESG: No brand data found — using default score
+            </p>
+          )}
         </div>
       </details>
 

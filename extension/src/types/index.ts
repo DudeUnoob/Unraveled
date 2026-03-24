@@ -34,10 +34,13 @@ export interface RetailerSelectorConfig {
   imageSelectors: string[];
 }
 
+export type ScoringMode = "full" | "fiber_only";
+
 export interface SustainabilityScore {
   value: number;
   grade: SustainabilityGrade;
   modelVersion: string;
+  scoringMode: ScoringMode;
   featureContributions: {
     fiberComposition: {
       featureValue: number;
@@ -52,6 +55,7 @@ export interface SustainabilityScore {
     brandReputation: {
       featureValue: number;
       modelWeight: number;
+      brandDataAvailable: boolean;
       sources: {
         goodOnYou: string;
         bcorpCertified: boolean;
@@ -92,6 +96,7 @@ export interface ScoreResult {
     costPerWear: number;
     trendAdjustedWears: number;
     trendAdjustedCpw: number;
+    fiberDataAvailable: boolean;
   };
   dataSources: {
     googleTrends: {
@@ -111,6 +116,7 @@ export interface ScoredProductPayload {
   product: ProductContext;
   score: ScoreResult;
   scoredAt: string;
+  manualMode?: boolean;
 }
 
 export interface TabScoreState {

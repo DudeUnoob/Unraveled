@@ -40,20 +40,44 @@ const NumberTicker = ({ value, prefix = "", suffix = "" }: { value: number, pref
     );
 };
 
-export const CpwComparisonWidget = memo(function CpwComparisonWidget() {
+interface CpwComparisonData {
+    price: number;
+    wears: number;
+    cpw: number;
+}
+
+interface CpwComparisonWidgetProps {
+    fastFashion?: CpwComparisonData;
+    quality?: CpwComparisonData;
+}
+
+const EXAMPLE_FAST_FASHION: CpwComparisonData = { price: 89, wears: 16, cpw: 5.56 };
+const EXAMPLE_QUALITY: CpwComparisonData = { price: 95, wears: 60, cpw: 1.58 };
+
+export const CpwComparisonWidget = memo(function CpwComparisonWidget({
+    fastFashion: fastFashionProp,
+    quality: qualityProp,
+}: CpwComparisonWidgetProps) {
     const [resolved, setResolved] = useState(false);
 
     useEffect(() => {
-        const timer = setTimeout(() => setResolved(true), 1500); // Resolve arrow after numbers partially tick
+        const timer = setTimeout(() => setResolved(true), 1500);
         return () => clearTimeout(timer);
     }, []);
 
-    const fastFashion = { price: 89, wears: 16, cpw: 5.56 };
-    const quality = { price: 95, wears: 60, cpw: 1.58 };
+    const isExample = !fastFashionProp && !qualityProp;
+    const fastFashion = fastFashionProp ?? EXAMPLE_FAST_FASHION;
+    const quality = qualityProp ?? EXAMPLE_QUALITY;
     const savings = (fastFashion.cpw - quality.cpw).toFixed(2);
 
     return (
         <div className="flex flex-col h-full bg-cream pt-8 pb-6 px-4 md:px-8 border-t border-linen/50 relative">
+
+            {isExample && (
+                <p className="text-[9px] font-mono uppercase tracking-wider text-charcoal/40 text-center mb-2">
+                    Illustrative example
+                </p>
+            )}
 
             <div className="grid grid-cols-2 gap-4 h-full relative z-10">
 

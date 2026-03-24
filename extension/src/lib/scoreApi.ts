@@ -160,11 +160,17 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
   // honestly reports when Google Trends fell back to keyword classification.
   // Confidence scores already indicate data quality.
 
+  const scoringModes = new Set<"full" | "fiber_only">(["full", "fiber_only"]);
+  const scoringMode = typeof sustainabilityScore.scoring_mode === "string" && scoringModes.has(sustainabilityScore.scoring_mode as "full" | "fiber_only")
+    ? (sustainabilityScore.scoring_mode as "full" | "fiber_only")
+    : "full";
+
   return {
     sustainabilityScore: {
       value: Math.round(assertNumber(sustainabilityScore.value, "sustainability_score.value", SCORE_RANGE)),
       grade: assertEnum(sustainabilityScore.grade, "sustainability_score.grade", sustainabilityGrades),
       modelVersion: assertString(sustainabilityScore.model_version, "sustainability_score.model_version"),
+      scoringMode,
       featureContributions: {
         fiberComposition: {
           featureValue: assertNumber(
@@ -190,6 +196,9 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
             "sustainability_score.feature_contributions.brand_reputation.model_weight",
             UNIT_RANGE
           ),
+          brandDataAvailable: typeof brandReputation.brand_data_available === "boolean"
+            ? brandReputation.brand_data_available
+            : true,
           sources: {
             goodOnYou: assertString(brandSources.good_on_you, "brand_reputation.sources.good_on_you"),
             bcorpCertified: assertBoolean(
@@ -251,7 +260,10 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
       trendAdjustedCpw: assertNumber(
         cpwEstimate.trend_adjusted_cpw,
         "cpw_estimate.trend_adjusted_cpw"
-      )
+      ),
+      fiberDataAvailable: typeof cpwEstimate.fiber_data_available === "boolean"
+        ? cpwEstimate.fiber_data_available
+        : true
     },
     dataSources: {
       googleTrends: {
