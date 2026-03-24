@@ -65,7 +65,7 @@ export const CpwComparisonWidget = memo(function CpwComparisonWidget({
         return () => clearTimeout(timer);
     }, []);
 
-    const isExample = !fastFashionProp && !qualityProp;
+    const isExample = !fastFashionProp || !qualityProp;
     const fastFashion = fastFashionProp ?? EXAMPLE_FAST_FASHION;
     const quality = qualityProp ?? EXAMPLE_QUALITY;
     const savings = (fastFashion.cpw - quality.cpw).toFixed(2);
