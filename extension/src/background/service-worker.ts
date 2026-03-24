@@ -105,7 +105,7 @@ const buildHttpError = async (response: Response): Promise<ScoreApiError> => {
   return new ScoreApiError(errorCode, message, response.status);
 };
 
-const scoreProductRemotely = async (product: ProductContext) => {
+const scoreProductRemotely = async (product: ProductContext, manualMode = false) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), UNRAVEL_SCORE_TIMEOUT_MS);
 
@@ -127,7 +127,8 @@ const scoreProductRemotely = async (product: ProductContext) => {
         currency: product.currency,
         image_url: product.imageUrl,
         brand: product.brand,
-        category: product.category
+        category: product.category,
+        manual_mode: manualMode
       })
     });
   } catch (error) {
@@ -205,13 +206,14 @@ const getFreshProductCache = async (productUrl: string): Promise<ProductCacheEnt
   return entry;
 };
 
-const scoreProductForTab = async (tabId: number, product: ProductContext): Promise<TabScoreState> => {
+const scoreProductForTab = async (tabId: number, product: ProductContext, manualMode = false): Promise<TabScoreState> => {
   try {
-    const score = await scoreProductRemotely(product);
+    const score = await scoreProductRemotely(product, manualMode);
     const payload: ScoredProductPayload = {
       product,
       score,
-      scoredAt: new Date().toISOString()
+      scoredAt: new Date().toISOString(),
+      manualMode
     };
 
     const state: TabScoreState = {
@@ -393,7 +395,7 @@ chrome.runtime.onMessage.addListener(
           return;
         }
 
-        const state = await scoreProductForTab(message.tabId, updatedProduct);
+        const state = await scoreProductForTab(message.tabId, updatedProduct, true);
         sendResponse({ ok: true, data: state });
       })();
 
