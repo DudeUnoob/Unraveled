@@ -950,20 +950,6 @@ Deno.serve(async (req: Request) => {
     let timeline: TimelinePoint[] = [];
     let fromCache = false;
 
-    const candidateCacheKeys = uniqQueries([queryKey, ...trendQueryCandidates]);
-
-    if (supabaseUrl && supabaseKey) {
-      for (const cacheKey of candidateCacheKeys) {
-        const cached = await getCachedTimeline(supabaseUrl, supabaseKey, cacheKey);
-        if (cached) {
-          console.log(`Trend cache hit for: "${cacheKey}"`);
-          timeline = cached.timeline;
-          fromCache = true;
-          break;
-        }
-      }
-    }
-
     let tiktokResult: TikTokSignal = {
       available: false,
       hashtag_views: null,
@@ -977,7 +963,35 @@ Deno.serve(async (req: Request) => {
       normalized_score: 0,
     };
 
+    const candidateCacheKeys = uniqQueries([queryKey, ...trendQueryCandidates]);
+
+    if (supabaseUrl && supabaseKey) {
+      for (const cacheKey of candidateCacheKeys) {
+        const cached = await getCachedTimeline(supabaseUrl, supabaseKey, cacheKey);
+        if (cached) {
+          console.log(`Trend cache hit for: "${cacheKey}"`);
+          timeline = cached.timeline;
+          fromCache = true;
+          if (cached.meta.tiktok_signal) {
+            tiktokResult = cached.meta.tiktok_signal as TikTokSignal;
+          }
+          if (cached.meta.pinterest_signal) {
+            pinterestResult = cached.meta.pinterest_signal as PinterestSignal;
+          }
+          break;
+        }
+      }
+    }
+
     if (!fromCache) {
+      // Start TikTok/Pinterest signal fetches in parallel with Google Trends
+      const tiktokFetchPromise = rapidApiKey
+        ? fetchTikTokSignal(query, rapidApiKey)
+        : Promise.resolve(tiktokResult);
+      const pinterestFetchPromise = rapidApiKey
+        ? fetchPinterestSignal(query, rapidApiKey)
+        : Promise.resolve(pinterestResult);
+
       let googleResult: { timeline: TimelinePoint[]; success: boolean } = {
         timeline: [],
         success: false,
@@ -1012,6 +1026,12 @@ Deno.serve(async (req: Request) => {
       }
 
       timeline = googleResult.timeline;
+
+      // Await signals now that Google Trends data is confirmed
+      [tiktokResult, pinterestResult] = await Promise.all([
+        tiktokFetchPromise,
+        pinterestFetchPromise,
+      ]);
     }
 
     const { params, lifespan, curveData } = fitDecayCurve(timeline);
