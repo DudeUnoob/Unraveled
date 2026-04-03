@@ -1,0 +1,30 @@
+{
+  "project_ref": "fmndxwcgyzevetcoizwd",
+  "synced_on": "2026-04-03",
+  "functions": [
+    {
+      "slug": "score",
+      "remote_version": 15,
+      "verify_jwt": false,
+      "remote_sha256": "262b03e14f541e0b9971912783773398942a40ad9c10164121a1c3f8219a2be4"
+    },
+    {
+      "slug": "trend-analyze",
+      "remote_version": 14,
+      "verify_jwt": false,
+      "remote_sha256": "1a8054fe1d570cdb63486072e6bea78116a5b8b22ccf21fe66abef128363a662"
+    },
+    {
+      "slug": "alternatives",
+      "remote_version": 7,
+      "verify_jwt": false,
+      "remote_sha256": "91c197910f43c0b349bd6d851582c60a98e18d8a6bdfad6dce875dd416e215a9"
+    },
+    {
+      "slug": "trend-image",
+      "remote_version": 7,
+      "verify_jwt": false,
+      "remote_sha256": "641f749ec7532ad42059090b3a87b05bcbff466c5df9ee86ac95c033d669586a"
+    }
+  ]
+}
