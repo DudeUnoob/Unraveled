@@ -238,7 +238,7 @@ export const DecayCurveChart = memo(function DecayCurveChart({
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-charcoal/[0.06]">
                 <span className="font-mono text-[9px] text-charcoal/30 uppercase tracking-wider">
                     {curve.model_type === "keyword_fallback"
-                        ? "Data: Keyword estimate — configure SERP_API_KEY for real data"
+                        ? "Data: Keyword estimate — configure Bright Data for live trend data"
                         : `Data: ${[
                             "Google Trends",
                             ...(data_sources?.tiktok?.available ? ["TikTok"] : []),
