@@ -1,6 +1,18 @@
 // Simple test of fiber parsing
-const { parseFiberComposition } = require('./extension/dist/assets/fiberParser.js');
+const fs = require('fs');
+const path = require('path');
 
+const fiberParserPath = path.resolve(__dirname, 'extension/dist/assets/fiberParser.js');
+
+if (!fs.existsSync(fiberParserPath)) {
+  console.error(
+    `Missing build artifact: ${fiberParserPath}\n` +
+    'Build the extension before running this script so extension/dist/assets/fiberParser.js is available.'
+  );
+  process.exit(1);
+}
+
+const { parseFiberComposition } = require(fiberParserPath);
 const testTexts = [
   "100% cotton",
   "50% cotton, 50% polyester",
