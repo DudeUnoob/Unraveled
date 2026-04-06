@@ -31,9 +31,11 @@ export const extractProductContext = (): ProductContext | null => {
   }
 
   const rawPriceText = firstNonEmptyText(config.priceSelectors);
+
   const descriptionText = gatherText(config.descriptionSelectors);
   const materialText = gatherText(config.materialSelectors);
   const fiberText = gatherFiberText(materialText, descriptionText);
+
   const fiberContent = normalizeFiberComposition(parseFiberComposition(fiberText));
 
   return {

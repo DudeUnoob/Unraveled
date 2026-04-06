@@ -130,5 +130,77 @@
       "#landingImage",
       "#imgTagWrapperId img"
     ]
+  },
+  "uniqlo.com": {
+    "retailer": "Uniqlo",
+    "productUrlPatterns": ["/products/", "/en/products/", "product"],
+    "nameSelectors": [
+      "h1",
+      "[data-testid='product-name']",
+      ".product-name",
+      ".title"
+    ],
+    "priceSelectors": [
+      "[data-testid='product-price']",
+      ".price",
+      ".product-price",
+      "[itemprop='price']"
+    ],
+    "materialSelectors": [
+      "[data-testid='product-materials']",
+      ".materials",
+      ".composition",
+      ".product-materials",
+      ".product-details"
+    ],
+    "descriptionSelectors": [
+      "[data-testid='product-description']",
+      ".description",
+      ".product-description",
+      ".details"
+    ],
+    "imageSelectors": [
+      "[data-testid='product-image']",
+      ".product-image img",
+      ".main-image img"
+    ]
+  },
+  "urbanoutfitters.com": {
+    "retailer": "Urban Outfitters",
+    "productUrlPatterns": ["/", "product"],
+    "nameSelectors": [
+      "h1",
+      "[data-testid='product-name']",
+      ".product-name",
+      ".c-product-meta__title"
+    ],
+    "priceSelectors": [
+      "[data-testid='product-price']",
+      ".price",
+      ".product-price",
+      ".c-product-price",
+      "[itemprop='price']"
+    ],
+    "materialSelectors": [
+      "[data-testid='product-materials']",
+      ".materials",
+      ".composition",
+      ".product-materials",
+      ".c-product-details__materials",
+      ".product-details"
+    ],
+    "descriptionSelectors": [
+      "[data-testid='product-description']",
+      ".description",
+      ".product-description",
+      ".c-product-details__description",
+      ".details"
+    ],
+    "imageSelectors": [
+      "[data-testid='product-image']",
+      ".product-image img",
+      ".c-product-image img",
+      ".main-image img"
+    ]
   }
 }
