@@ -468,10 +468,19 @@ const App = () => {
         type="button"
         className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         onClick={() => {
-          chrome.runtime.sendMessage({ type: "UNRAVEL_DOWNLOAD_FIBER_DATA" }, (response) => {
-            if (response?.ok) {
-              console.log(`Downloaded ${response.count} fiber data entries`);
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            const activeTab = tabs[0];
+
+            if (typeof activeTab?.id !== "number") {
+              console.warn("Unable to download fiber data: no active tab found");
+              return;
             }
+
+            chrome.tabs.sendMessage(activeTab.id, { type: "UNRAVEL_DOWNLOAD_FIBER_DATA" }, (response) => {
+              if (response?.ok) {
+                console.log(`Downloaded ${response.count} fiber data entries`);
+              }
+            });
           });
         }}
       >
