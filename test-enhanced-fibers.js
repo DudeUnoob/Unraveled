@@ -1,6 +1,6 @@
 // Comprehensive test of enhanced fiber recognition
-import { parseFiberComposition } from './lib/fiberParser';
-import { FIBER_ALIASES } from './config/fiberData';
+import { parseFiberComposition } from './extension/src/lib/fiberParser';
+import { FIBER_ALIASES } from './extension/src/config/fiberData';
 
 console.log('🧵 ENHANCED FIBER RECOGNITION TEST');
 console.log('==================================');
