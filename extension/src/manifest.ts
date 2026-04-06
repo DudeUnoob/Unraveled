@@ -18,7 +18,9 @@ const retailerHostPermissions = [
   "https://www.asos.com/*",
   "https://us.shein.com/*",
   "https://www.shein.com/*",
-  "https://www.amazon.com/*"
+  "https://www.amazon.com/*",
+  "https://www.uniqlo.com/*",
+  "https://www.urbanoutfitters.com/*"
 ];
 
 
@@ -48,7 +50,9 @@ export default defineManifest({
         "https://www.asos.com/*",
         "https://us.shein.com/*",
         "https://www.shein.com/*",
-        "https://www.amazon.com/*"
+        "https://www.amazon.com/*",
+        "https://www.uniqlo.com/*",
+        "https://www.urbanoutfitters.com/*"
       ],
       js: ["src/content/content-script.ts"],
       run_at: "document_idle"

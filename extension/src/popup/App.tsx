@@ -464,6 +464,20 @@ const App = () => {
         👕 See Better Alternatives →
       </button>
 
+      <button
+        type="button"
+        className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+        onClick={() => {
+          chrome.runtime.sendMessage({ type: "UNRAVEL_DOWNLOAD_FIBER_DATA" }, (response) => {
+            if (response?.ok) {
+              console.log(`Downloaded ${response.count} fiber data entries`);
+            }
+          });
+        }}
+      >
+        💾 Download Fiber Data →
+      </button>
+
       <details className="mt-3">
         <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-slate-600">
           Data Sources
