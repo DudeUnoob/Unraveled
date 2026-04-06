@@ -3,12 +3,12 @@ import { firstNonEmptyText, gatherText } from './extension/src/lib/dom';
 
 // Mock document for testing selectors
 const mockDocument = {
-  querySelector: (selector: string) => {
+  querySelector: (selector) => {
     // This would need to be populated with actual HTML content
     // For now, we'll create a testing framework
     return null;
   },
-  querySelectorAll: (selector: string) => {
+  querySelectorAll: (selector) => {
     return [];
   }
 };
