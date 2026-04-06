@@ -10,7 +10,6 @@ export const firstNonEmptyText = (selectors: string[]): string => {
   for (const selector of selectors) {
     const node = document.querySelector(selector);
     const text = normalizeText(node?.textContent);
-    console.log(`[UNRAVEL] Selector "${selector}" found:`, !!node, 'text:', text.substring(0, 100));
     if (text) {
       return text;
     }
