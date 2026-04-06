@@ -1,4 +1,4 @@
-import { parseFiberComposition } from './lib/fiberParser';
+import { parseFiberComposition } from './extension/src/lib/fiberParser';
 
 // Test fiber parsing with sample text
 const testTexts = [
