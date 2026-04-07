@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Clock, TrendUp, ChartLine, Skull } from "@phosphor-icons/react";
+import { normalizeQueryText } from "@/lib/normalizeQuery";
 
 interface TrendGalleryCardProps {
   id: string;
@@ -32,6 +33,7 @@ export function TrendGalleryCard({
 }: TrendGalleryCardProps) {
   const config = labelConfig[label] ?? labelConfig.Trending;
   const Icon = config.icon;
+  const displayName = normalizeQueryText(queryText);
   const date = new Date(createdAt).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -69,7 +71,7 @@ export function TrendGalleryCard({
         </div>
 
         <h3 className="font-sans text-base font-semibold text-charcoal capitalize leading-snug mb-2 line-clamp-2">
-          {queryText}
+          {displayName}
         </h3>
 
         <div className="flex items-center justify-between">
