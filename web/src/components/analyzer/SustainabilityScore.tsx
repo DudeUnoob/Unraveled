@@ -344,7 +344,7 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                         >
                             <PuzzlePiece weight="duotone" className="w-4 h-4 text-charcoal/30 shrink-0 mt-0.5" />
                             <p className="font-sans text-xs text-charcoal/40 leading-relaxed">
-                                {brandInfo
+                                {brandInfo?.found
                                     ? "Estimated from trend data plus brand reputation lookup — install the Chrome Extension for exact fiber composition."
                                     : "Estimated from trend data — install the Chrome Extension for detailed fiber and brand analysis."}
                             </p>
