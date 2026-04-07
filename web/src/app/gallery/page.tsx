@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import { GalleryContent } from "./GalleryContent";
+import { normalizeQueryText } from "@/lib/normalizeQuery";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://fmndxwcgyzevetcoizwd.supabase.co";
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -43,7 +44,7 @@ export default async function GalleryPage() {
   // Deduplicate by query_text (keep most recent)
   const seen = new Set<string>();
   const unique = analyses.filter((a) => {
-    const key = a.query_text.toLowerCase().trim();
+    const key = normalizeQueryText(a.query_text).toLowerCase();
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
