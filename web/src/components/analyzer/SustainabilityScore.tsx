@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import type { ExtensionData } from "@/types/analysis";
+import type { BrandInfo, ExtensionData } from "@/types/analysis";
 import { Leaf, Star, ChartLine, Heartbeat, PuzzlePiece } from "@phosphor-icons/react";
 import { computeClientSustainabilityScore } from "@/lib/sustainability";
 
@@ -10,6 +10,7 @@ interface SustainabilityScoreProps {
     extensionData?: ExtensionData | null;
     trendLabel: string;
     weeksRemaining?: number;
+    brandInfo?: BrandInfo;
 }
 
 function getGradeColor(grade: string): string {
@@ -73,6 +74,7 @@ export const SustainabilityScore = memo(function SustainabilityScore({
     extensionData,
     trendLabel,
     weeksRemaining,
+    brandInfo,
 }: SustainabilityScoreProps) {
     const isExtensionMode = extensionData != null && extensionData.sustainabilityScore > 0;
 
@@ -90,7 +92,11 @@ export const SustainabilityScore = memo(function SustainabilityScore({
         effectiveTrendLabel = extensionData.trendLabel || trendLabel;
         features = estimateFeatureContributions(score, effectiveTrendLabel);
     } else {
-        const result = computeClientSustainabilityScore(trendLabel);
+        const result = computeClientSustainabilityScore(
+            trendLabel,
+            undefined,
+            brandInfo?.normalized_score
+        );
         score = result.score;
         grade = result.grade;
         gradeLabel = result.gradeLabel;
@@ -239,6 +245,17 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                             <p className="font-mono text-[10px] text-charcoal/30 tracking-wide pl-6">
                                 Brand data unavailable — mid-range prior applied
                             </p>
+                        ) : !isExtensionMode && brandInfo?.found ? (
+                            <p className="font-mono text-[10px] text-charcoal/40 tracking-wide pl-6">
+                                {brandInfo.name}
+                                {brandInfo.good_on_you ? ` · Good On You: ${brandInfo.good_on_you}` : ""}
+                                {brandInfo.fti_score ? ` · FTI: ${brandInfo.fti_score}` : ""}
+                                {brandInfo.bcorp_certified === true ? " · B-Corp certified" : ""}
+                            </p>
+                        ) : !isExtensionMode && brandInfo?.name ? (
+                            <p className="font-mono text-[10px] text-charcoal/30 tracking-wide pl-6">
+                                {brandInfo.name} not found in ratings data — mid-range prior applied
+                            </p>
                         ) : !isExtensionMode ? (
                             <p className="font-mono text-[10px] text-charcoal/30 tracking-wide pl-6">
                                 Mid-range prior — install extension for brand ratings
@@ -327,7 +344,9 @@ export const SustainabilityScore = memo(function SustainabilityScore({
                         >
                             <PuzzlePiece weight="duotone" className="w-4 h-4 text-charcoal/30 shrink-0 mt-0.5" />
                             <p className="font-sans text-xs text-charcoal/40 leading-relaxed">
-                                Estimated from trend data — install the Chrome Extension for detailed fiber and brand analysis.
+                                {brandInfo?.found
+                                    ? "Estimated from trend data plus brand reputation lookup — install the Chrome Extension for exact fiber composition."
+                                    : "Estimated from trend data — install the Chrome Extension for detailed fiber and brand analysis."}
                             </p>
                         </motion.div>
                     )}

@@ -54,6 +54,15 @@ interface PinterestSignal {
   normalized_score: number;
 }
 
+interface BrandLookupResult {
+  name: string;
+  found: boolean;
+  normalized_score: number;
+  good_on_you: string | null;
+  bcorp_certified: boolean | null;
+  fti_score: string | null;
+}
+
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -166,9 +175,16 @@ function buildTrendQueryCandidates(query: string): string[] {
     candidates.push("baggy jeans");
   }
 
-  return uniqQueries(candidates).filter((candidate) =>
+  const uniqueCandidates = uniqQueries(candidates).filter(Boolean);
+  const multiWordCandidates = uniqueCandidates.filter((candidate) =>
     candidate.split(" ").length >= 2
   );
+
+  if (multiWordCandidates.length > 0) {
+    return multiWordCandidates;
+  }
+
+  return uniqueCandidates.slice(0, 1);
 }
 
 async function fetchTikTokSignal(
@@ -889,6 +905,63 @@ async function saveAnalysis(
   }
 }
 
+const DEFAULT_BRAND_RESULT: BrandLookupResult = {
+  name: "",
+  found: false,
+  normalized_score: 0.4,
+  good_on_you: null,
+  bcorp_certified: null,
+  fti_score: null,
+};
+
+async function lookupBrandRating(
+  brand: string,
+  supabaseUrl: string,
+  supabaseKey: string,
+): Promise<BrandLookupResult> {
+  try {
+    const client = createClient(supabaseUrl, supabaseKey);
+    const brandLower = brand.toLowerCase().trim();
+    const { data } = await client
+      .from("brand_ratings")
+      .select(
+        "brand_name, normalized_brand_score, good_on_you, bcorp_certified, fti_score",
+      )
+      .ilike("brand_name_lower", `%${brandLower}%`)
+      .limit(1)
+      .maybeSingle();
+
+    if (!data) {
+      return { ...DEFAULT_BRAND_RESULT, name: brand };
+    }
+
+    return {
+      name: typeof data.brand_name === "string" && data.brand_name.trim().length > 0
+        ? data.brand_name.trim()
+        : brand,
+      found: true,
+      normalized_score: clamp(
+        Number(data.normalized_brand_score ?? DEFAULT_BRAND_RESULT.normalized_score),
+        0,
+        1,
+      ),
+      good_on_you: typeof data.good_on_you === "string"
+        ? data.good_on_you
+        : null,
+      bcorp_certified: typeof data.bcorp_certified === "boolean"
+        ? data.bcorp_certified
+        : null,
+      fti_score: typeof data.fti_score === "string"
+        ? data.fti_score
+        : data.fti_score != null
+        ? String(data.fti_score)
+        : null,
+    };
+  } catch {
+    return { ...DEFAULT_BRAND_RESULT, name: brand };
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -908,6 +981,10 @@ Deno.serve(async (req: Request) => {
     const body = await req.json();
     const query = String(body.query ?? "").trim();
     const inputType = String(body.input_type ?? "text");
+    const brandInput =
+      typeof body.brand === "string" && body.brand.trim().length > 0
+        ? body.brand.trim()
+        : null;
 
     if (!query) {
       return new Response(
@@ -933,6 +1010,13 @@ Deno.serve(async (req: Request) => {
       );
       const queryKey = normalizeQueryKey(query);
       const fallback = buildFallbackResponse(query, queryKey, false);
+      if (brandInput && supabaseUrl && supabaseKey) {
+        fallback.brand_info = await lookupBrandRating(
+          brandInput,
+          supabaseUrl,
+          supabaseKey,
+        );
+      }
       return new Response(JSON.stringify(fallback), {
         status: 200,
         headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
@@ -1019,6 +1103,13 @@ Deno.serve(async (req: Request) => {
           queryKey,
           googleTrendsProviderConfigured,
         );
+        if (brandInput && supabaseUrl && supabaseKey) {
+          fallback.brand_info = await lookupBrandRating(
+            brandInput,
+            supabaseUrl,
+            supabaseKey,
+          );
+        }
         return new Response(JSON.stringify(fallback), {
           status: 200,
           headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
@@ -1096,6 +1187,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    let brandInfo: BrandLookupResult | null = null;
+    if (brandInput && supabaseUrl && supabaseKey) {
+      brandInfo = await lookupBrandRating(brandInput, supabaseUrl, supabaseKey);
+    }
+
     const now = new Date().toISOString();
     const response = {
       analysis_id: analysisId ?? `temp_${Date.now()}`,
@@ -1139,6 +1235,7 @@ Deno.serve(async (req: Request) => {
       shareable_url: analysisId
         ? `${WEB_APP_BASE_URL}/analyze/${analysisId}`
         : null,
+      ...(brandInfo ? { brand_info: brandInfo } : {}),
     };
 
     return new Response(JSON.stringify(response), {

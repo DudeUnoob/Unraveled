@@ -16,7 +16,13 @@ const INITIAL_STATE: AnalysisStore & { price?: number; wearsPerWeek?: number } =
 export function useAnalyze() {
     const [store, setStore] = useState<AnalysisStore & { price?: number; wearsPerWeek?: number }>(INITIAL_STATE);
 
-    const analyze = useCallback(async (query: string, inputType = "text", price?: number, wearsPerWeek?: number) => {
+    const analyze = useCallback(async (
+        query: string,
+        inputType = "text",
+        price?: number,
+        wearsPerWeek?: number,
+        brand?: string | null,
+    ) => {
         if (!query.trim()) {
             setStore((prev) => ({
                 ...prev,
@@ -35,6 +41,9 @@ export function useAnalyze() {
             };
             if (price && price > 0) {
                 body.price = price;
+            }
+            if (brand && brand.trim()) {
+                body.brand = brand.trim();
             }
 
             const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/trend-analyze`, {
