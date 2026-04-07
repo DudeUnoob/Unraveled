@@ -33,6 +33,15 @@ export interface TrendCurve {
     r_squared: number;
 }
 
+export interface BrandInfo {
+    name: string;
+    found: boolean;
+    normalized_score: number;
+    good_on_you?: string | null;
+    bcorp_certified?: boolean | null;
+    fti_score?: string | null;
+}
+
 export interface TrendAnalysisResponse {
     analysis_id: string;
     query_normalized: string;
@@ -60,11 +69,13 @@ export interface TrendAnalysisResponse {
         };
     };
     shareable_url: string | null;
+    brand_info?: BrandInfo;
 }
 
 export interface ImageAnalysisResponse {
   style_description: string;
   category: string;
+  brand: string | null;
   keywords: string[];
   suggested_query: string;
 }

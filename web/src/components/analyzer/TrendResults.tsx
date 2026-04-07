@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useEffect } from "react";
+import { memo } from "react";
 import { motion } from "framer-motion";
 import type { TrendAnalysisResponse, ExtensionData, CpwData } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
@@ -93,7 +93,6 @@ export const TrendResults = memo(function TrendResults({
     );
     const isFallback = data.trend_curve.model_type === "keyword_fallback"
         || !data.data_sources.google_trends.available;
-    const [copied, setCopied] = useState(false);
 
     // Build CPW data if price is available
     const effectivePrice = price ?? extensionData?.price ?? null;
@@ -130,38 +129,21 @@ export const TrendResults = memo(function TrendResults({
         }
     }
 
-    const handleCopyLink = async () => {
-        const url = data.shareable_url || window.location.href;
-        try {
-            await navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        } catch {
-            // fallback
-        }
-    };
-
     let sectionIndex = 0;
 
     const { user } = useUser();
     const { isSaved, save, unsave } = useSavedAnalyses();
-    const [bookmarked, setBookmarked] = useState(false);
-
-    useEffect(() => {
-        setBookmarked(isSaved(data.analysis_id));
-    }, [isSaved, data.analysis_id]);
+    const bookmarked = isSaved(data.analysis_id);
 
     const handleBookmark = async () => {
         if (bookmarked) {
-            const ok = await unsave(data.analysis_id);
-            if (ok) setBookmarked(false);
+            await unsave(data.analysis_id);
         } else {
-            const ok = await save(
+            await save(
                 data.analysis_id,
                 data.query_normalized,
                 data.trend_lifespan.label,
             );
-            if (ok) setBookmarked(true);
         }
     };
 
@@ -310,6 +292,7 @@ export const TrendResults = memo(function TrendResults({
                     extensionData={extensionData}
                     trendLabel={data.trend_lifespan.label}
                     weeksRemaining={data.trend_lifespan.weeks_remaining}
+                    brandInfo={data.brand_info}
                 />
             </motion.div>
 

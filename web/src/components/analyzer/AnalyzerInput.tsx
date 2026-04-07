@@ -6,8 +6,8 @@ import { MagnifyingGlass, LinkSimple, ImageSquare, ArrowRight, Warning } from "@
 import { ImageUploadDropzone } from "./ImageUploadDropzone";
 
 interface AnalyzerInputProps {
-    onAnalyze: (query: string, inputType: string, price?: number, wearsPerWeek?: number) => void;
-    onImageAnalyzed?: (query: string) => void;
+    onAnalyze: (query: string, inputType: string, price?: number, wearsPerWeek?: number, brand?: string | null) => void;
+    onImageAnalyzed?: (query: string, brand?: string | null) => void;
     isLoading: boolean;
     error: string | null;
     initialQuery?: string;
@@ -26,24 +26,16 @@ export function AnalyzerInput({
     initialPrice,
     autoTrigger = false,
 }: AnalyzerInputProps) {
-    const [query, setQuery] = useState(initialQuery);
+    const [queryDraft, setQueryDraft] = useState(initialQuery);
+    const [queryDirty, setQueryDirty] = useState(false);
     const [inputMode, setInputMode] = useState<InputMode>("text");
-    const [price, setPrice] = useState<string>(initialPrice ? String(initialPrice) : "");
+    const [priceDraft, setPriceDraft] = useState<string>(initialPrice ? String(initialPrice) : "");
+    const [priceDirty, setPriceDirty] = useState(false);
     const [wearsPerWeek, setWearsPerWeek] = useState<string>("2");
     const inputRef = useRef<HTMLInputElement>(null);
     const hasAutoTriggered = useRef(false);
-
-    useEffect(() => {
-        if (initialQuery) {
-            setQuery(initialQuery);
-        }
-    }, [initialQuery]);
-
-    useEffect(() => {
-        if (initialPrice) {
-            setPrice(String(initialPrice));
-        }
-    }, [initialPrice]);
+    const query = queryDirty ? queryDraft : initialQuery;
+    const price = priceDirty ? priceDraft : (initialPrice ? String(initialPrice) : "");
 
     useEffect(() => {
         if (autoTrigger && initialQuery && !hasAutoTriggered.current) {
@@ -109,12 +101,13 @@ export function AnalyzerInput({
             {/* Input Form */}
             {inputMode === "image" ? (
                 <ImageUploadDropzone
-                    onImageAnalyzed={(suggestedQuery) => {
-                        setQuery(suggestedQuery);
+                    onImageAnalyzed={(suggestedQuery, brand) => {
+                        setQueryDirty(true);
+                        setQueryDraft(suggestedQuery);
                         if (onImageAnalyzed) {
-                            onImageAnalyzed(suggestedQuery);
+                            onImageAnalyzed(suggestedQuery, brand);
                         } else {
-                            onAnalyze(suggestedQuery, "image");
+                            onAnalyze(suggestedQuery, "image", undefined, undefined, brand);
                         }
                     }}
                     isLoading={isLoading}
@@ -126,7 +119,10 @@ export function AnalyzerInput({
                             ref={inputRef}
                             type={inputMode === "url" ? "url" : "text"}
                             value={query}
-                            onChange={(e) => setQuery(e.target.value)}
+                            onChange={(e) => {
+                                setQueryDirty(true);
+                                setQueryDraft(e.target.value);
+                            }}
                             placeholder={placeholders[inputMode]}
                             disabled={isLoading}
                             className="w-full py-4 pl-5 pr-36 bg-charcoal/[0.04] border border-charcoal/10 rounded-2xl font-sans text-base text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-300 disabled:opacity-50"
@@ -162,7 +158,10 @@ export function AnalyzerInput({
                         min="0"
                         step="0.01"
                         value={price}
-                        onChange={(e) => setPrice(e.target.value)}
+                        onChange={(e) => {
+                            setPriceDirty(true);
+                            setPriceDraft(e.target.value);
+                        }}
                         placeholder="Item price ($)"
                         disabled={isLoading}
                         className="w-36 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200 disabled:opacity-50"

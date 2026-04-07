@@ -44,7 +44,7 @@ function parseExtensionData(params: URLSearchParams): ExtensionData | null {
 
 function AnalyzerContent() {
     const searchParams = useSearchParams();
-    const { state, data, error, price: analyzedPrice, wearsPerWeek, analyze, reset } = useAnalyze();
+    const { state, data, error, price: analyzedPrice, wearsPerWeek, analyze } = useAnalyze();
 
     // Parse extension data from URL params
     const extensionData = useMemo(
@@ -96,7 +96,7 @@ function AnalyzerContent() {
                     >
                         <AnalyzerInput
                             onAnalyze={analyze}
-                            onImageAnalyzed={(query) => analyze(query, "image")}
+                            onImageAnalyzed={(query, brand) => analyze(query, "image", undefined, undefined, brand)}
                             isLoading={state === "loading"}
                             error={error}
                             initialQuery={initialQuery}

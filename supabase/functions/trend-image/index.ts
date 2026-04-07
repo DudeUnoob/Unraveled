@@ -72,6 +72,8 @@ BRAND DETECTION:
 STYLE QUERY (suggested_query):
 - Generate a specific, trend-searchable query (2-6 words) that captures the ACTUAL style trend this item belongs to.
 - This query will be used for Google Trends and TikTok searches, so it must match real fashion search terms people actually use.
+- Prefer the most specific silhouette or fashion movement visible in the image over generic garment names.
+- If the image only supports a single strong fashion noun (for example "jorts"), return that noun instead of padding with vague adjectives.
 - Good examples: "barrel leg jeans", "mesh ballet flats", "mob wife fur coat", "oversized moto jacket", "sheer mesh top", "boxy cropped blazer", "wide leg cargo pants", "coquette bow top", "quiet luxury trousers".
 - BAD examples (too generic): "trendy hoodies", "nice jeans", "blue shirt", "casual top", "stylish dress", "cool jacket".
 - Focus on the specific silhouette, fabric treatment, style movement, or fashion subculture this item represents.
@@ -119,7 +121,7 @@ Return ONLY valid JSON with these exact keys:
           },
         ],
         max_tokens: 400,
-        temperature: 0.2,
+        temperature: 0.1,
       }),
       signal: AbortSignal.timeout(20000),
     });
