@@ -1,7 +1,7 @@
 /**
  * Normalizes a raw query string for display and storage.
  * If the input is a URL, extracts a human-readable product name from the pathname.
- * Non-URL strings are returned as-is.
+ * Non-URL strings are returned trimmed, unchanged.
  */
 
 const LOCALE_SEGMENTS = new Set([
