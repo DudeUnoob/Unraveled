@@ -2,117 +2,72 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { MagneticButton } from "@/components/ui/MagneticButton";
-import { Browser as ChromeIcon, Asterisk, List, X } from "@phosphor-icons/react";
-import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
+import { ASSETS } from "@/components/home/Assets";
 import { useUser } from "@/hooks/useUser";
-import { AuthButton } from "@/components/auth/AuthButton";
-import { UserMenu } from "@/components/auth/UserMenu";
 
 const navLinks = [
     { name: "Analyze", href: "/analyze" },
     { name: "Gallery", href: "/gallery" },
     { name: "Brands", href: "/brands" },
     { name: "About", href: "/about" },
-    { name: "Dashboard", href: "/dashboard", auth: true },
 ];
 
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [activeLink, setActiveLink] = useState("");
-    const [mobileOpen, setMobileOpen] = useState(false);
     const { scrollY } = useScroll();
-    const { user, loading } = useUser();
+    const { signInWithGoogle } = useUser();
 
     useMotionValueEvent(scrollY, "change", (latest) => {
-        setIsScrolled(latest > 50);
+        setIsScrolled(latest > 10);
     });
 
-    const visibleLinks = navLinks.filter((l) => !l.auth || user);
-
     return (
-        <motion.header
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        <header
             className={cn(
-                "fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-full max-w-[1200px] px-4 md:px-0 transition-all duration-500",
+                "fixed top-0 left-0 right-0 z-[100] w-full transition-all duration-300",
+                isScrolled ? "bg-white shadow-sm border-b border-gray-200" : "bg-white border-b border-gray-200"
             )}
         >
-            <nav
-                className={cn(
-                    "flex items-center justify-between rounded-full px-6 py-4 transition-all duration-500",
-                    isScrolled
-                        ? "bg-white/90 backdrop-blur-md shadow-sm border border-slate-200/50 text-charcoal"
-                        : "bg-transparent text-charcoal"
-                )}
-            >
-                <div className="flex items-center gap-x-12">
-                    <Link href="/" className="flex items-center gap-1.5 font-sans font-medium text-lg tracking-tight uppercase shrink-0">
-                        <Asterisk weight="bold" className="w-5 h-5 text-charcoal/80" />
-                        UNRAVEL
+            <nav className="max-w-[1400px] mx-auto flex items-center justify-between px-6 py-3">
+                {/* Left: Logo */}
+                <div className="flex items-center">
+                    <Link href="/">
+                        <img src={ASSETS.imgImage32} alt="Unraveled Logo" className="w-12 h-12 object-contain" />
                     </Link>
-
-                    <ul className="hidden md:flex items-center gap-6 font-sans text-sm font-medium">
-                        {visibleLinks.map((link) => (
-                            <li key={link.name}>
-                                <Link
-                                    href={link.href}
-                                    onClick={() => setActiveLink(link.name)}
-                                    className="relative transition-opacity hover:opacity-100"
-                                    style={{ opacity: activeLink === link.name ? 1 : 0.6 }}
-                                >
-                                    {link.name}
-                                </Link>
-                            </li>
-                        ))}
-                    </ul>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    {!loading && (user ? <UserMenu /> : <AuthButton />)}
+                {/* Center: Tabs */}
+                <div className="flex items-center justify-center gap-1">
+                    {navLinks.map((link, index) => {
+                        const isActive = index === 0; // Simulate "Analyze" as active tab
+                        return (
+                            <Link
+                                key={link.name}
+                                href={link.href}
+                                className={cn(
+                                    "px-5 flex items-center justify-center transition-colors text-white font-serif font-bold text-lg",
+                                    isActive ? "bg-[#5f6642] h-10 rounded-t-lg rounded-b-none" : "bg-[#5f6642]/80 h-8 rounded-t-lg rounded-b-none hover:bg-[#5f6642]/90"
+                                )}
+                            >
+                                {link.name}
+                            </Link>
+                        );
+                    })}
+                </div>
 
-                    {/* Mobile menu toggle */}
+                {/* Right: Sign In */}
+                <div className="flex items-center justify-end">
                     <button
-                        className="md:hidden p-2 rounded-full hover:bg-stone-100 transition-colors"
-                        onClick={() => setMobileOpen((p) => !p)}
+                        onClick={() => signInWithGoogle()}
+                        className="flex items-center gap-2 bg-[#5f6642] text-white px-4 py-2 rounded-md font-serif font-bold hover:bg-[#5f6642]/90 transition-colors"
                     >
-                        {mobileOpen ? (
-                            <X weight="bold" className="w-5 h-5" />
-                        ) : (
-                            <List weight="bold" className="w-5 h-5" />
-                        )}
+                        <img src={ASSETS.imgGoogle} alt="Google" className="w-4 h-4 object-contain" />
+                        Sign In
                     </button>
                 </div>
             </nav>
-
-            {/* Mobile dropdown */}
-            <AnimatePresence>
-                {mobileOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, y: -8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                        className="md:hidden mt-2 mx-2 rounded-2xl bg-white/95 backdrop-blur-md border border-stone-200 shadow-lg overflow-hidden"
-                    >
-                        <ul className="p-3 space-y-1">
-                            {visibleLinks.map((link) => (
-                                <li key={link.name}>
-                                    <Link
-                                        href={link.href}
-                                        onClick={() => setMobileOpen(false)}
-                                        className="block px-4 py-3 rounded-xl text-sm font-medium text-charcoal hover:bg-stone-50 transition-colors"
-                                    >
-                                        {link.name}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </motion.header>
+        </header>
     );
 }
