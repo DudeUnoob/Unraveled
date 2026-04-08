@@ -4,6 +4,7 @@
     "productUrlPatterns": ["/p", "-p", "product"],
     "nameSelectors": [
       "h1[data-qa-qualifier='product-name']",
+      "h1.product-detail-info__header-name",
       "h1"
     ],
     "priceSelectors": [
@@ -14,15 +15,16 @@
     "materialSelectors": [
       "[data-qa*='composition']",
       "[data-qa*='material']",
-      "main"
+      ".product-detail-extra-detail .structured-component-text",
+      ".product-detail-description .structured-component-text"
     ],
     "descriptionSelectors": [
       "[data-qa='product-detail-description']",
-      "main"
+      ".product-detail-description"
     ],
     "imageSelectors": [
       "img[data-qa='product-image']",
-      "main img"
+      ".media-image img"
     ]
   },
   "hm.com": {
@@ -38,17 +40,18 @@
       "span[data-testid='price-value']"
     ],
     "materialSelectors": [
-      "[data-testid='description']",
       "[data-testid='product-detail-material']",
-      "main"
+      "[data-testid='product-description-text']",
+      ".product-description-text",
+      "#section-descriptionAccordion"
     ],
     "descriptionSelectors": [
       "[data-testid='description']",
-      "main"
+      ".product-description"
     ],
     "imageSelectors": [
       "img[data-testid='product-image']",
-      "main img"
+      ".product-detail-main-image-container img"
     ]
   },
   "asos.com": {
@@ -66,15 +69,16 @@
     "materialSelectors": [
       "[data-testid='about-me']",
       "[id*='about-me']",
-      "main"
+      ".product-description [class*='about']",
+      "#product-details-container"
     ],
     "descriptionSelectors": [
       "[data-testid='description']",
-      "main"
+      ".product-description"
     ],
     "imageSelectors": [
       "img[data-testid='image']",
-      "main img"
+      ".gallery-image img"
     ]
   },
   "shein.com": {
@@ -82,25 +86,28 @@
     "productUrlPatterns": ["/goods/", "product", "/item"],
     "nameSelectors": [
       "h1",
-      "[data-testid='product-intro-name']"
+      "[data-testid='product-intro-name']",
+      ".product-intro__head-name"
     ],
     "priceSelectors": [
       "[data-testid='product-intro-price']",
       "[itemprop='price']",
-      ".from"
+      ".from",
+      ".product-intro__head-price"
     ],
     "materialSelectors": [
       "[data-testid='product-detail-description']",
       "[data-testid='product-intro-detail']",
-      "main"
+      ".product-intro__description-table",
+      ".product-intro__description"
     ],
     "descriptionSelectors": [
       "[data-testid='product-detail-description']",
-      "main"
+      ".product-intro__description"
     ],
     "imageSelectors": [
       "img[data-testid='product-image']",
-      "main img"
+      ".product-intro__main-image img"
     ]
   },
   "amazon.com": {
@@ -118,8 +125,8 @@
     "materialSelectors": [
       "#productFactsDesktop_feature_div",
       "#detailBullets_feature_div",
-      "#productDescription",
-      "#aplus_feature_div"
+      "#tech-specs-desktop",
+      "#productDescription"
     ],
     "descriptionSelectors": [
       "#productDescription",
@@ -129,6 +136,186 @@
     "imageSelectors": [
       "#landingImage",
       "#imgTagWrapperId img"
+    ]
+  },
+  "target.com": {
+    "retailer": "Target",
+    "productUrlPatterns": ["/p/", "product"],
+    "nameSelectors": [
+      "h1[data-test='product-title']",
+      "[data-test='product-title']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[data-test='product-price']",
+      "[data-test='current-price']",
+      "[itemprop='price']"
+    ],
+    "materialSelectors": [
+      "[data-test='item-details-description']",
+      "[data-test='detailsTab']",
+      "#specAndDescript"
+    ],
+    "descriptionSelectors": [
+      "[data-test='item-details-description']",
+      "#specAndDescript"
+    ],
+    "imageSelectors": [
+      "[data-test='product-image'] img",
+      "picture img"
+    ]
+  },
+  "nordstrom.com": {
+    "retailer": "Nordstrom",
+    "productUrlPatterns": ["/s/", "/product"],
+    "nameSelectors": [
+      "h1[itemprop='name']",
+      "[data-element='product-title']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[itemprop='price']",
+      "[data-element='sale-price']",
+      "span[class*='Price']"
+    ],
+    "materialSelectors": [
+      "[id*='product-details']",
+      "[data-element='product-details']",
+      "#product-details-tabs"
+    ],
+    "descriptionSelectors": [
+      "[itemprop='description']",
+      "[data-element='product-description']"
+    ],
+    "imageSelectors": [
+      "img[itemprop='image']",
+      "[data-element='product-media'] img"
+    ]
+  },
+  "uniqlo.com": {
+    "retailer": "Uniqlo",
+    "productUrlPatterns": ["/products/", "/product"],
+    "nameSelectors": [
+      "h1.productTitle",
+      "h1[class*='product']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[class*='price']",
+      "[itemprop='price']",
+      ".price-original"
+    ],
+    "materialSelectors": [
+      "[class*='composition']",
+      "[class*='material']",
+      "#productMaterialInfo",
+      ".pdp-material"
+    ],
+    "descriptionSelectors": [
+      "[class*='description']",
+      "#productDescriptionInfo"
+    ],
+    "imageSelectors": [
+      ".pdp-image img",
+      "img[class*='hero']"
+    ]
+  },
+  "gap.com": {
+    "retailer": "Gap",
+    "productUrlPatterns": ["/browse/product", "/product"],
+    "nameSelectors": [
+      "h1[class*='product-title']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[class*='product-price']",
+      "[itemprop='price']",
+      ".product-price--sale"
+    ],
+    "materialSelectors": [
+      "[class*='fabric-content']",
+      "[class*='product-details']",
+      "#tabDetailsContent"
+    ],
+    "descriptionSelectors": [
+      "[class*='product-description']",
+      "#tabDescriptionContent"
+    ],
+    "imageSelectors": [
+      ".pdp-image img",
+      "img[class*='product']"
+    ]
+  },
+  "forever21.com": {
+    "retailer": "Forever 21",
+    "productUrlPatterns": ["/product/", "/p/"],
+    "nameSelectors": [
+      "h1[class*='product']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[class*='price']",
+      "[itemprop='price']"
+    ],
+    "materialSelectors": [
+      "[class*='description'] [class*='detail']",
+      ".product-description__content"
+    ],
+    "descriptionSelectors": [
+      "[class*='description']",
+      ".product-description__content"
+    ],
+    "imageSelectors": [
+      ".product-detail__image img",
+      "picture img"
+    ]
+  },
+  "urbanoutfitters.com": {
+    "retailer": "Urban Outfitters",
+    "productUrlPatterns": ["/shop/", "/product"],
+    "nameSelectors": [
+      "h1[class*='product']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[class*='price'] span",
+      "[itemprop='price']"
+    ],
+    "materialSelectors": [
+      "[class*='product-content']",
+      "[class*='product-detail'] [class*='description']"
+    ],
+    "descriptionSelectors": [
+      "[class*='product-detail__description']",
+      "[class*='product-content']"
+    ],
+    "imageSelectors": [
+      "[class*='product-image'] img",
+      "picture img"
+    ]
+  },
+  "anthropologie.com": {
+    "retailer": "Anthropologie",
+    "productUrlPatterns": ["/shop/", "/product"],
+    "nameSelectors": [
+      "h1[class*='product']",
+      "h1"
+    ],
+    "priceSelectors": [
+      "[class*='price'] span",
+      "[itemprop='price']"
+    ],
+    "materialSelectors": [
+      "[class*='product-content']",
+      "[class*='product-detail'] [class*='description']"
+    ],
+    "descriptionSelectors": [
+      "[class*='product-detail__description']",
+      "[class*='product-content']"
+    ],
+    "imageSelectors": [
+      "[class*='product-image'] img",
+      "picture img"
     ]
   }
 }
