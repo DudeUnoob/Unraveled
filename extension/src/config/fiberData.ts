@@ -1,21 +1,23 @@
 import type { TrendLabel } from "../types";
 
+/**
+ * Fiber sustainability ranks — higher = more sustainable.
+ * Kept in exact sync with the edge function `score/index.ts`.
+ */
 export const FIBER_RANKS: Record<string, number> = {
   // Premium Natural Fibers
   "organic linen": 0.95,
-  "silk": 0.93,
-  "cashmere": 0.91,
-  "hemp": 0.92,
+  linen: 0.82,
+  hemp: 0.92,
   "organic cotton": 0.9,
   "bamboo": 0.87,
   "tencel/lyocell": 0.88,
   "alpaca": 0.86,
   "mohair": 0.85,
   "recycled wool": 0.85,
-  "wool": 0.83,
-  "jute": 0.82,
-
-  // Sustainable Synthetics
+  wool: 0.78,
+  silk: 0.72,
+  cotton: 0.65,
   "recycled polyester": 0.6,
   "recycled nylon": 0.58,
   "recycled cotton": 0.75,
@@ -54,6 +56,10 @@ export const FIBER_RANKS: Record<string, number> = {
   "sisal": 0.6
 };
 
+/**
+ * Alias map for canonical fiber names.
+ * Kept in exact sync with the edge function `score/index.ts`.
+ */
 export const FIBER_ALIASES: Record<string, string[]> = {
   // Premium Natural Fibers
   "organic linen": ["organic linen", "organic-flax linen", "eco linen"],
@@ -108,22 +114,24 @@ export const FIBER_ALIASES: Record<string, string[]> = {
   "sisal": ["sisal", "sisal hemp", "agave fiber"]
 };
 
+/**
+ * Estimated total wears per fiber type before garment degrades.
+ * Kept in exact sync with the edge function `score/index.ts`.
+ */
 export const FIBER_DURABILITY_WEARS: Record<string, number> = {
   // Premium Natural Fibers
   "organic linen": 90,
-  "silk": 85,
-  "cashmere": 80,
-  "hemp": 88,
+  linen: 85,
+  hemp: 88,
   "organic cotton": 82,
   "bamboo": 75,
   "tencel/lyocell": 74,
   "alpaca": 70,
   "mohair": 65,
   "recycled wool": 78,
-  "wool": 75,
-  "jute": 60,
-
-  // Sustainable Synthetics
+  wool: 75,
+  silk: 60,
+  cotton: 62,
   "recycled polyester": 56,
   "recycled nylon": 54,
   "recycled cotton": 70,
@@ -196,4 +204,4 @@ export const HEALTH_HAZARD_PATTERNS = {
 };
 
 export const DEFAULT_FIBER_FEATURE = 0.35;
-export const DEFAULT_DURABILITY_WEARS = 36;
+export const DEFAULT_DURABILITY_WEARS = 50;

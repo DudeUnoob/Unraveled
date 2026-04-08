@@ -1,20 +1,33 @@
 import { FIBER_ALIASES } from "../config/fiberData";
 
+/**
+ * Normalize a candidate string for fiber matching.
+ * Keeps forward-slashes (important for "viscose/rayon") and hyphens.
+ */
 const normalizeCandidate = (value: string): string =>
-  value.toLowerCase().replace(/[^a-z/\s-]/g, " ").replace(/\s+/g, " ").trim();
+  value.toLowerCase().replace(/[^a-z0-9/\s-]/g, " ").replace(/\s+/g, " ").trim();
 
+/**
+ * Sort aliases longest-first so "organic cotton" beats "cotton".
+ * Built once at module load for performance.
+ */
+const SORTED_ALIAS_ENTRIES: Array<[string, string[]]> = Object.entries(FIBER_ALIASES)
+  .sort(([a], [b]) => b.length - a.length);
+
+/**
+ * Match a fiber name string to its canonical name.
+ *
+ * Uses `includes()` instead of word-boundary regex. The previous `\b` approach
+ * broke because `normalizeCandidate` strips the characters that regex word
+ * boundaries depend on, causing false negatives for common fibers like
+ * "cotton", "polyester", and "modal".
+ */
 const canonicalizeFiber = (value: string): string | null => {
   const normalized = normalizeCandidate(value);
 
-  for (const [canonical, aliases] of Object.entries(FIBER_ALIASES)) {
+  for (const [canonical, aliases] of SORTED_ALIAS_ENTRIES) {
     for (const alias of aliases) {
-      const pattern = new RegExp(
-        `\\b${alias
-          .replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")
-          .replace(/\s+/g, "\\\\s+")}\\b`,
-        "i"
-      );
-      if (pattern.test(normalized)) {
+      if (normalized.includes(alias.toLowerCase())) {
         return canonical;
       }
     }
@@ -31,68 +44,49 @@ const clampPct = (value: number): number => {
   return Math.max(0, Math.min(100, value));
 };
 
+/**
+ * Parse raw fiber text into a canonical composition map.
+ *
+ * Handles these common formats from retailer product pages:
+ *   - "80% Cotton, 20% Polyester"
+ *   - "Cotton 80%, Polyester 20%"
+ *   - "Material: 80% Cotton / 20% Polyester"
+ *   - Multi-line with one fiber per line
+ */
 export const parseFiberComposition = (rawText: string): Record<string, number> => {
   const text = rawText.toLowerCase();
 
-  // Handle structured formats like "shell: 100% cotton, lining: 100% polyester"
-  const structuredMatches = text.match(/(\w+):\s*([^,]+)(?:,|$)/g);
-  if (structuredMatches) {
-    const composition: Record<string, number> = {};
-    for (const match of structuredMatches) {
-      const [, , content] = match.match(/(\w+):\s*(.+)/) || [];
-      if (content) {
-        const subComposition = parseSimpleComposition(content);
-        Object.assign(composition, subComposition);
-      }
-    }
-    return composition;
+  // First try: structured "label: value" pattern (e.g., "Material: 80% Cotton, 20% Polyester")
+  const labelPattern = /(?:material|composition|fabric|content|made of)\s*[:=]\s*(.+)/gi;
+  let enrichedText = text;
+  let match: RegExpExecArray | null;
+  while ((match = labelPattern.exec(text)) !== null) {
+    enrichedText += "\n" + match[1];
   }
 
-  return parseSimpleComposition(text);
-};
-
-const parseSimpleComposition = (text: string): Record<string, number> => {
-  const segments = text
-    .split(/[\n;,|]+/)
+  const segments = enrichedText
+    .split(/[\n;,|•·]+/)
     .map((segment) => normalizeCandidate(segment))
     .filter(Boolean);
 
   const composition: Record<string, number> = {};
 
   for (const segment of segments) {
-    // Enhanced regex patterns to handle more formats
-    const patterns = [
-      // Standard: "100% cotton", "50 % cotton"
-      /(\d{1,3}(?:\.\d+)?)\s*%\s*([a-z][a-z\s/-]{1,50})/i,
-      // Reverse: "cotton 100%", "cotton 50 %"
-      /([a-z][a-z\s/-]{1,50})\s*(\d{1,3}(?:\.\d+)?)\s*%/i,
-      // No percent: "100 cotton", "cotton 100"
-      /(\d{1,3}(?:\.\d+)?)\s+([a-z][a-z\s/-]{1,50})/i,
-      /([a-z][a-z\s/-]{1,50})\s+(\d{1,3}(?:\.\d+)?)/i,
-      // Word-based: "one hundred percent cotton"
-      /(?:one\s+hundred|100)\s*percent?\s*([a-z][a-z\s/-]{1,50})/i,
-      /([a-z][a-z\s/-]{1,50})\s+(?:one\s+hundred|100)\s*percent?/i
-    ];
+    // Pattern 1: "80% cotton" (percent first)
+    const percentFirst = segment.match(/(\d{1,3}(?:\.\d+)?)\s*%\s*([a-z][a-z\s/-]{1,50})/i);
+    // Pattern 2: "cotton 80%" (name first)
+    const nameFirst = segment.match(/([a-z][a-z\s/-]{1,50})\s*(\d{1,3}(?:\.\d+)?)\s*%/i);
 
-    let matched = false;
-    for (const pattern of patterns) {
-      const match = segment.match(pattern);
-      if (match) {
-        const value = match[1]?.match(/\d/) ? match[1] : match[2];
-        const name = match[1]?.match(/\d/) ? match[2] : match[1];
+    const value = percentFirst?.[1] ?? nameFirst?.[2];
+    const name = percentFirst?.[2] ?? nameFirst?.[1];
 
-        if (value && name) {
-          const canonical = canonicalizeFiber(name);
-          if (canonical) {
-            const pct = clampPct(Number(value));
-            if (pct > 0) {
-              composition[canonical] = (composition[canonical] ?? 0) + pct;
-              matched = true;
-              break;
-            }
-          }
-        }
-      }
+    if (!value || !name) {
+      continue;
+    }
+
+    const canonical = canonicalizeFiber(name);
+    if (!canonical) {
+      continue;
     }
 
     // If no percentage found, try to identify fiber without percentage
