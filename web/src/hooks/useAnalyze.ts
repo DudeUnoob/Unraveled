@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
+import { normalizeQueryText } from "@/lib/normalizeQuery";
 import type { AnalysisStore, TrendAnalysisResponse } from "@/types/analysis";
 
 const INITIAL_STATE: AnalysisStore & { price?: number; wearsPerWeek?: number } = {
@@ -16,7 +17,13 @@ const INITIAL_STATE: AnalysisStore & { price?: number; wearsPerWeek?: number } =
 export function useAnalyze() {
     const [store, setStore] = useState<AnalysisStore & { price?: number; wearsPerWeek?: number }>(INITIAL_STATE);
 
-    const analyze = useCallback(async (query: string, inputType = "text", price?: number, wearsPerWeek?: number) => {
+    const analyze = useCallback(async (
+        query: string,
+        inputType = "text",
+        price?: number,
+        wearsPerWeek?: number,
+        brand?: string | null,
+    ) => {
         if (!query.trim()) {
             setStore((prev) => ({
                 ...prev,
@@ -26,15 +33,20 @@ export function useAnalyze() {
             return;
         }
 
-        setStore({ state: "loading", data: null, error: null, query: query.trim(), price, wearsPerWeek });
+        const normalizedQuery = normalizeQueryText(query);
+
+        setStore({ state: "loading", data: null, error: null, query: normalizedQuery, price, wearsPerWeek });
 
         try {
             const body: Record<string, unknown> = {
-                query: query.trim(),
+                query: normalizedQuery,
                 input_type: inputType,
             };
             if (price && price > 0) {
                 body.price = price;
+            }
+            if (brand && brand.trim()) {
+                body.brand = brand.trim();
             }
 
             const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/trend-analyze`, {
@@ -50,7 +62,7 @@ export function useAnalyze() {
 
             const data: TrendAnalysisResponse = await res.json();
 
-            setStore({ state: "success", data, error: null, query: query.trim(), price, wearsPerWeek });
+            setStore({ state: "success", data, error: null, query: normalizedQuery, price, wearsPerWeek });
         } catch (err) {
             const message = err instanceof Error ? err.message : "Something went wrong";
             setStore((prev) => ({ ...prev, state: "error", error: message }));

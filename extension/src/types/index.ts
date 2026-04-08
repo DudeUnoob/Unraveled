@@ -142,6 +142,7 @@ export type RuntimeMessage =
   | { type: "UNRAVEL_GET_SCORE_FOR_TAB"; tabId: number }
   | { type: "UNRAVEL_REFRESH_SCORE_FOR_TAB"; tabId: number }
   | { type: "UNRAVEL_EXTRACT_PRODUCT_CONTEXT" }
+  | { type: "UNRAVEL_DOWNLOAD_FIBER_DATA" }
   | {
       type: "UNRAVEL_SCORE_MANUAL_FIBERS";
       tabId: number;

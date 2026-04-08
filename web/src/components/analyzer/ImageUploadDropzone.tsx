@@ -2,12 +2,11 @@
 
 import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { UploadSimple, Image, SpinnerGap, ArrowRight, Warning, X } from "@phosphor-icons/react";
+import { UploadSimple, SpinnerGap, ArrowRight, Warning, X } from "@phosphor-icons/react";
 import { useImageUpload } from "@/hooks/useImageUpload";
-import type { ImageAnalysisResponse } from "@/types/analysis";
 
 interface ImageUploadDropzoneProps {
-  onImageAnalyzed: (query: string) => void;
+  onImageAnalyzed: (query: string, brand: string | null) => void;
   isLoading: boolean;
 }
 
@@ -18,6 +17,8 @@ export function ImageUploadDropzone({ onImageAnalyzed, isLoading }: ImageUploadD
   const [preview, setPreview] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const queryInputRef = useRef<HTMLInputElement>(null);
+  const brandInputRef = useRef<HTMLInputElement>(null);
   const { uploading, analyzing, error, result, processImage, reset } = useImageUpload();
 
   const handleFile = useCallback(
@@ -141,7 +142,10 @@ export function ImageUploadDropzone({ onImageAnalyzed, isLoading }: ImageUploadD
                 )}
 
                 {result && (
-                  <div>
+                  <div
+                    key={`${result.suggested_query}:${result.brand ?? "manual"}`}
+                    className="space-y-3"
+                  >
                     <p className="font-sans text-sm text-charcoal/70 mb-1 line-clamp-2">
                       {result.style_description}
                     </p>
@@ -155,15 +159,53 @@ export function ImageUploadDropzone({ onImageAnalyzed, isLoading }: ImageUploadD
                         </span>
                       ))}
                     </div>
+                    {result.brand ? (
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest/[0.08] text-forest">
+                        <span className="font-mono text-[10px] uppercase tracking-wider">Brand detected</span>
+                        <span className="font-sans text-sm font-medium">{result.brand}</span>
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        <label htmlFor="manual-brand" className="block font-mono text-[10px] text-charcoal/35 uppercase tracking-wider">
+                          Brand
+                        </label>
+                        <input
+                          id="manual-brand"
+                          type="text"
+                          ref={brandInputRef}
+                          defaultValue=""
+                          placeholder="Brand not visible - enter for better scoring"
+                          disabled={isBusy}
+                          className="w-full max-w-sm py-2.5 px-3 bg-white/80 border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all disabled:opacity-50"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-1">
+                      <label htmlFor="editable-query" className="block font-mono text-[10px] text-charcoal/35 uppercase tracking-wider">
+                        Search query
+                      </label>
+                      <input
+                        id="editable-query"
+                        type="text"
+                        ref={queryInputRef}
+                        defaultValue={result.suggested_query}
+                        placeholder="Refine the detected trend query"
+                        disabled={isBusy}
+                        className="w-full max-w-md py-2.5 px-3 bg-white/80 border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all disabled:opacity-50"
+                      />
+                    </div>
                     <motion.button
                       type="button"
-                      onClick={() => onImageAnalyzed(result.suggested_query)}
-                      disabled={isLoading}
+                      onClick={() => onImageAnalyzed(
+                        queryInputRef.current?.value.trim() || result.suggested_query,
+                        result.brand ?? (brandInputRef.current?.value.trim() || null)
+                      )}
+                      disabled={isBusy || !result.suggested_query.trim()}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-charcoal text-cream rounded-xl font-sans text-sm font-medium disabled:opacity-30 hover:bg-forest transition-colors"
                     >
-                      Analyze &ldquo;{result.suggested_query}&rdquo;
+                      Analyze trend
                       <ArrowRight weight="bold" className="w-3.5 h-3.5" />
                     </motion.button>
                   </div>

@@ -50,6 +50,28 @@ const formatCpw = (value: number, currency: string): string => {
   }
 };
 
+const saveFiberDataToStorage = (fiberData: any) => {
+  // Get existing fiber data from storage
+  chrome.storage.local.get(['unravelFiberData'], (result) => {
+    const existingData = (result.unravelFiberData as any[]) || [];
+    const updatedData = [...existingData, fiberData];
+
+    // Keep only last 100 entries to prevent storage bloat
+    if (updatedData.length > 100) {
+      updatedData.splice(0, updatedData.length - 100);
+    }
+
+    // Save updated data
+    chrome.storage.local.set({ unravelFiberData: updatedData }, () => {
+      if (chrome.runtime.lastError) {
+        console.log('[UNRAVEL] Error saving fiber data:', chrome.runtime.lastError);
+      } else {
+        console.log('[UNRAVEL] ✅ Fiber data saved to storage (', updatedData.length, 'entries)');
+      }
+    });
+  });
+};
+
 const renderOverlay = (payload: ScoredProductPayload) => {
   const anchor = getAnchorElement();
   if (!anchor) {
@@ -81,7 +103,7 @@ const renderOverlay = (payload: ScoredProductPayload) => {
 const detectAndScore = () => {
   const context = extractProductContext();
   if (!context) {
-    removeOverlay();
+    console.log('[UNRAVEL] No product context found');
     return;
   }
 
@@ -92,6 +114,22 @@ const detectAndScore = () => {
 
   lastSignature = signature;
 
+  // Output fiber data as JSON for easy extraction
+  const fiberData = {
+    productUrl: context.productUrl,
+    productName: context.productName,
+    brand: context.brand,
+    retailer: context.retailerDomain,
+    fiberContent: context.fiberContent,
+    rawFiberText: context.fiberText,
+    extractedAt: new Date().toISOString()
+  };
+
+  console.log('[UNRAVEL] FIBER DATA JSON:', JSON.stringify(fiberData, null, 2));
+
+  // Save to local storage for persistence
+  saveFiberDataToStorage(fiberData);
+
   const message: RuntimeMessage = {
     type: "UNRAVEL_PRODUCT_DETECTED",
     payload: context
@@ -99,13 +137,13 @@ const detectAndScore = () => {
 
   chrome.runtime.sendMessage(message, (response) => {
     if (chrome.runtime.lastError || !response?.ok || !response?.data) {
-      removeOverlay();
+      console.log('[UNRAVEL] Scoring failed, but fiber data extracted');
       return;
     }
 
     const state = response.data as TabScoreState;
     if (!state.payload || state.status === "error") {
-      removeOverlay();
+      console.log('[UNRAVEL] Scoring error, but fiber data available');
       return;
     }
 
@@ -118,6 +156,26 @@ chrome.runtime.onMessage.addListener((message: RuntimeMessage, _sender, sendResp
     const context = extractProductContext();
     sendResponse({ ok: true, data: context ?? null });
     return;
+  }
+
+  if (message.type === "UNRAVEL_DOWNLOAD_FIBER_DATA") {
+    chrome.storage.local.get(['unravelFiberData'], (result) => {
+      const fiberData = (result.unravelFiberData as any[]) || [];
+      const dataStr = JSON.stringify(fiberData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+
+      const url = URL.createObjectURL(dataBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `unravel-fiber-data-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      sendResponse({ ok: true, count: fiberData.length });
+    });
+    return true; // Keep message channel open for async response
   }
 });
 

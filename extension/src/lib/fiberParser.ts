@@ -89,12 +89,17 @@ export const parseFiberComposition = (rawText: string): Record<string, number> =
       continue;
     }
 
-    const pct = clampPct(Number(value));
-    if (!pct) {
-      continue;
+    // If no percentage found, try to identify fiber without percentage
+    if (!matched) {
+      const canonical = canonicalizeFiber(segment);
+      if (canonical && !composition[canonical]) {
+        // Assume 100% if it's the only fiber mentioned
+        const fiberCount = Object.keys(composition).length;
+        if (fiberCount === 0) {
+          composition[canonical] = 100;
+        }
+      }
     }
-
-    composition[canonical] = (composition[canonical] ?? 0) + pct;
   }
 
   return composition;
