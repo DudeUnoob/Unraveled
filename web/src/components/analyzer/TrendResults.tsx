@@ -226,7 +226,7 @@ export const TrendResults = memo(function TrendResults({
                 >
                     <p className="font-mono text-[11px] text-amber-800 leading-relaxed">
                         {data.data_sources.google_trends.serp_key_configured === false
-                            ? "⚠️ Real-time trend data unavailable. Metrics below are keyword-based estimates, not derived from Google Trends. Configure Bright Data for live analysis."
+                            ? "⚠️ Real-time trend data unavailable. Metrics below are keyword-based estimates, not derived from Google Trends. Configure SerpAPI (SERP_API_KEY) for live analysis."
                             : "⚠️ Google Trends has insufficient data for this query. Metrics below are keyword-based estimates — try a broader search term for live analysis."}
                     </p>
                 </motion.div>
