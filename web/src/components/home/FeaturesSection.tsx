@@ -8,20 +8,23 @@ const FEATURES = [
         title: "Uncover reality",
         desc: "Unravel's platform is built to help consumers see past greenwashing.",
         bg: ASSETS.imgRoundedRectangle,
+        bgColor: "bg-[#5f6642]",
         textColor: "text-white",
         descColor: "text-white",
     },
     {
         title: "Future-proof style",
         desc: "A powerful data engine translates sustainability metrics into simple insights",
-        bg: ASSETS.imgRoundedRectangle1,
+        bg: ASSETS.imgImage17,
+        bgColor: "bg-[#e4bac5]",
         textColor: "text-[#9e345c]",
         descColor: "text-[#9e345c]",
     },
     {
         title: "Reduce waste",
         desc: "Eliminate impulse buys, endless returns, and low-quality fabrics",
-        bg: ASSETS.imgRoundedRectangle2,
+        bg: ASSETS.imgImage18,
+        bgColor: "bg-[#27416f]",
         textColor: "text-white",
         descColor: "text-white",
     }
@@ -29,43 +32,49 @@ const FEATURES = [
 
 export function FeaturesSection() {
     return (
-        <section className="relative w-full flex flex-col items-center justify-center z-20 min-h-[600px] -mt-[1px]">
+        <section className="relative w-full flex flex-col items-center justify-center z-20 py-16 -mt-[1px] bg-cream">
             {/* 
-              The background image contains both the ripped edges and the gingham pattern.
-              We stretch it with object-fill to ensure the edges cover the top and bottom seamlessly.
+              The container now fills the full width of the desktop as requested, 
+              removing the rounded corners and max-width.
             */}
-            <div className="absolute inset-0 w-full h-full pointer-events-none">
-                <img src={ASSETS.imgGroup14} alt="Gingham Pattern with Ripped Edges" className="w-full h-full object-fill" />
-            </div>
+            <div className="relative w-full min-h-[661px] overflow-hidden flex flex-col items-center justify-center py-20">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <img 
+                        src={ASSETS.imgRoundedRectangle} 
+                        alt="Gingham Pattern" 
+                        className="absolute h-[350.22%] left-[-8.97%] max-w-none top-[-69.82%] w-[117.96%] object-cover" 
+                    />
+                </div>
 
-            <div className="relative z-30 w-full max-w-[1200px] px-8 flex flex-col md:flex-row items-center justify-center gap-8 py-32">
-                {FEATURES.map((feature, i) => (
-                    <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: i * 0.15 }}
-                        className="relative w-full md:w-1/3 aspect-[4/3] rounded-[16px] overflow-hidden shadow-[0px_4px_4px_rgba(0,0,0,0.48)] flex flex-col items-center justify-center text-center px-6"
-                    >
-                        {/* Background Fabric */}
-                        <img
-                            src={feature.bg}
-                            alt={feature.title}
-                            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                        />
-                        
-                        {/* Content */}
-                        <div className="relative z-10 flex flex-col items-center gap-4">
-                            <h3 className={`font-serif font-bold text-[32px] leading-tight ${feature.textColor}`}>
-                                {feature.title}
-                            </h3>
-                            <p className={`font-serif font-bold text-[20px] leading-relaxed max-w-[280px] ${feature.descColor}`}>
-                                {feature.desc}
-                            </p>
-                        </div>
-                    </motion.div>
-                ))}
+                <div className="relative z-30 w-full max-w-[1200px] px-4 md:px-8 flex flex-col md:flex-row items-center justify-center gap-8 mx-auto">
+                    {FEATURES.map((feature, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.6, delay: i * 0.15 }}
+                            className={`relative w-full md:w-1/3 aspect-[4/3] rounded-[16px] overflow-hidden shadow-[0px_4px_4px_rgba(0,0,0,0.48)] flex flex-col items-center justify-center text-center px-6 ${feature.bgColor}`}
+                        >
+                            {/* Background Fabric */}
+                            <img
+                                src={feature.bg}
+                                alt={feature.title}
+                                className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                            />
+                            
+                            {/* Content */}
+                            <div className="relative z-10 flex flex-col items-center gap-4">
+                                <h3 className={`font-serif font-bold text-[32px] leading-tight ${feature.textColor}`}>
+                                    {feature.title}
+                                </h3>
+                                <p className={`font-serif font-bold text-[20px] leading-relaxed max-w-[280px] ${feature.descColor}`}>
+                                    {feature.desc}
+                                </p>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
             </div>
         </section>
     );

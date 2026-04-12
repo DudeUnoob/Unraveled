@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { MagnifyingGlass, LinkSimple, ImageSquare, ArrowRight, Warning } from "@phosphor-icons/react";
 import { ImageUploadDropzone } from "./ImageUploadDropzone";
 
@@ -16,6 +16,70 @@ interface AnalyzerInputProps {
 }
 
 type InputMode = "text" | "url" | "image";
+
+function MagneticButton({
+    children,
+    onClick,
+    disabled,
+    isLoading
+}: {
+    children?: React.ReactNode,
+    onClick?: (e: React.FormEvent) => void,
+    disabled?: boolean,
+    isLoading?: boolean
+}) {
+    const ref = useRef<HTMLButtonElement>(null);
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const springConfig = { stiffness: 150, damping: 15, mass: 0.1 };
+    const springX = useSpring(x, springConfig);
+    const springY = useSpring(y, springConfig);
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        if (!ref.current) return;
+        const { clientX, clientY } = e;
+        const { left, top, width, height } = ref.current.getBoundingClientRect();
+        const centerX = left + width / 2;
+        const centerY = top + height / 2;
+        const distanceX = clientX - centerX;
+        const distanceY = clientY - centerY;
+        
+        // Only pull if within a reasonable range (magnetic effect)
+        x.set(distanceX * 0.35);
+        y.set(distanceY * 0.35);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    return (
+        <motion.button
+            ref={ref}
+            style={{ x: springX, y: springY }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onClick={onClick}
+            disabled={disabled}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="flex items-center gap-2 px-6 py-3 mr-2 bg-forest text-forest-light rounded-full font-serif text-base font-bold disabled:opacity-30 transition-colors hover:bg-forest-dark z-10"
+        >
+            {isLoading ? (
+                <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full"
+                />
+            ) : (
+                <ArrowRight weight="bold" className="w-4 h-4" />
+            )}
+            {isLoading ? "Analyzing" : "Analyze"}
+        </motion.button>
+    );
+}
 
 export function AnalyzerInput({
     onAnalyze,
@@ -59,46 +123,40 @@ export function AnalyzerInput({
         image: "",
     };
 
+    const modes = [
+        { id: "text", label: "Text", icon: MagnifyingGlass },
+        { id: "url", label: "URL", icon: LinkSimple },
+        { id: "image", label: "Image", icon: ImageSquare },
+    ];
+
     return (
-        <div className="w-full">
+        <div className="w-full relative">
             {/* Input Mode Tabs */}
-            <div className="flex items-center gap-1 mb-4">
-                <button
-                    type="button"
-                    onClick={() => setInputMode("text")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-xs font-medium transition-all duration-200 ${inputMode === "text"
-                        ? "bg-charcoal text-cream"
-                        : "text-charcoal/50 hover:text-charcoal/80"
+            <div className="flex gap-2 w-fit mb-4">
+                {modes.map((mode) => (
+                    <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setInputMode(mode.id as InputMode)}
+                        className={`relative flex items-center gap-2 px-5 py-1.5 rounded-full font-serif text-base font-medium transition-colors duration-300 z-10 border-2 ${
+                            inputMode === mode.id
+                                ? "bg-forest text-forest-light border-forest"
+                                : "bg-transparent text-forest border-forest hover:bg-forest/10"
                         }`}
-                >
-                    <MagnifyingGlass weight="bold" className="w-3.5 h-3.5" />
-                    Text
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setInputMode("url")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-xs font-medium transition-all duration-200 ${inputMode === "url"
-                        ? "bg-charcoal text-cream"
-                        : "text-charcoal/50 hover:text-charcoal/80"
-                        }`}
-                >
-                    <LinkSimple weight="bold" className="w-3.5 h-3.5" />
-                    URL
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setInputMode("image")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-sans text-xs font-medium transition-all duration-200 ${inputMode === "image"
-                            ? "bg-charcoal text-cream"
-                            : "text-charcoal/50 hover:text-charcoal/80"
-                        }`}
-                >
-                    <ImageSquare weight="bold" className="w-3.5 h-3.5" />
-                    Image
-                </button>
+                    >
+                        {mode.label}
+                        {inputMode === mode.id && (
+                            <motion.div
+                                layoutId="activeTab"
+                                className="absolute inset-0 bg-forest rounded-full -z-10"
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                        )}
+                    </button>
+                ))}
             </div>
 
-            {/* Input Form */}
+            {/* Input Form with Liquid Glass Refraction */}
             {inputMode === "image" ? (
                 <ImageUploadDropzone
                     onImageAnalyzed={(suggestedQuery, brand) => {
@@ -113,93 +171,98 @@ export function AnalyzerInput({
                     isLoading={isLoading}
                 />
             ) : (
-                <form onSubmit={handleSubmit} className="relative w-full">
-                    <div className="relative">
-                        <input
-                            ref={inputRef}
-                            type={inputMode === "url" ? "url" : "text"}
-                            value={query}
-                            onChange={(e) => {
-                                setQueryDirty(true);
-                                setQueryDraft(e.target.value);
-                            }}
-                            placeholder={placeholders[inputMode]}
-                            disabled={isLoading}
-                            className="w-full py-4 pl-5 pr-36 bg-charcoal/[0.04] border border-charcoal/10 rounded-2xl font-sans text-base text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-300 disabled:opacity-50"
-                        />
+                <form onSubmit={handleSubmit} className="relative w-full group">
+                    <div className="relative overflow-hidden bg-sage/60 border-2 border-forest rounded-full transition-all duration-500">
+                        <div className="flex items-center gap-2">
+                            <input
+                                ref={inputRef}
+                                type={inputMode === "url" ? "url" : "text"}
+                                value={query}
+                                onChange={(e) => {
+                                    setQueryDirty(true);
+                                    setQueryDraft(e.target.value);
+                                }}
+                                placeholder={placeholders[inputMode]}
+                                disabled={isLoading}
+                                className="flex-1 py-4 pl-8 pr-4 bg-transparent border-none font-serif text-lg text-forest placeholder:text-forest/40 focus:outline-none focus:ring-0 disabled:opacity-50"
+                            />
 
-                        <motion.button
-                            type="submit"
-                            disabled={isLoading || !query.trim()}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 px-5 py-2.5 bg-charcoal text-cream rounded-xl font-sans text-sm font-medium disabled:opacity-30 transition-colors hover:bg-forest"
-                        >
-                            {isLoading ? (
-                                <motion.div
-                                    animate={{ rotate: 360 }}
-                                    transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                                    className="w-4 h-4 border-2 border-cream/30 border-t-cream rounded-full"
-                                />
-                            ) : (
-                                <ArrowRight weight="bold" className="w-4 h-4" />
-                            )}
-                            {isLoading ? "Analyzing" : "Analyze"}
-                        </motion.button>
+                            <MagneticButton
+                                isLoading={isLoading}
+                                disabled={isLoading || !query.trim()}
+                                onClick={handleSubmit}
+                            />
+                        </div>
                     </div>
                 </form>
             )}
 
-            {/* Price & Wears/Week Inputs */}
-            {inputMode !== "image" && (
-                <div className="flex items-center gap-3 mt-3">
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={price}
-                        onChange={(e) => {
-                            setPriceDirty(true);
-                            setPriceDraft(e.target.value);
-                        }}
-                        placeholder="Item price ($)"
-                        disabled={isLoading}
-                        className="w-36 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200 disabled:opacity-50"
-                    />
-                    <input
-                        type="number"
-                        min="1"
-                        max="7"
-                        value={wearsPerWeek}
-                        onChange={(e) => setWearsPerWeek(e.target.value)}
-                        placeholder="Wears/week"
-                        disabled={isLoading}
-                        className="w-32 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200 disabled:opacity-50"
-                    />
-                    <span className="font-sans text-xs text-charcoal/30">wears / week</span>
-                </div>
-            )}
+            {/* Price & Wears/Week Inputs - Clean & Unboxed */}
+            <AnimatePresence>
+                {inputMode !== "image" && (
+                    <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex flex-wrap items-center gap-6 mt-6 ml-4"
+                    >
+                        <div className="flex flex-col gap-1.5">
+                            <label className="font-sans text-[10px] font-bold text-charcoal/30 uppercase tracking-widest ml-1">Price</label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal/30 font-bold">$</span>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    value={price}
+                                    onChange={(e) => {
+                                        setPriceDirty(true);
+                                        setPriceDraft(e.target.value);
+                                    }}
+                                    placeholder="0.00"
+                                    disabled={isLoading}
+                                    className="w-32 py-2.5 pl-7 pr-3 bg-forest-light/10 border-b-2 border-forest/10 focus:border-forest rounded-t-xl font-mono text-sm text-charcoal placeholder:text-charcoal/20 focus:outline-none transition-all duration-300"
+                                />
+                            </div>
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5">
+                            <label className="font-sans text-[10px] font-bold text-charcoal/30 uppercase tracking-widest ml-1">Wears / Week</label>
+                            <input
+                                type="number"
+                                min="1"
+                                max="7"
+                                value={wearsPerWeek}
+                                onChange={(e) => setWearsPerWeek(e.target.value)}
+                                placeholder="2"
+                                disabled={isLoading}
+                                className="w-24 py-2.5 px-4 bg-forest-light/10 border-b-2 border-forest/10 focus:border-forest rounded-t-xl font-mono text-sm text-charcoal placeholder:text-charcoal/20 focus:outline-none transition-all duration-300"
+                            />
+                        </div>
+                        
+                        <div className="flex flex-col justify-end h-full self-end mb-1">
+                             <p className="font-sans text-[10px] font-medium text-charcoal/40 max-w-[24ch]">
+                                Helps us calculate the <span className="text-forest font-bold underline underline-offset-4">real</span> cost per wear.
+                            </p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Error Message */}
             <AnimatePresence>
                 {error && (
                     <motion.div
-                        initial={{ opacity: 0, y: -8 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -8 }}
-                        transition={{ duration: 0.2 }}
-                        className="flex items-center gap-2 mt-3 px-4 py-2.5 bg-rust/8 border border-rust/15 rounded-xl"
+                        exit={{ opacity: 0, y: 8 }}
+                        className="flex items-center gap-3 mt-8 px-6 py-4 bg-rust/5 border border-rust/10 rounded-2xl"
                     >
-                        <Warning weight="fill" className="w-4 h-4 text-rust shrink-0" />
-                        <span className="font-sans text-sm text-rust/90">{error}</span>
+                        <Warning weight="fill" className="w-5 h-5 text-rust shrink-0" />
+                        <span className="font-sans text-sm font-medium text-rust/90">{error}</span>
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Helper text */}
-            <p className="mt-3 font-sans text-xs text-charcoal/35 max-w-md">
-                Enter a product name, style keyword, or fashion trend to see its projected lifespan and real cost per wear.
-            </p>
         </div>
     );
 }

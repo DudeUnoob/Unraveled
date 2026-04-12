@@ -11,7 +11,6 @@ import { AnalyzerSkeleton } from "@/components/analyzer/AnalyzerSkeleton";
 import { AnalyzerEmptyState } from "@/components/analyzer/AnalyzerEmptyState";
 import { useAnalyze } from "@/hooks/useAnalyze";
 import type { ExtensionData } from "@/types/analysis";
-import { Asterisk } from "@phosphor-icons/react";
 
 function parseExtensionData(params: URLSearchParams): ExtensionData | null {
     if (params.get("source") !== "extension") return null;
@@ -19,7 +18,6 @@ function parseExtensionData(params: URLSearchParams): ExtensionData | null {
     const score = parseFloat(params.get("sustainability_score") ?? "0");
     const grade = params.get("sustainability_grade") ?? "";
 
-    // Need at least a product name to consider it valid extension data
     const productName = params.get("product_name") ?? "";
     if (!productName) return null;
 
@@ -46,7 +44,6 @@ function AnalyzerContent() {
     const searchParams = useSearchParams();
     const { state, data, error, price: analyzedPrice, wearsPerWeek, analyze } = useAnalyze();
 
-    // Parse extension data from URL params
     const extensionData = useMemo(
         () => parseExtensionData(searchParams),
         [searchParams]
@@ -56,44 +53,70 @@ function AnalyzerContent() {
     const initialQuery = extensionData?.productName ?? searchParams.get("product_name") ?? "";
     const initialPrice = extensionData?.price ?? undefined;
 
-
     return (
-        <main className="flex min-h-[100dvh] flex-col items-center w-full overflow-hidden bg-[#f6f5f1] text-charcoal selection:bg-rust/30">
+        <main className="flex min-h-[100dvh] flex-col items-center w-full overflow-hidden bg-cream text-charcoal selection:bg-forest/30">
             <Navbar />
 
-            {/* Page Header */}
-            <section className="w-full pt-28 pb-8 px-4">
-                <div className="max-w-[1100px] mx-auto">
+            {/* Hero Section - Centered */}
+            <section className="w-full pt-32 pb-8 px-6 lg:px-12">
+                <div className="max-w-[1100px] mx-auto flex flex-col items-center text-center">
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     >
-                        {/* Breadcrumb */}
-                        <div className="flex items-center gap-2 mb-6">
-                            <Asterisk weight="bold" className="w-3.5 h-3.5 text-charcoal/30" />
-                            <span className="font-mono text-[10px] text-charcoal/30 uppercase tracking-widest">
-                                Micro-Trend Death Clock
-                            </span>
-                        </div>
-
-                        <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-charcoal leading-[1.1] mb-3">
-                            When does this{" "}
-                            <span className="font-serif italic text-forest">trend</span> die?
+                        <h1 className="font-serif text-4xl md:text-5xl font-bold text-forest leading-tight mb-4">
+                            When does this trend die?
                         </h1>
-                        <p className="font-sans text-base text-charcoal/45 max-w-xl leading-relaxed mb-8">
+                        <p className="font-serif text-lg md:text-xl text-forest/70 max-w-[800px] mx-auto leading-relaxed">
                             Enter a product, style, or fashion keyword. We pull real search data,
                             fit a decay model, and project exactly when the trend flatlines.
                         </p>
                     </motion.div>
+                </div>
+            </section>
 
-                    {/* Input */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                        className="max-w-2xl"
-                    >
+            {/* Product Images Row */}
+            <section className="w-full px-6 lg:px-12 pb-8">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                    className="max-w-[1100px] mx-auto flex items-center justify-center gap-8 md:gap-12"
+                >
+                    <div className="w-[260px] h-[350px] shrink-0 overflow-hidden rounded-lg">
+                        <img
+                            src="/hero-product-1.png"
+                            alt="Fashion trend example"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <div className="w-[260px] h-[330px] shrink-0 overflow-hidden rounded-lg">
+                        <img
+                            src="/hero-product-2.png"
+                            alt="Fashion trend example"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    <div className="w-[260px] h-[270px] shrink-0 overflow-hidden rounded-lg hidden md:block">
+                        <img
+                            src="/hero-product-3.png"
+                            alt="Fashion trend example"
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                </motion.div>
+            </section>
+
+            {/* Search Bar Section - Green Container */}
+            <section className="w-full px-6 lg:px-12 pb-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="max-w-[1100px] mx-auto"
+                >
+                    <div className="bg-forest-light border-3 border-forest rounded-[20px] p-8">
                         <AnalyzerInput
                             onAnalyze={analyze}
                             onImageAnalyzed={(query, brand) => analyze(query, "image", undefined, undefined, brand)}
@@ -103,12 +126,12 @@ function AnalyzerContent() {
                             initialPrice={initialPrice ?? undefined}
                             autoTrigger={isFromExtension && Boolean(initialQuery)}
                         />
-                    </motion.div>
-                </div>
+                    </div>
+                </motion.div>
             </section>
 
             {/* Results Area */}
-            <section className="w-full flex-1 px-4 pb-20">
+            <section className="w-full flex-1 px-6 lg:px-12 pb-32 z-10 relative">
                 <div className="max-w-[1100px] mx-auto">
                     <AnimatePresence mode="wait">
                         {state === "idle" && (
@@ -142,7 +165,7 @@ function AnalyzerContent() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0 }}
-                                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                                 className="mt-12"
                             >
                                 <TrendResults
@@ -178,10 +201,10 @@ export default function AnalyzePage() {
     return (
         <Suspense
             fallback={
-                <main className="flex min-h-[100dvh] flex-col items-center w-full bg-[#f6f5f1]">
+                <main className="flex min-h-[100dvh] flex-col items-center w-full bg-cream">
                     <Navbar />
                     <div className="flex-1 flex items-center justify-center">
-                        <div className="w-8 h-8 border-2 border-charcoal/20 border-t-charcoal rounded-full animate-spin" />
+                        <div className="w-12 h-12 border-4 border-forest/10 border-t-forest rounded-full animate-spin" />
                     </div>
                 </main>
             }
