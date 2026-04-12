@@ -1,14 +1,11 @@
 "use client";
-
 import { memo } from "react";
 import { motion } from "framer-motion";
 import type { CpwData } from "@/types/analysis";
-import { CurrencyDollar, TShirt, TrendDown, Info } from "@phosphor-icons/react";
-
+import { CurrencyDollar, TShirt, TrendDown, } from "@phosphor-icons/react";
 interface CpwProjectionProps {
     cpw: CpwData;
 }
-
 function formatCurrency(value: number, currency = "USD"): string {
     return new Intl.NumberFormat("en-US", {
         style: "currency",
@@ -17,18 +14,15 @@ function formatCurrency(value: number, currency = "USD"): string {
         maximumFractionDigits: 2,
     }).format(value);
 }
-
 function getCpwColor(cpwValue: number): string {
     if (cpwValue <= 2) return "#5c6c47";
     if (cpwValue <= 5) return "#D4883C";
     return "#C84B31";
 }
-
 export const CpwProjection = memo(function CpwProjection({ cpw }: CpwProjectionProps) {
     const trendCpwColor = getCpwColor(cpw.trendAdjustedCpw);
-    const standardCpwColor = getCpwColor(cpw.standardCpw);
+//     const standardCpwColor = getCpwColor(cpw.standardCpw);
     const isWorse = cpw.trendAdjustedCpw > cpw.standardCpw * 1.2;
-
     return (
         <div className="w-full flex flex-col h-full">
             {/* Header */}
@@ -48,7 +42,6 @@ export const CpwProjection = memo(function CpwProjection({ cpw }: CpwProjectionP
                     </span>
                 </div>
             </div>
-
             {/* CPW Metrics - Unboxed & Stacked (Cockpit Mode) */}
             <div className="flex flex-col gap-10">
                 {/* Trend-Adjusted CPW (Highlighted) */}
@@ -79,12 +72,10 @@ export const CpwProjection = memo(function CpwProjection({ cpw }: CpwProjectionP
                         </motion.span>
                         <span className="font-sans text-xs font-bold text-charcoal/30 uppercase tracking-widest">/ wear</span>
                     </div>
-
                     <p className="font-mono text-[10px] text-charcoal/40 font-medium">
                         Capped by <span className="text-charcoal font-bold">~{cpw.trendAdjustedWears}</span> wears before trend death.
                     </p>
                 </div>
-
                 {/* Standard CPW (Comparative) */}
                 <div className="flex flex-col gap-4 pt-8 border-t border-forest/5">
                     <div className="flex items-center justify-between">
@@ -104,13 +95,11 @@ export const CpwProjection = memo(function CpwProjection({ cpw }: CpwProjectionP
                         </span>
                         <span className="font-sans text-xs font-bold text-charcoal/20 uppercase tracking-widest">/ wear</span>
                     </div>
-
                     <p className="font-mono text-[10px] text-charcoal/30 font-medium">
                         Based on <span className="font-bold">~{cpw.standardWears}</span> wears (material lifespan).
                     </p>
                 </div>
             </div>
-
             {/* Insight Callout */}
             {isWorse && (
                 <motion.div

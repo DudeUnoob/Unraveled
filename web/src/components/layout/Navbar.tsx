@@ -1,31 +1,26 @@
 "use client";
-
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useMotionValueEvent, } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ASSETS } from "@/components/home/Assets";
 import { useUser } from "@/hooks/useUser";
 import { GoogleLogo } from "@phosphor-icons/react";
-
 const navLinks = [
     { name: "Analyze", href: "/analyze" },
     { name: "Gallery", href: "/gallery" },
     { name: "Brands", href: "/brands" },
     { name: "About", href: "/about" },
 ];
-
 export function Navbar() {
     const [isScrolled, setIsScrolled] = useState(false);
     const { scrollY } = useScroll();
     const { signInWithGoogle, user } = useUser();
     const pathname = usePathname();
-
     useMotionValueEvent(scrollY, "change", (latest) => {
         setIsScrolled(latest > 20);
     });
-
     return (
         <header
             className={cn(
@@ -46,7 +41,6 @@ export function Navbar() {
                             <img src={ASSETS.imgImage32} alt="Unraveled Logo" className="w-10 h-10 object-contain" />
                         </Link>
                     </div>
-
                     {/* Center: Tabs */}
                     <div className="flex items-center gap-1">
                         {navLinks.map((link) => {
@@ -72,7 +66,6 @@ export function Navbar() {
                             );
                         })}
                     </div>
-
                     {/* Right: Sign In / User */}
                     <div className="flex items-center gap-4">
                         {!user ? (

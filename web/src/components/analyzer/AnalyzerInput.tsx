@@ -1,10 +1,8 @@
 "use client";
-
-import { useState, useEffect, useRef, useMemo } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { useState, useEffect, useRef, } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring, } from "framer-motion";
 import { MagnifyingGlass, LinkSimple, ImageSquare, ArrowRight, Warning } from "@phosphor-icons/react";
 import { ImageUploadDropzone } from "./ImageUploadDropzone";
-
 interface AnalyzerInputProps {
     onAnalyze: (query: string, inputType: string, price?: number, wearsPerWeek?: number, brand?: string | null) => void;
     onImageAnalyzed?: (query: string, brand?: string | null) => void;
@@ -14,9 +12,7 @@ interface AnalyzerInputProps {
     initialPrice?: number;
     autoTrigger?: boolean;
 }
-
 type InputMode = "text" | "url" | "image";
-
 function MagneticButton({
     children,
     onClick,
@@ -31,11 +27,9 @@ function MagneticButton({
     const ref = useRef<HTMLButtonElement>(null);
     const x = useMotionValue(0);
     const y = useMotionValue(0);
-
     const springConfig = { stiffness: 150, damping: 15, mass: 0.1 };
     const springX = useSpring(x, springConfig);
     const springY = useSpring(y, springConfig);
-
     const handleMouseMove = (e: React.MouseEvent) => {
         if (!ref.current) return;
         const { clientX, clientY } = e;
@@ -49,12 +43,10 @@ function MagneticButton({
         x.set(distanceX * 0.35);
         y.set(distanceY * 0.35);
     };
-
     const handleMouseLeave = () => {
         x.set(0);
         y.set(0);
     };
-
     return (
         <motion.button
             ref={ref}
@@ -80,7 +72,6 @@ function MagneticButton({
         </motion.button>
     );
 }
-
 export function AnalyzerInput({
     onAnalyze,
     onImageAnalyzed,
@@ -100,7 +91,6 @@ export function AnalyzerInput({
     const hasAutoTriggered = useRef(false);
     const query = queryDirty ? queryDraft : initialQuery;
     const price = priceDirty ? priceDraft : (initialPrice ? String(initialPrice) : "");
-
     useEffect(() => {
         if (autoTrigger && initialQuery && !hasAutoTriggered.current) {
             hasAutoTriggered.current = true;
@@ -108,7 +98,6 @@ export function AnalyzerInput({
             onAnalyze(initialQuery, "text", p);
         }
     }, [autoTrigger, initialQuery, initialPrice, onAnalyze, price]);
-
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!query.trim() || isLoading) return;
@@ -116,46 +105,35 @@ export function AnalyzerInput({
         const w = wearsPerWeek ? parseInt(wearsPerWeek, 10) : undefined;
         onAnalyze(query.trim(), inputMode, p && p > 0 ? p : undefined, w && w > 0 ? w : undefined);
     };
-
     const placeholders: Record<InputMode, string> = {
         text: "barrel leg jeans, mesh ballet flats, butter yellow...",
         url: "https://www.zara.com/us/en/product-page.html",
         image: "",
     };
-
     const modes = [
         { id: "text", label: "Text", icon: MagnifyingGlass },
         { id: "url", label: "URL", icon: LinkSimple },
         { id: "image", label: "Image", icon: ImageSquare },
     ];
-
     return (
         <div className="w-full relative">
             {/* Input Mode Tabs */}
-            <div className="flex gap-2 w-fit mb-4">
+            <div className="flex gap-3 w-fit mb-4 ml-1">
                 {modes.map((mode) => (
                     <button
                         key={mode.id}
                         type="button"
                         onClick={() => setInputMode(mode.id as InputMode)}
-                        className={`relative flex items-center gap-2 px-5 py-1.5 rounded-full font-serif text-base font-medium transition-colors duration-300 z-10 border-2 ${
+                        className={`relative flex items-center justify-center min-w-[100px] px-6 py-2 rounded-full font-serif text-lg font-medium transition-colors duration-300 z-10 border-[3px] ${
                             inputMode === mode.id
-                                ? "bg-forest text-forest-light border-forest"
+                                ? "bg-forest text-white border-forest"
                                 : "bg-transparent text-forest border-forest hover:bg-forest/10"
                         }`}
                     >
                         {mode.label}
-                        {inputMode === mode.id && (
-                            <motion.div
-                                layoutId="activeTab"
-                                className="absolute inset-0 bg-forest rounded-full -z-10"
-                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                            />
-                        )}
                     </button>
                 ))}
             </div>
-
             {/* Input Form with Liquid Glass Refraction */}
             {inputMode === "image" ? (
                 <ImageUploadDropzone
@@ -172,7 +150,7 @@ export function AnalyzerInput({
                 />
             ) : (
                 <form onSubmit={handleSubmit} className="relative w-full group">
-                    <div className="relative overflow-hidden bg-sage/60 border-2 border-forest rounded-full transition-all duration-500">
+                    <div className="relative overflow-hidden bg-[#9fa686] border-2 border-forest rounded-full transition-all duration-500">
                         <div className="flex items-center gap-2">
                             <input
                                 ref={inputRef}
@@ -184,9 +162,8 @@ export function AnalyzerInput({
                                 }}
                                 placeholder={placeholders[inputMode]}
                                 disabled={isLoading}
-                                className="flex-1 py-4 pl-8 pr-4 bg-transparent border-none font-serif text-lg text-forest placeholder:text-forest/40 focus:outline-none focus:ring-0 disabled:opacity-50"
+                                className="flex-1 py-4 pl-8 pr-4 bg-transparent border-none font-serif text-lg text-white placeholder:text-white/60 focus:outline-none focus:ring-0 disabled:opacity-50"
                             />
-
                             <MagneticButton
                                 isLoading={isLoading}
                                 disabled={isLoading || !query.trim()}
@@ -196,7 +173,6 @@ export function AnalyzerInput({
                     </div>
                 </form>
             )}
-
             {/* Price & Wears/Week Inputs - Clean & Unboxed */}
             <AnimatePresence>
                 {inputMode !== "image" && (
@@ -248,7 +224,6 @@ export function AnalyzerInput({
                     </motion.div>
                 )}
             </AnimatePresence>
-
             {/* Error Message */}
             <AnimatePresence>
                 {error && (

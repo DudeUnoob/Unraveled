@@ -88,26 +88,26 @@ export function StatsSection() {
                         </div>
                         <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Uncover reality</h3>
                         <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
-                            Unravel's platform is built to help consumers see past greenwashing. Optimized to eliminate marketing fiction and instantly deliver transparent tracking.
+                            Unravel&apos;s platform is built to help consumers see past greenwashing. Optimized to eliminate marketing fiction and instantly deliver transparent tracking.
                         </p>
-                    </motion.div>
+                        </motion.div>
 
-                    {/* Feature 2 */}
-                    <motion.div
+                        {/* Feature 2 */}
+                        <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: "-100px" }}
                         transition={{ duration: 0.8, delay: 0.5 }}
                         className="flex flex-col border-t pt-8 md:pt-0 md:border-t-0 md:border-l border-charcoal/[0.08] md:pl-8"
-                    >
+                        >
                         <div className="w-10 h-10 mb-6 text-charcoal">
                             <ShieldCheck weight="light" className="w-full h-full" />
                         </div>
                         <h3 className="font-sans text-[17px] font-medium text-charcoal mb-3">Future-proof style</h3>
                         <p className="font-sans text-[15px] leading-relaxed text-charcoal/60">
-                            A powerful data engine translates sustainability metrics into simple insights, enabling the industry's most detailed consumer wardrobe analysis.
+                            A powerful data engine translates sustainability metrics into simple insights, enabling the industry&apos;s most detailed consumer wardrobe analysis.
                         </p>
-                    </motion.div>
+                        </motion.div>
 
                     {/* Feature 3 */}
                     <motion.div

@@ -2,19 +2,16 @@
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import type { TrendAnalysisResponse, ExtensionData, CpwData } from "@/types/analysis";
+import type { TrendAnalysisResponse, ExtensionData } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
 import { DecayCurveChart } from "./DecayCurveChart";
 import { ShareButton } from "./ShareButton";
 import { AlternativesSection } from "./AlternativesSection";
 import { ExtensionDataBanner } from "./ExtensionDataBanner";
-import { CpwProjection } from "./CpwProjection";
-import { ComparisonCallout } from "./ComparisonCallout";
 import { SustainabilityScore } from "./SustainabilityScore";
-import { TrendUp, Clock, ChartLine, BookmarkSimple, Info } from "@phosphor-icons/react";
+import { BookmarkSimple, Info } from "@phosphor-icons/react";
 import { useUser } from "@/hooks/useUser";
 import { useSavedAnalyses } from "@/hooks/useSavedAnalyses";
-import { getStandardWears, DEFAULT_WEARS_PER_WEEK } from "@/lib/durability";
 
 interface TrendResultsProps {
     data: TrendAnalysisResponse;
@@ -48,22 +45,6 @@ function getPhaseVerdict(label: string, weeksRemaining: number): string {
     }
 }
 
-function computeWears(
-    weeksRemaining: number,
-    trendLabel: string,
-    standardWears: number,
-    wearsPerWeek: number,
-): { standard: number; adjusted: number } {
-    const wearsBeforeDeath = wearsPerWeek * weeksRemaining;
-    const adjusted = trendLabel === "Timeless"
-        ? standardWears
-        : Math.min(standardWears, Math.max(1, wearsBeforeDeath));
-    return {
-        standard: standardWears,
-        adjusted,
-    };
-}
-
 const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -90,8 +71,6 @@ const itemVariants = {
 export const TrendResults = memo(function TrendResults({
     data,
     extensionData,
-    price,
-    wearsPerWeek: wearsPerWeekProp,
 }: TrendResultsProps) {
     const phaseColor = getPhaseColor(data.trend_lifespan.label);
     const verdict = getPhaseVerdict(
@@ -100,38 +79,6 @@ export const TrendResults = memo(function TrendResults({
     );
     const isFallback = data.trend_curve.model_type === "keyword_fallback"
         || !data.data_sources.google_trends.available;
-
-    const effectivePrice = price ?? extensionData?.price ?? null;
-    const effectiveWearsPerWeek = wearsPerWeekProp ?? DEFAULT_WEARS_PER_WEEK;
-    const smartStandardWears = extensionData?.fiberDurabilityWears && extensionData.fiberDurabilityWears > 0
-        ? extensionData.fiberDurabilityWears
-        : getStandardWears(data.query_normalized);
-    
-    let cpwData: CpwData | null = null;
-    if (effectivePrice && effectivePrice > 0) {
-        const wears = computeWears(data.trend_lifespan.weeks_remaining, data.trend_lifespan.label, smartStandardWears, effectiveWearsPerWeek);
-        if (extensionData?.cpw && extensionData.cpw > 0) {
-            cpwData = {
-                price: effectivePrice,
-                currency: extensionData.currency || "USD",
-                standardCpw: extensionData.cpw,
-                standardWears: wears.standard,
-                trendAdjustedCpw: extensionData.cpwAdjusted || extensionData.cpw,
-                trendAdjustedWears: wears.adjusted,
-                trendLabel: data.trend_lifespan.label,
-            };
-        } else {
-            cpwData = {
-                price: effectivePrice,
-                currency: extensionData?.currency || "USD",
-                standardCpw: Math.round((effectivePrice / wears.standard) * 100) / 100,
-                standardWears: wears.standard,
-                trendAdjustedCpw: Math.round((effectivePrice / wears.adjusted) * 100) / 100,
-                trendAdjustedWears: wears.adjusted,
-                trendLabel: data.trend_lifespan.label,
-            };
-        }
-    }
 
     const { user } = useUser();
     const { isSaved, save, unsave } = useSavedAnalyses();
@@ -153,46 +100,55 @@ export const TrendResults = memo(function TrendResults({
             className="w-full flex flex-col gap-12"
         >
             {/* Header / Verdict Section */}
-            <motion.div variants={itemVariants} className="w-full flex flex-col md:flex-row md:items-end justify-between gap-8 pb-12 border-b border-forest/5">
-                <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-4">
-                         <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center"
-                            style={{ backgroundColor: `${phaseColor}10` }}
-                        >
-                            {data.trend_lifespan.label === "Timeless" ? (
-                                <Clock weight="duotone" className="w-5 h-5" style={{ color: phaseColor }} />
-                            ) : data.trend_lifespan.label === "Dead" ? (
-                                <TrendUp weight="duotone" className="w-5 h-5 rotate-180" style={{ color: phaseColor }} />
-                            ) : (
-                                <ChartLine weight="duotone" className="w-5 h-5" style={{ color: phaseColor }} />
-                            )}
+            <motion.div variants={itemVariants} className="w-full pb-12 mb-8 border-b border-forest/10">
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                    {/* Product Image (if available) */}
+                    {extensionData && extensionData.productUrl && (
+                        <div className="w-[240px] shrink-0">
+                            {/* Placeholder for actual product image logic. We use a placeholder matching the design's aspect ratio */}
+                            <div className="w-[180px] h-[240px] bg-forest/5 rounded-2xl overflow-hidden border-2 border-forest">
+                                <img src="/hero-product-1.png" className="w-full h-full object-cover" alt="Product" />
+                            </div>
                         </div>
-                        <span className="font-sans text-[10px] font-bold text-charcoal/30 uppercase tracking-[0.2em]">Analysis Verdict</span>
-                    </div>
-                    <h2 className="font-sans text-4xl md:text-5xl font-bold text-charcoal tracking-tighter mb-4">
-                        <span className="capitalize">{data.query_normalized}</span>
-                        <span className="mx-4 text-forest-light">/</span>
-                        <span style={{ color: phaseColor }} className="font-drama italic font-normal">{data.trend_lifespan.label}</span>
-                    </h2>
-                    <p className="font-sans text-lg text-charcoal/60 leading-relaxed max-w-2xl">
-                        {verdict}
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                     {user && (
-                        <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handleBookmark}
-                            className="flex items-center gap-2 px-5 py-3 rounded-full bg-forest-light/20 text-forest font-sans text-xs font-bold transition-colors hover:bg-forest-light/40"
-                        >
-                            <BookmarkSimple weight={bookmarked ? "fill" : "bold"} className="w-4 h-4" />
-                            {bookmarked ? "Saved" : "Save Analysis"}
-                        </motion.button>
                     )}
-                    <ShareButton shareableUrl={data.shareable_url} />
+                    
+                    {/* Header Info */}
+                    <div className="flex-1 flex flex-col gap-4">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex flex-col gap-1">
+                                {(extensionData?.brand || data.brand_info?.name) && (
+                                    <span className="font-serif text-[18px] text-[#5c6c47] uppercase tracking-wide">
+                                        {extensionData?.brand || data.brand_info?.name}
+                                    </span>
+                                )}
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <h2 className="font-serif text-4xl font-bold text-[#5c6c47]">
+                                        {extensionData?.productName || data.query_normalized}
+                                    </h2>
+                                    <div className="px-5 py-1.5 bg-[#d494ac] text-white rounded-full font-serif text-[20px] font-bold">
+                                        {data.trend_lifespan.label.toLowerCase()}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {user && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={handleBookmark}
+                                        className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#dce2c5] text-forest font-sans text-xs font-bold transition-colors"
+                                    >
+                                        <BookmarkSimple weight={bookmarked ? "fill" : "bold"} className="w-4 h-4" />
+                                        {bookmarked ? "Saved" : "Save"}
+                                    </motion.button>
+                                )}
+                                <ShareButton shareableUrl={data.shareable_url} />
+                            </div>
+                        </div>
+                        <p className="font-serif text-2xl text-[#5c6c47] leading-relaxed max-w-[800px] mt-4">
+                            {verdict}
+                        </p>
+                    </div>
                 </div>
             </motion.div>
 
@@ -218,10 +174,10 @@ export const TrendResults = memo(function TrendResults({
                 </motion.div>
             )}
 
-            {/* Bento Grid Row 1: Main Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                 {/* Sustainability Score (Main Bento Card) */}
-                <motion.div variants={itemVariants} className="lg:col-span-7 bg-white/40 backdrop-blur-sm border border-forest/5 rounded-[2.5rem] p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] flex flex-col">
+            {/* Main Content Area - Vertically Stacked */}
+            <div className="w-full flex flex-col gap-12">
+                 {/* Sustainability Score */}
+                <motion.div variants={itemVariants} className="w-full">
                     <SustainabilityScore
                         extensionData={extensionData}
                         trendLabel={data.trend_lifespan.label}
@@ -230,72 +186,26 @@ export const TrendResults = memo(function TrendResults({
                     />
                 </motion.div>
 
-                {/* Trend Lifespan Stats (Side Bento Card) */}
-                <motion.div variants={itemVariants} className="lg:col-span-5 bg-white/40 backdrop-blur-sm border border-forest/5 rounded-[2.5rem] p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] flex flex-col justify-between overflow-hidden">
+                <div className="w-full h-px bg-forest/10" />
+
+                {/* Trend Lifespan Stats */}
+                <motion.div variants={itemVariants} className="w-full">
                     <TrendLifespanBar lifespan={data.trend_lifespan} />
                 </motion.div>
-            </div>
 
-            {/* Bento Grid Row 2: Decay & CPW */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-                {/* Decay Curve Chart (Wide Bento Card) */}
-                <motion.div variants={itemVariants} className="lg:col-span-8 bg-white/40 backdrop-blur-sm border border-forest/5 rounded-[2.5rem] p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)]">
+                {/* Decay Curve Chart */}
+                <motion.div variants={itemVariants} className="w-full bg-[#eaf1d7] rounded-[20px] p-8 md:p-12 shadow-sm border border-[#5c6c47]/10">
                     <DecayCurveChart curve={data.trend_curve} phaseColor={phaseColor} data_sources={data.data_sources} />
                 </motion.div>
 
-                {/* CPW Projection (Compact Bento Card) */}
-                {cpwData && (
-                    <motion.div variants={itemVariants} className="lg:col-span-4 bg-white/40 backdrop-blur-sm border border-forest/5 rounded-[2.5rem] p-10 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.03)] flex flex-col">
-                        <CpwProjection cpw={cpwData} />
-                    </motion.div>
-                )}
-            </div>
-
-            {/* Comparison Callout (Full Width Bento Card) */}
-            {cpwData && (
-                <motion.div variants={itemVariants} className="w-full bg-forest text-cream rounded-[2.5rem] p-10 overflow-hidden relative">
-                    <ComparisonCallout cpw={cpwData} query={data.query_normalized} />
-                    
-                    {/* Decorative refraction pattern */}
-                    <div className="absolute inset-0 pointer-events-none opacity-10 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.2),transparent_70%)]" />
+                {/* Sustainable Alternatives */}
+                <motion.div variants={itemVariants} className="w-full pt-12 border-t border-forest/10">
+                    <AlternativesSection
+                        query={data.query_normalized}
+                        trendLabel={data.trend_lifespan.label}
+                    />
                 </motion.div>
-            )}
-
-            {/* Model Parameters (Monospace cockpit mode) */}
-            <motion.div variants={itemVariants} className="w-full pt-12">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="w-8 h-px bg-forest/20" />
-                    <h3 className="font-sans text-[10px] font-bold text-charcoal/40 uppercase tracking-[0.2em]">
-                        Decay Model Parameters
-                    </h3>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-12">
-                    {[
-                        { label: "Peak Interest (K)", value: data.decay_params.K.toFixed(0) },
-                        { label: "Growth Rate (r)", value: isFallback ? "—" : data.decay_params.r.toFixed(3) },
-                        { label: "Decay Constant (λ)", value: isFallback ? "—" : data.decay_params.lambda.toFixed(3) },
-                        { label: "Statistical Fit (R²)", value: isFallback ? "N/A" : `${(data.decay_params.r_squared * 100).toFixed(1)}%` },
-                    ].map((param) => (
-                        <div key={param.label} className="group">
-                            <span className="block font-sans text-[10px] font-bold text-charcoal/25 uppercase tracking-widest mb-3 group-hover:text-forest transition-colors duration-300">
-                                {param.label}
-                            </span>
-                            <span className="font-mono text-2xl font-medium text-charcoal/80 tabular-nums">
-                                {param.value}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
-
-            {/* Sustainable Alternatives (Full Width) */}
-            <motion.div variants={itemVariants} className="w-full mt-12 pt-12 border-t border-forest/5">
-                <AlternativesSection
-                    query={data.query_normalized}
-                    trendLabel={data.trend_lifespan.label}
-                />
-            </motion.div>
+            </div>
         </motion.div>
     );
 });

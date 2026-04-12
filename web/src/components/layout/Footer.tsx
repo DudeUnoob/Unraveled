@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Asterisk, Sparkle } from "@phosphor-icons/react";
 
@@ -89,19 +90,19 @@ export function Footer() {
                     <div className="flex flex-col gap-6">
                         <span className="font-sans text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Navigation</span>
                         <div className="flex flex-col gap-3">
-                            <a href="/analyze" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Analyze Trend</a>
-                            <a href="/gallery" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Style Gallery</a>
-                            <a href="/brands" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Brand Index</a>
-                            <a href="/about" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Our Mission</a>
+                            <Link href="/analyze" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Analyze Trend</Link>
+                            <Link href="/gallery" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Style Gallery</Link>
+                            <Link href="/brands" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Brand Index</Link>
+                            <Link href="/about" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Our Mission</Link>
                         </div>
                     </div>
                     
                     <div className="flex flex-col gap-6">
                         <span className="font-sans text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Legal</span>
                         <div className="flex flex-col gap-3">
-                            <a href="#" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Privacy Policy</a>
-                            <a href="#" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Terms of Service</a>
-                            <a href="#" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Cookie Policy</a>
+                            <Link href="#" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Privacy Policy</Link>
+                            <Link href="#" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Terms of Service</Link>
+                            <Link href="#" className="font-sans text-sm font-bold text-cream/60 hover:text-white transition-colors">Cookie Policy</Link>
                         </div>
                     </div>
 

@@ -1,10 +1,7 @@
 "use client";
-
-import { motion } from "framer-motion";
 import { ASSETS } from "./Assets";
 import Link from "next/link";
 import { MagneticButton } from "@/components/ui/MagneticButton";
-
 export function HeroSection() {
     return (
         <section className="relative w-full h-[90vh] min-h-[700px] flex items-center justify-center overflow-hidden bg-white mt-[64px]">
@@ -12,7 +9,6 @@ export function HeroSection() {
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#ecf9d8_0%,_#ffffff_70%)]" />
             </div>
-
             {/* Orbiting Clothes */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center max-w-[1200px] mx-auto w-full h-full">
                 {/* Top Left (Yellow Top) */}
@@ -36,7 +32,6 @@ export function HeroSection() {
                 {/* Bottom Right (Cream T-Shirt) */}
                 <img src={ASSETS.imgImage10} alt="Cream t-shirt" className="absolute bottom-[18%] right-[20%] w-[18%] object-contain rotate-[15deg]" />
             </div>
-
             {/* Centered Text */}
             <div className="relative z-10 flex flex-col items-center justify-center text-center mt-8">
                 <p className="font-drama italic text-[3rem] md:text-[4rem] text-[#5f6642] mb-1">
