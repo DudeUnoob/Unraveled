@@ -1,5 +1,6 @@
 "use client";
 
+import { Navbar } from "@/components/layout/Navbar";
 import Link from "next/link";
 
 const ASSETS = {
@@ -16,7 +17,7 @@ const ASSETS = {
   star3: "https://www.figma.com/api/mcp/asset/9794e05c-b991-483d-b22b-b552b43116c7",
   tableImage: "https://www.figma.com/api/mcp/asset/86a7965b-61c0-48a8-94f3-1abe125c37fe",
   waveFooterAndPlaidTop: "https://www.figma.com/api/mcp/asset/70eadf7e-5b9a-4a5e-a3a6-6ae91d6d4459",
-  logoImage: "https://www.figma.com/api/mcp/asset/c85546d0-0856-4202-99ec-51611a674df4",
+  logoImage: "https://www.figma.com/api/mcp/asset/1f6220d2-4cfd-4a13-9df3-8bd0d05c6573",
   googleIcon: "https://www.figma.com/api/mcp/asset/654c7ecb-205b-40a2-88b0-dc257c29c397",
   tabInactive: "https://www.figma.com/api/mcp/asset/ac2f3189-2966-415f-b082-556e421f1231",
   lineNavbar: "https://www.figma.com/api/mcp/asset/752307d6-9ff8-4e46-824d-b65869c2ee9a",
@@ -26,43 +27,7 @@ export default function AboutPage() {
   return (
     <main className="flex min-h-[100dvh] flex-col w-full overflow-hidden bg-white text-charcoal selection:bg-rust/30 pb-0">
       
-      {/* Custom Folder-Tab Navbar matching Figma exactly */}
-      <header className="w-full relative h-[80px] flex items-end px-4 md:px-8 z-50 pt-6">
-        {/* Logo */}
-        <div className="absolute left-4 md:left-8 top-4 w-[45px] h-[41px]">
-          <img src={ASSETS.logoImage} alt="Logo" className="w-full h-full object-contain" />
-        </div>
-
-        {/* Tabs */}
-        <div className="hidden md:flex mx-auto items-end gap-[6px] relative z-10 pb-[1px]">
-          <Link href="/analyze" className="w-[104px] h-[32px] relative flex items-center justify-center group">
-            <img src={ASSETS.tabInactive} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <span className="relative z-10 font-serif font-bold text-white text-[20px]">Analyze</span>
-          </Link>
-          <Link href="/gallery" className="w-[104px] h-[32px] relative flex items-center justify-center group">
-            <img src={ASSETS.tabInactive} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <span className="relative z-10 font-serif font-bold text-white text-[20px]">Gallery</span>
-          </Link>
-          <Link href="/brands" className="w-[104px] h-[32px] relative flex items-center justify-center group">
-            <img src={ASSETS.tabInactive} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            <span className="relative z-10 font-serif font-bold text-white text-[20px]">Brands</span>
-          </Link>
-          <div className="w-[129px] h-[40px] bg-[#5f6642] rounded-t-[10px] flex items-center justify-center relative">
-            <span className="font-serif font-bold text-white text-[22px]">About</span>
-          </div>
-        </div>
-
-        {/* Sign In */}
-        <div className="hidden md:flex absolute right-8 bottom-[1px] w-[125px] h-[35px] bg-[#5f6642] rounded-t-[10px] items-center justify-center gap-2 cursor-pointer z-10">
-          <span className="font-serif font-bold text-[#fff3f8] text-[20px]">Sign In</span>
-          <img src={ASSETS.googleIcon} alt="Google" className="w-5 h-5 object-contain" />
-        </div>
-
-        {/* Bottom Line */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <img src={ASSETS.lineNavbar} alt="" className="w-full h-[2px] object-cover" />
-        </div>
-      </header>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="relative w-full pt-20 pb-12 px-6 flex flex-col items-center z-10 bg-white">

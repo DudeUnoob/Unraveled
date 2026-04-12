@@ -25,7 +25,7 @@ export const ASSETS = {
   imgImage22: "https://www.figma.com/api/mcp/asset/b42305a5-c75b-46f0-beaf-33f7b62dad12", 
   imgImage20: "https://www.figma.com/api/mcp/asset/861ca09b-4338-4be0-903c-f4467e2dbe87", 
   imgGoogle: "https://www.figma.com/api/mcp/asset/1d497a03-1cb2-4f12-a7ee-e6310a31305e", 
-  imgImage32: "https://www.figma.com/api/mcp/asset/8bd7df62-d27c-4ff7-bb91-1e242cb245c2", 
+  imgImage32: "https://www.figma.com/api/mcp/asset/1f6220d2-4cfd-4a13-9df3-8bd0d05c6573", 
   imgImage34: "https://www.figma.com/api/mcp/asset/6810c17a-d848-46b2-aee2-74cc5e8f6f5a", 
   imgGroup14: "https://www.figma.com/api/mcp/asset/50006035-d677-4e46-9b89-8d61008dd38e", 
   imgGroup30: "https://www.figma.com/api/mcp/asset/8e6ec0c3-88a2-43f7-a3f2-a6fbe7cd1ede"
