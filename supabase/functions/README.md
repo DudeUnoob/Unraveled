@@ -17,17 +17,12 @@ Use [`.env.example`](/Users/dam_kamani/Downloads/Unraveled/supabase/functions/.e
 
 ## Required environment variables
 
-- `BRIGHTDATA_API_KEY`
-- `BRIGHTDATA_SERP_ZONE`
-- `RAPIDAPI_KEY`
-- `SERP_API_KEY`
-- `OPENAI_API_KEY`
+- `SERP_API_KEY` — used by all functions for Google Trends (TIMESERIES), Google Search, and Google Shopping
+- `RAPIDAPI_KEY` — TikTok and Pinterest social signal APIs
+- `OPENAI_API_KEY` — image analysis (trend-image function)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `WEB_APP_BASE_URL`
-
-`BRIGHTDATA_API_KEY` and `BRIGHTDATA_SERP_ZONE` replace the old SerpApi configuration for the Bright Data-migrated Google Trends and Google Search paths.
-`SERP_API_KEY` is still required by `alternatives` until that function is migrated.
 
 ## Commands
 
