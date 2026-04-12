@@ -2,11 +2,12 @@ import selectorConfig from "../config/retailerSelectors.json";
 import type { RetailerSelectorConfig } from "../types";
 
 const KNOWN_CATEGORIES: Array<{ category: string; keywords: string[] }> = [
-  { category: "tops", keywords: ["top", "shirt", "tee", "blouse", "tank"] },
-  { category: "bottoms", keywords: ["jeans", "pants", "trouser", "skirt", "shorts"] },
-  { category: "dresses", keywords: ["dress", "gown"] },
-  { category: "outerwear", keywords: ["jacket", "coat", "hoodie", "sweater", "cardigan"] },
-  { category: "shoes", keywords: ["shoe", "sneaker", "boot", "loafer", "heel"] }
+  { category: "tops", keywords: ["top", "shirt", "tee", "blouse", "tank", "polo", "henley", "camisole", "crop top", "tunic", "bodysuit"] },
+  { category: "bottoms", keywords: ["jeans", "pants", "trouser", "skirt", "shorts", "chino", "jogger", "legging", "cargo", "culotte", "wide leg"] },
+  { category: "dresses", keywords: ["dress", "gown", "romper", "jumpsuit", "playsuit"] },
+  { category: "outerwear", keywords: ["jacket", "coat", "hoodie", "sweater", "cardigan", "blazer", "parka", "vest", "pullover", "sweatshirt", "anorak", "windbreaker", "trench"] },
+  { category: "shoes", keywords: ["shoe", "sneaker", "boot", "loafer", "heel", "sandal", "mule", "flat", "oxford", "slipper", "clog", "espadrille"] },
+  { category: "accessories", keywords: ["bag", "belt", "hat", "scarf", "glove", "wallet", "sunglasses", "jewelry", "watch", "tie"] }
 ];
 
 const retailerEntries = Object.entries(

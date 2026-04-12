@@ -3,7 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   fetchGoogleTrendsTimeline,
   type TimelinePoint,
-} from "../_shared/brightdata.ts";
+} from "../_shared/serpapi.ts";
 
 const TIKTOK_API_BASE = "https://tiktok-api23.p.rapidapi.com";
 const PINTEREST_API_BASE = "https://pinterest-scraper5.p.rapidapi.com";
@@ -996,17 +996,15 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const brightDataApiKey = Deno.env.get("BRIGHTDATA_API_KEY");
-    const brightDataZone = Deno.env.get("BRIGHTDATA_SERP_ZONE");
+    const serpApiKey = Deno.env.get("SERP_API_KEY");
     const rapidApiKey = Deno.env.get("RAPIDAPI_KEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    const googleTrendsProviderConfigured =
-      Boolean(brightDataApiKey && brightDataZone);
+    const googleTrendsProviderConfigured = Boolean(serpApiKey);
 
     if (!googleTrendsProviderConfigured) {
       console.warn(
-        "Bright Data Google Trends is not configured, using keyword fallback",
+        "SerpAPI Google Trends is not configured (SERP_API_KEY missing), using keyword fallback",
       );
       const queryKey = normalizeQueryKey(query);
       const fallback = buildFallbackResponse(query, queryKey, false);
@@ -1084,8 +1082,7 @@ Deno.serve(async (req: Request) => {
       for (const candidate of trendQueryCandidates) {
         console.log(`Trying Google Trends candidate: "${candidate}"`);
         const attempt = await fetchGoogleTrendsTimeline(candidate, {
-          apiKey: brightDataApiKey!,
-          zone: brightDataZone!,
+          apiKey: serpApiKey!,
           date: "today 12-m",
         });
         if (attempt.success && attempt.timeline.length > 0) {
@@ -1096,7 +1093,7 @@ Deno.serve(async (req: Request) => {
 
       if (!googleResult.success || googleResult.timeline.length === 0) {
         console.warn(
-          `Bright Data Trends returned no data for "${query}", using keyword fallback`,
+          `SerpAPI Trends returned no data for "${query}", using keyword fallback`,
         );
         const fallback = buildFallbackResponse(
           query,

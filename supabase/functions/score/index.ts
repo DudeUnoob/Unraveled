@@ -4,7 +4,7 @@ import {
   fetchGoogleSearchResultCount,
   fetchGoogleTrendsTimeline,
   type TimelinePoint,
-} from "../_shared/brightdata.ts";
+} from "../_shared/serpapi.ts";
 
 const FIBER_RANKS: Record<string, number> = {
   "organic linen": 0.95,
@@ -250,15 +250,13 @@ interface PinterestSignal {
 
 async function fetchPinterestSignal(
   query: string,
-  brightDataApiKey: string,
-  brightDataZone: string,
+  serpApiKey: string,
 ): Promise<PinterestSignal> {
   try {
     const result = await fetchGoogleSearchResultCount(
       `site:pinterest.com ${query}`,
       {
-        apiKey: brightDataApiKey,
-        zone: brightDataZone,
+        apiKey: serpApiKey,
         hl: "en",
         gl: "us",
         num: 10,
@@ -686,12 +684,11 @@ async function cacheTrendResult(
   }
 }
 
-async function classifyTrendViaBrightData(
+async function classifyTrend(
   productName: string,
   category: string,
 ): Promise<TrendResult> {
-  const brightDataApiKey = Deno.env.get("BRIGHTDATA_API_KEY");
-  const brightDataZone = Deno.env.get("BRIGHTDATA_SERP_ZONE");
+  const serpApiKey = Deno.env.get("SERP_API_KEY");
   const rapidApiKey = Deno.env.get("RAPIDAPI_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -708,9 +705,9 @@ async function classifyTrendViaBrightData(
     normalized_score: 0,
   };
 
-  if (!brightDataApiKey || !brightDataZone) {
+  if (!serpApiKey) {
     console.warn(
-      "Bright Data Google Trends is not configured, falling back to keyword classification",
+      "SerpAPI is not configured (SERP_API_KEY missing), falling back to keyword classification",
     );
     const fallback = classifyTrendByKeywords(productName, category);
     return {
@@ -735,8 +732,7 @@ async function classifyTrendViaBrightData(
 
   const fetchPromises: Promise<unknown>[] = [
     fetchGoogleTrendsTimeline(query, {
-      apiKey: brightDataApiKey,
-      zone: brightDataZone,
+      apiKey: serpApiKey,
       date: "today 12-m",
     }),
   ];
@@ -744,7 +740,7 @@ async function classifyTrendViaBrightData(
     fetchPromises.push(fetchTikTokSignal(query, rapidApiKey));
   }
   fetchPromises.push(
-    fetchPinterestSignal(query, brightDataApiKey, brightDataZone),
+    fetchPinterestSignal(query, serpApiKey),
   );
 
   const results = await Promise.all(fetchPromises);
@@ -1008,7 +1004,7 @@ Deno.serve(async (req: Request) => {
       ? 0
       : clamp(Number(brandData.normalized_brand_score), 0, 1);
 
-    const trend = await classifyTrendViaBrightData(productName, category);
+    const trend = await classifyTrend(productName, category);
     const trendFeature = TREND_FEATURE_MAP[trend.label] ?? 0.75;
 
     const rawScore = (
