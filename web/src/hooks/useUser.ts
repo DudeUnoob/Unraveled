@@ -16,7 +16,7 @@ export function useUser() {
   }, [supabase]);
 
   useEffect(() => {
-    fetchUser();
+    setTimeout(() => { fetchUser(); }, 0);
 
     const {
       data: { subscription },

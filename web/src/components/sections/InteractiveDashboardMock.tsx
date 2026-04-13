@@ -1,12 +1,9 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { GaugeWidget } from "@/components/dashboard/GaugeWidget";
 import { FiberBarWidget, GarmentData } from "@/components/dashboard/FiberBarWidget";
 import { CheckCircle, Database, Robot, FileCode } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
-
 const GARMENTS: (GarmentData & { trendFeed: string })[] = [
     {
         name: "Fast Fashion Blouse",
@@ -35,23 +32,19 @@ const GARMENTS: (GarmentData & { trendFeed: string })[] = [
         ]
     },
 ];
-
 export function InteractiveDashboardMock({ activeFeature = 0 }: { activeFeature?: number }) {
     // Feature 2 animation state
     const [isClean, setIsClean] = useState(false);
-
     useEffect(() => {
-        setIsClean(false);
+        setTimeout(() => setIsClean(false), 0);
         if (activeFeature === 2) {
             const timer = setTimeout(() => setIsClean(true), 2500);
             return () => clearTimeout(timer);
         }
     }, [activeFeature]);
-
     return (
         <div className="w-full h-full flex items-center justify-center p-8 bg-white/50 backdrop-blur-sm relative overflow-hidden">
             <AnimatePresence mode="wait">
-
                 {/* FEATURE 0: Parameter Network */}
                 {activeFeature === 0 && (
                     <motion.div
@@ -89,12 +82,10 @@ export function InteractiveDashboardMock({ activeFeature = 0 }: { activeFeature?
                                 <span className="text-[9px] font-mono text-charcoal/40 uppercase">Supply Chain</span>
                             </motion.div>
                         </div>
-
                         {/* Animated connecting lines (CSS simulation for neatness) */}
                         <div className="absolute top-[3.5rem] bottom-0 left-0 right-0 w-full flex justify-center -z-10 opacity-20 hidden">
                             {/* SVG could go here, omitting for layout simplicity, conveying the network via visual stagger instead */}
                         </div>
-
                         <motion.div
                             layoutId="fiberbar-card"
                             className="w-full rounded-[1.5rem] bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.08)] border border-charcoal/[0.04] overflow-hidden"
@@ -104,7 +95,6 @@ export function InteractiveDashboardMock({ activeFeature = 0 }: { activeFeature?
                         </motion.div>
                     </motion.div>
                 )}
-
                 {/* FEATURE 1: Smart Scoring */}
                 {activeFeature === 1 && (
                     <motion.div
@@ -124,7 +114,6 @@ export function InteractiveDashboardMock({ activeFeature = 0 }: { activeFeature?
                         </motion.div>
                     </motion.div>
                 )}
-
                 {/* FEATURE 2: Data Quality Resolution */}
                 {activeFeature === 2 && (
                     <motion.div
@@ -174,7 +163,6 @@ export function InteractiveDashboardMock({ activeFeature = 0 }: { activeFeature?
                                     <div className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#4A6741]/10 text-[#4A6741] px-4 py-1.5 rounded-full font-mono text-[10px] uppercase font-bold tracking-widest border border-[#4A6741]/20">
                                         <CheckCircle weight="fill" className="w-4 h-4" /> Data Standardized
                                     </div>
-
                                     <motion.div
                                         layoutId="fiberbar-card"
                                         className="w-full rounded-[1.5rem] bg-white shadow-[0_20px_40px_-10px_rgba(0,0,0,0.08)] border border-charcoal/[0.04] overflow-hidden"

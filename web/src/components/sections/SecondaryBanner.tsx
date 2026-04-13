@@ -30,7 +30,7 @@ export function SecondaryBanner() {
 
                 {/* Subheadline */}
                 <p className="font-sans text-[15px] md:text-[17px] text-white/80 max-w-[600px] leading-relaxed mb-10 text-center">
-                    Unravel's AI engine multiplies your conscious choices, not your budget. Accelerate brand discovery, track real garment lifespans, and uncover automated transparency.
+                    Unravel&apos;s AI engine multiplies your conscious choices, not your budget. Accelerate brand discovery, track real garment lifespans, and uncover automated transparency.
                 </p>
 
                 {/* CTA */}

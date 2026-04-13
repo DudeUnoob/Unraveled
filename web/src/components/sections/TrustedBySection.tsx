@@ -63,7 +63,7 @@ export function TrustedBySection() {
                     Trusted by leaders
                 </h2>
                 <p className="font-sans text-charcoal/60 text-[14px] md:text-[15px] max-w-[500px] mx-auto leading-relaxed">
-                    Analyze supply chains like the world's best companies — <br className="hidden md:block" />
+                    Analyze supply chains like the world&apos;s best companies — <br className="hidden md:block" />
                     without needing a 100+ person team.
                 </p>
             </motion.div>
@@ -110,7 +110,7 @@ export function TrustedBySection() {
                             {/* Left Text Box */}
                             <div className="w-full md:w-[55%] h-1/2 md:h-full p-8 md:p-14 flex flex-col justify-center bg-[#F6F5F1] z-10 relative">
                                 <p className="font-sans text-[1.25rem] md:text-[1.75rem] font-normal leading-[1.35] tracking-tight text-charcoal/90 mb-8">
-                                    "{testimonials[activeIndex].quote}"
+                                    &quot;{testimonials[activeIndex].quote}&quot;
                                 </p>
                                 <div className="mt-auto flex flex-col gap-1">
                                     <div className="font-sans font-semibold text-[13px] text-charcoal">{testimonials[activeIndex].author}</div>

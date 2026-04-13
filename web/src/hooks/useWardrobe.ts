@@ -64,7 +64,7 @@ export function useWardrobe() {
   }, [supabase]);
 
   useEffect(() => {
-    fetchItems();
+    setTimeout(() => { fetchItems(); }, 0);
   }, [fetchItems]);
 
   const addItem = useCallback(

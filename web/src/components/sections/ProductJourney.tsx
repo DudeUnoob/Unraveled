@@ -1,12 +1,10 @@
 "use client";
-
 import { useState } from "react";
-import { useScroll, useTransform, motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { InteractiveExtensionMock } from "./InteractiveExtensionMock";
 import { InteractiveDashboardMock } from "./InteractiveDashboardMock";
 import { ArrowRight, Lightning, Money, HardDrives, ChartLineUp } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
-
 const EXTENSION_FEATURES = [
     {
         icon: Lightning,
@@ -24,7 +22,6 @@ const EXTENSION_FEATURES = [
         desc: "Seamlessly extract product specs into structured parameter networks."
     }
 ];
-
 const DASHBOARD_FEATURES = [
     {
         icon: HardDrives,
@@ -42,17 +39,13 @@ const DASHBOARD_FEATURES = [
         desc: "Turn unstructured web data into pristine, actionable material intelligence."
     }
 ];
-
 export function ProductJourney() {
     const [activeExtensionFeature, setActiveExtensionFeature] = useState(0);
     const [activeDashboardFeature, setActiveDashboardFeature] = useState(0);
-
     return (
         <section className="w-full bg-white text-charcoal py-32 flex flex-col gap-32 border-b border-charcoal/5">
-
             {/* Feature 1: The AI Overlay (Extension) */}
             <div className="max-w-[1000px] mx-auto w-full px-4 flex flex-col gap-12">
-
                 {/* Section Header */}
                 <div className="w-full flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex flex-col items-start max-w-2xl">
@@ -68,14 +61,12 @@ export function ProductJourney() {
                         Explore <ArrowRight weight="bold" className="w-3 h-3" />
                     </button>
                 </div>
-
                 {/* Section Content: Image Left, Features Right */}
                 <div className="w-full flex flex-col lg:flex-row gap-12 lg:gap-16">
                     {/* UI: Left - Interactive Extension Mock */}
                     <div className="lg:w-[55%] w-full bg-[#f6f5f1] rounded-[1rem] p-4 md:p-12 min-h-[450px] flex items-center justify-center relative z-10 border border-charcoal/[0.03]">
                         <InteractiveExtensionMock activeFeature={activeExtensionFeature} />
                     </div>
-
                     {/* Features: Right */}
                     <div className="lg:w-[45%] flex flex-col justify-center gap-2 py-4 relative">
                         {EXTENSION_FEATURES.map((feature, idx) => {
@@ -119,12 +110,9 @@ export function ProductJourney() {
                         })}
                     </div>
                 </div>
-
             </div>
-
             {/* Feature 2: The Dashboard */}
             <div className="max-w-[1000px] mx-auto w-full px-4 flex flex-col gap-12">
-
                 {/* Section Header */}
                 <div className="w-full flex flex-col md:flex-row md:items-start justify-between gap-6">
                     <div className="flex flex-col items-start max-w-2xl">
@@ -140,10 +128,8 @@ export function ProductJourney() {
                         Explore <ArrowRight weight="bold" className="w-3 h-3" />
                     </button>
                 </div>
-
                 {/* Section Content: Features Left, Image Right */}
                 <div className="w-full flex flex-col-reverse lg:flex-row gap-12 lg:gap-16">
-
                     {/* Features: Left */}
                     <div className="lg:w-[45%] flex flex-col justify-center gap-2 py-4 relative">
                         {DASHBOARD_FEATURES.map((feature, idx) => {
@@ -186,17 +172,12 @@ export function ProductJourney() {
                             );
                         })}
                     </div>
-
                     {/* UI: Right - Interactive Dashboard Mock */}
                     <div className="lg:w-[55%] w-full bg-[#f6f5f1] rounded-[1rem] p-0 md:p-4 min-h-[450px] flex items-center justify-center relative z-10 overflow-hidden border border-charcoal/[0.03]">
                         <InteractiveDashboardMock activeFeature={activeDashboardFeature} />
                     </div>
-
                 </div>
-
             </div>
-
         </section>
     );
 }
-
