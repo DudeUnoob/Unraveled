@@ -5,6 +5,12 @@ import {
   fetchGoogleTrendsTimeline,
   type TimelinePoint,
 } from "../_shared/serpapi.ts";
+import {
+  buildScoreTrendQuerySeed,
+  buildTrendQueryCandidates,
+  normalizeQueryKey,
+} from "../_shared/trendQueries.ts";
+import { completeStructuredJson } from "../_shared/llmRouter.ts";
 
 const FIBER_RANKS: Record<string, number> = {
   "organic linen": 0.95,
@@ -135,6 +141,187 @@ function canonicalizeFiber(name: string): string | null {
     }
   }
   return null;
+}
+
+const MAX_FIBER_EXCERPT_CHARS = 12_000;
+
+const normalizeFiberPercentages = (
+  composition: Record<string, number>,
+): Record<string, number> => {
+  const entries = Object.entries(composition).filter(([, value]) =>
+    Number.isFinite(value) && value > 0
+  );
+  const total = entries.reduce((sum, [, value]) => sum + value, 0);
+
+  if (entries.length === 0 || total <= 0) {
+    return {};
+  }
+
+  const ratio = total > 100 ? 100 / total : 1;
+  return Object.fromEntries(
+    entries.map(([fiber, value]) => [fiber, Number((value * ratio).toFixed(2))]),
+  );
+};
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const canonicalizeFiberContentInput = (
+  rawInput: Record<string, unknown>,
+): Record<string, number> => {
+  const canonicalized: Record<string, number> = {};
+
+  for (const [fiber, rawValue] of Object.entries(rawInput)) {
+    const canonical = canonicalizeFiber(fiber);
+    if (!canonical) {
+      continue;
+    }
+
+    const numeric = typeof rawValue === "number"
+      ? rawValue
+      : typeof rawValue === "string"
+      ? Number(rawValue)
+      : NaN;
+    if (!Number.isFinite(numeric) || numeric <= 0) {
+      continue;
+    }
+
+    canonicalized[canonical] = (canonicalized[canonical] ?? 0) + numeric;
+  }
+
+  return normalizeFiberPercentages(canonicalized);
+};
+
+const isLikelyCanonicalComposition = (composition: Record<string, number>): boolean => {
+  const entries = Object.entries(composition);
+  if (entries.length === 0) {
+    return false;
+  }
+
+  const hasUnknownKeys = entries.some(([fiber]) => !canonicalizeFiber(fiber));
+  if (hasUnknownKeys) {
+    return false;
+  }
+
+  const total = entries.reduce((sum, [, value]) => sum + (Number.isFinite(value) ? value : 0), 0);
+  return total >= 99 && total <= 101;
+};
+
+const buildFiberExcerpt = (
+  descriptionText: string,
+  materialExcerpt: string,
+): string => {
+  const merged = [materialExcerpt, descriptionText]
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .join("\n\n");
+
+  if (merged.length <= MAX_FIBER_EXCERPT_CHARS) {
+    return merged;
+  }
+
+  return merged.slice(0, MAX_FIBER_EXCERPT_CHARS);
+};
+
+const parseLlmFiberMap = (raw: unknown): Record<string, number> | null => {
+  if (typeof raw !== "object" || raw === null || !("fibers" in raw)) {
+    return null;
+  }
+
+  const fibers = (raw as { fibers?: unknown }).fibers;
+  if (!Array.isArray(fibers)) {
+    return null;
+  }
+
+  const parsed: Record<string, number> = {};
+  for (const entry of fibers) {
+    if (typeof entry !== "object" || entry === null) {
+      continue;
+    }
+
+    const item = entry as { canonical?: unknown; name?: unknown; pct?: unknown };
+    const nameCandidate = typeof item.canonical === "string"
+      ? item.canonical
+      : typeof item.name === "string"
+      ? item.name
+      : "";
+    const canonical = canonicalizeFiber(nameCandidate);
+    if (!canonical) {
+      continue;
+    }
+
+    const rawPct = typeof item.pct === "number"
+      ? item.pct
+      : typeof item.pct === "string"
+      ? Number(item.pct)
+      : NaN;
+
+    if (!Number.isFinite(rawPct) || rawPct <= 0) {
+      continue;
+    }
+
+    parsed[canonical] = (parsed[canonical] ?? 0) + clamp(rawPct, 0, 100);
+  }
+
+  const normalized = normalizeFiberPercentages(parsed);
+  return Object.keys(normalized).length > 0 ? normalized : null;
+};
+
+async function extractFiberCompositionWithLlm(
+  productName: string,
+  brand: string,
+  category: string,
+  excerpt: string,
+): Promise<{ composition: Record<string, number>; provider: "groq" | "gemini" } | null> {
+  if (!excerpt.trim()) {
+    return null;
+  }
+
+  const llmResult = await completeStructuredJson(
+    {
+      schemaName: "fiber_composition",
+      systemPrompt:
+        "You extract apparel fiber composition into canonical labels. " +
+        "Return JSON only. Use percentages when present and avoid guessing fibers not mentioned.",
+      userPrompt:
+        `Product: ${productName}\nBrand: ${brand}\nCategory: ${category}\n\n` +
+        `Text excerpt:\n${excerpt}`,
+      jsonSchema: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          fibers: {
+            type: "array",
+            minItems: 1,
+            maxItems: 12,
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                canonical: { type: "string" },
+                name: { type: "string" },
+                pct: { type: "number", minimum: 0, maximum: 100 },
+              },
+              required: ["pct"],
+            },
+          },
+        },
+        required: ["fibers"],
+      },
+      maxTokens: 400,
+      temperature: 0.1,
+    },
+    parseLlmFiberMap,
+  );
+
+  if (!llmResult) {
+    return null;
+  }
+
+  return {
+    composition: llmResult.data,
+    provider: llmResult.provider,
+  };
 }
 
 interface TikTokSignal {
@@ -457,62 +644,8 @@ interface TrendResult {
   googleTrendsAvailable: boolean;
   tiktokSignal: TikTokSignal;
   pinterestSignal: PinterestSignal;
-}
-
-function buildTrendQuery(productName: string, category: string): string {
-  const stopWords = new Set([
-    "the",
-    "a",
-    "an",
-    "and",
-    "or",
-    "in",
-    "on",
-    "at",
-    "to",
-    "for",
-    "with",
-    "of",
-    "by",
-    "from",
-    "is",
-    "it",
-    "this",
-    "that",
-  ]);
-
-  const words = productName
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .split(/\s+/)
-    .filter((word) => word.length > 1 && !stopWords.has(word));
-
-  const queryWords = words.slice(0, 4);
-
-  const fashionCategories = new Set([
-    "tops",
-    "bottoms",
-    "dresses",
-    "outerwear",
-    "shoes",
-    "accessories",
-    "shirts",
-    "pants",
-    "skirts",
-    "jackets",
-    "coats",
-    "apparel",
-  ]);
-
-  if (!fashionCategories.has(category.toLowerCase())) {
-    queryWords.push("fashion");
-  }
-
-  return queryWords.join(" ");
-}
-
-function normalizeQueryKey(query: string): string {
-  return query.toLowerCase().trim().replace(/\s+/g, " ");
+  llmProvider: "groq" | "gemini" | null;
+  queryUsed: string | null;
 }
 
 function analyzeTrendTimeline(
@@ -640,6 +773,8 @@ async function getCachedTrend(
       tiktokSignal: (data.tiktok_signal as TikTokSignal) ?? defaultTiktok,
       pinterestSignal: (data.pinterest_signal as PinterestSignal) ??
         defaultPinterest,
+      llmProvider: null,
+      queryUsed: null,
     };
   } catch {
     return null;
@@ -716,11 +851,13 @@ async function classifyTrend(
       googleTrendsAvailable: false,
       tiktokSignal: defaultTiktok,
       pinterestSignal: defaultPinterest,
+      llmProvider: null,
+      queryUsed: null,
     };
   }
 
-  const query = buildTrendQuery(productName, category);
-  const queryKey = normalizeQueryKey(query);
+  const querySeed = buildScoreTrendQuerySeed(productName, category);
+  const queryKey = normalizeQueryKey(querySeed);
 
   if (supabaseUrl && supabaseKey) {
     const cached = await getCachedTrend(supabaseUrl, supabaseKey, queryKey);
@@ -730,34 +867,39 @@ async function classifyTrend(
     }
   }
 
-  const fetchPromises: Promise<unknown>[] = [
-    fetchGoogleTrendsTimeline(query, {
+  const trendCandidatesResult = await buildTrendQueryCandidates(querySeed, "score");
+  const trendCandidates = trendCandidatesResult.candidates.length > 0
+    ? trendCandidatesResult.candidates
+    : [querySeed];
+
+  let timeline: TimelinePoint[] = [];
+  let queryUsed: string | null = null;
+
+  for (const candidate of trendCandidates) {
+    console.log(`Trying Google Trends candidate: "${candidate}"`);
+    const attempt = await fetchGoogleTrendsTimeline(candidate, {
       apiKey: serpApiKey,
       date: "today 12-m",
-    }),
-  ];
-  if (rapidApiKey) {
-    fetchPromises.push(fetchTikTokSignal(query, rapidApiKey));
+    });
+
+    if (attempt.success && attempt.timeline.length > 0) {
+      timeline = attempt.timeline;
+      queryUsed = candidate;
+      break;
+    }
   }
-  fetchPromises.push(
-    fetchPinterestSignal(query, serpApiKey),
+
+  const socialQuery = queryUsed ?? trendCandidates[0] ?? querySeed;
+  let tiktokResult = defaultTiktok;
+  if (rapidApiKey) {
+    tiktokResult = await fetchTikTokSignal(socialQuery, rapidApiKey);
+  }
+  const pinterestResult = await fetchPinterestSignal(
+    socialQuery,
+    serpApiKey,
   );
 
-  const results = await Promise.all(fetchPromises);
-
-  const googleResult = results[0] as {
-    timeline: TimelinePoint[];
-    success: boolean;
-  };
-  let tiktokResult = defaultTiktok;
-  let resultIndex = 1;
-  if (rapidApiKey) {
-    tiktokResult = results[resultIndex] as TikTokSignal;
-    resultIndex++;
-  }
-  const pinterestResult = results[resultIndex] as PinterestSignal;
-
-  if (!googleResult.success || googleResult.timeline.length === 0) {
+  if (!queryUsed || timeline.length === 0) {
     const fallback = classifyTrendByKeywords(productName, category);
     return {
       ...fallback,
@@ -765,10 +907,11 @@ async function classifyTrend(
       googleTrendsAvailable: false,
       tiktokSignal: tiktokResult,
       pinterestSignal: pinterestResult,
+      llmProvider: trendCandidatesResult.llmProvider,
+      queryUsed: socialQuery,
     };
   }
 
-  const timeline = googleResult.timeline;
   const analysis = analyzeTrendTimeline(timeline);
 
   const adjustedConfidence = adjustConfidence(
@@ -786,6 +929,8 @@ async function classifyTrend(
     googleTrendsAvailable: true,
     tiktokSignal: tiktokResult,
     pinterestSignal: pinterestResult,
+    llmProvider: trendCandidatesResult.llmProvider,
+    queryUsed,
   };
 
   if (supabaseUrl && supabaseKey) {
@@ -982,12 +1127,33 @@ Deno.serve(async (req: Request) => {
     const brand = String(body.brand ?? "Unknown");
     const category = String(body.category ?? "apparel");
     const descriptionText = String(body.description_text ?? "");
-    const fiberContent: Record<string, number> = body.fiber_content ?? {};
+    const materialExcerpt = String(body.material_excerpt ?? "");
+    const rawFiberInput = isRecord(body.fiber_content)
+      ? body.fiber_content
+      : {};
+    const clientFiberContent = canonicalizeFiberContentInput(rawFiberInput);
     const price: number | undefined =
       typeof body.price === "number" && body.price > 0 ? body.price : undefined;
     const manualMode = body.manual_mode === true;
 
-    const fiber = computeFiberScore(fiberContent);
+    const fiberExcerpt = buildFiberExcerpt(descriptionText, materialExcerpt);
+    let normalizedFiberContent = clientFiberContent;
+    let llmFiberProvider: "groq" | "gemini" | null = null;
+
+    if (!manualMode && !isLikelyCanonicalComposition(clientFiberContent)) {
+      const llmFiberResult = await extractFiberCompositionWithLlm(
+        productName,
+        brand,
+        category,
+        fiberExcerpt,
+      );
+      if (llmFiberResult) {
+        normalizedFiberContent = llmFiberResult.composition;
+        llmFiberProvider = llmFiberResult.provider;
+      }
+    }
+
+    const fiber = computeFiberScore(normalizedFiberContent);
     const weights = manualMode ? WEIGHTS_MANUAL : WEIGHTS_FULL;
 
     let brandData: BrandRating;
@@ -1015,10 +1181,10 @@ Deno.serve(async (req: Request) => {
     const sustainabilityValue = Math.round(clamp(rawScore, 0, 100));
     const grade = gradeFromScore(sustainabilityValue);
 
-    const health = computeHealthScore(fiberContent, descriptionText);
+    const health = computeHealthScore(normalizedFiberContent, descriptionText);
     const cpw = computeCpw(
       price,
-      fiberContent,
+      normalizedFiberContent,
       trend.label,
       category,
       fiber.fiberDataAvailable,
@@ -1036,12 +1202,22 @@ Deno.serve(async (req: Request) => {
     );
 
     const now = new Date().toISOString();
+    const llmUsage: string[] = [];
+    const llmProviders = new Set<string>();
+    if (trend.llmProvider) {
+      llmUsage.push("trend_candidates");
+      llmProviders.add(trend.llmProvider);
+    }
+    if (llmFiberProvider) {
+      llmUsage.push("fiber_extraction");
+      llmProviders.add(llmFiberProvider);
+    }
 
     const response = {
       sustainability_score: {
         value: sustainabilityValue,
         grade,
-        model_version: "v1.2-real-data",
+        model_version: "v1.3-llm-inputs",
         scoring_mode: manualMode ? "fiber_only" : "full",
         feature_contributions: {
           fiber_composition: {
@@ -1097,6 +1273,7 @@ Deno.serve(async (req: Request) => {
         google_trends: {
           available: trend.googleTrendsAvailable,
           last_updated: now,
+          query_used: trend.queryUsed,
         },
         esg_api: {
           available: !manualMode && brandFound,
@@ -1122,6 +1299,16 @@ Deno.serve(async (req: Request) => {
             }
             : {}),
         },
+        ...(llmUsage.length > 0
+          ? {
+            llm: {
+              available: true,
+              providers: Array.from(llmProviders),
+              used_for: llmUsage,
+              last_updated: now,
+            },
+          }
+          : {}),
       },
       web_app_deep_link: deepLink,
     };

@@ -123,6 +123,7 @@ const scoreProductRemotely = async (product: ProductContext, manualMode = false)
         product_name: product.productName,
         fiber_content: product.fiberContent,
         description_text: product.descriptionText,
+        material_excerpt: product.materialExcerpt,
         price: product.price,
         currency: product.currency,
         image_url: product.imageUrl,

@@ -56,18 +56,24 @@ const clampPct = (value: number): number => {
 export const parseFiberComposition = (rawText: string): Record<string, number> => {
   const text = rawText.toLowerCase();
 
-  // First try: structured "label: value" pattern (e.g., "Material: 80% Cotton, 20% Polyester")
-  const labelPattern = /(?:material|composition|fabric|content|made of)\s*[:=]\s*(.+)/gi;
-  let enrichedText = text;
-  let match: RegExpExecArray | null;
-  while ((match = labelPattern.exec(text)) !== null) {
-    enrichedText += "\n" + match[1];
-  }
+  // Keep the raw text intact so percentages survive parsing.
+  const enrichedText = text;
 
+  const seenSegments = new Set<string>();
   const segments = enrichedText
-    .split(/[\n;,|•·]+/)
-    .map((segment) => normalizeCandidate(segment))
-    .filter(Boolean);
+    .split(/[\n;,|•·]+|(?:\s\/\s)/)
+    .map((segment) => segment.trim())
+    .filter((segment) => {
+      if (!segment) {
+        return false;
+      }
+      const key = normalizeCandidate(segment);
+      if (!key || seenSegments.has(key)) {
+        return false;
+      }
+      seenSegments.add(key);
+      return true;
+    });
 
   const composition: Record<string, number> = {};
 
@@ -89,16 +95,19 @@ export const parseFiberComposition = (rawText: string): Record<string, number> =
       continue;
     }
 
-    // If no percentage found, try to identify fiber without percentage
-    if (!matched) {
+    composition[canonical] = Number(
+      ((composition[canonical] ?? 0) + clampPct(parseFloat(value))).toFixed(2)
+    );
+  }
+
+  if (Object.keys(composition).length === 0) {
+    for (const segment of segments) {
       const canonical = canonicalizeFiber(segment);
-      if (canonical && !composition[canonical]) {
-        // Assume 100% if it's the only fiber mentioned
-        const fiberCount = Object.keys(composition).length;
-        if (fiberCount === 0) {
-          composition[canonical] = 100;
-        }
+      if (!canonical) {
+        continue;
       }
+      composition[canonical] = 100;
+      break;
     }
   }
 

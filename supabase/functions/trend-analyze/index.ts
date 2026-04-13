@@ -4,6 +4,10 @@ import {
   fetchGoogleTrendsTimeline,
   type TimelinePoint,
 } from "../_shared/serpapi.ts";
+import {
+  buildTrendQueryCandidates,
+  normalizeQueryKey,
+} from "../_shared/trendQueries.ts";
 
 const TIKTOK_API_BASE = "https://tiktok-api23.p.rapidapi.com";
 const PINTEREST_API_BASE = "https://pinterest-scraper5.p.rapidapi.com";
@@ -69,123 +73,6 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers":
     "Content-Type, Authorization, apikey, x-client-info",
 };
-
-function normalizeQueryKey(query: string): string {
-  return query.toLowerCase().trim().replace(/\s+/g, " ");
-}
-
-const TREND_QUERY_STOP_WORDS = new Set([
-  "a",
-  "an",
-  "and",
-  "for",
-  "in",
-  "near",
-  "of",
-  "on",
-  "that",
-  "the",
-  "these",
-  "this",
-  "those",
-  "to",
-  "with",
-]);
-
-const TREND_QUERY_COLOR_WORDS = new Set([
-  "beige",
-  "black",
-  "blue",
-  "brown",
-  "burgundy",
-  "cream",
-  "gold",
-  "gray",
-  "green",
-  "grey",
-  "indigo",
-  "khaki",
-  "lavender",
-  "maroon",
-  "navy",
-  "olive",
-  "orange",
-  "pink",
-  "purple",
-  "red",
-  "silver",
-  "tan",
-  "teal",
-  "white",
-  "yellow",
-]);
-
-function uniqQueries(queries: string[]): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-
-  for (const query of queries) {
-    const normalized = normalizeQueryKey(query);
-    if (!normalized || seen.has(normalized)) {
-      continue;
-    }
-    seen.add(normalized);
-    result.push(normalized);
-  }
-
-  return result;
-}
-
-function buildTrendQueryCandidates(query: string): string[] {
-  const base = normalizeQueryKey(
-    query
-      .replace(/[^\w\s-]/g, " ")
-      .replace(/\bfor\s+(women|woman|men|man|girls|boys)\b/g, " ")
-      .replace(/\bin\s+[a-z\s]+$/i, " ")
-      .replace(/\s+/g, " "),
-  );
-
-  const words = base
-    .split(" ")
-    .map((word) => word.trim())
-    .filter(Boolean)
-    .filter((word) => !TREND_QUERY_STOP_WORDS.has(word));
-
-  const withoutColors = words.filter((word) => !TREND_QUERY_COLOR_WORDS.has(word));
-  const nounLike = withoutColors.filter((word) =>
-    !["best", "cute", "nice", "outfit", "style", "fashion"].includes(word)
-  );
-
-  const broadCandidates = [
-    nounLike.join(" "),
-    withoutColors.join(" "),
-    base,
-  ];
-
-  const candidates = [...broadCandidates];
-
-  if (nounLike.includes("cargo") && nounLike.includes("pants")) {
-    if (nounLike.includes("baggy")) {
-      candidates.push("baggy cargo pants");
-    }
-    candidates.push("cargo pants");
-  }
-
-  if (nounLike.includes("jeans") && nounLike.includes("baggy")) {
-    candidates.push("baggy jeans");
-  }
-
-  const uniqueCandidates = uniqQueries(candidates).filter(Boolean);
-  const multiWordCandidates = uniqueCandidates.filter((candidate) =>
-    candidate.split(" ").length >= 2
-  );
-
-  if (multiWordCandidates.length > 0) {
-    return multiWordCandidates;
-  }
-
-  return uniqueCandidates.slice(0, 1);
-}
 
 async function fetchTikTokSignal(
   query: string,
@@ -1054,7 +941,8 @@ Deno.serve(async (req: Request) => {
     }
 
     const queryKey = normalizeQueryKey(query);
-    const trendQueryCandidates = buildTrendQueryCandidates(query);
+    let trendQueryCandidates: string[] = [queryKey];
+    let trendQueryLlmProvider: "groq" | "gemini" | null = null;
     let timeline: TimelinePoint[] = [];
     let fromCache = false;
 
@@ -1115,6 +1003,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!fromCache) {
+      const trendCandidatesResult = await buildTrendQueryCandidates(
+        query,
+        "trend-analyze",
+      );
+      trendQueryCandidates = trendCandidatesResult.candidates;
+      trendQueryLlmProvider = trendCandidatesResult.llmProvider;
+
       // Start TikTok/Pinterest signal fetches in parallel with Google Trends
       const tiktokFetchPromise = rapidApiKey
         ? fetchTikTokSignal(query, rapidApiKey)
@@ -1277,6 +1172,16 @@ Deno.serve(async (req: Request) => {
             }
             : {}),
         },
+        ...(trendQueryLlmProvider
+          ? {
+            llm: {
+              available: true,
+              provider: trendQueryLlmProvider,
+              used_for: ["trend_candidates"],
+              last_updated: now,
+            },
+          }
+          : {}),
       },
       shareable_url: analysisId
         ? `${WEB_APP_BASE_URL}/analyze/${analysisId}`

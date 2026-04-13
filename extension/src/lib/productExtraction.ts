@@ -4,15 +4,69 @@ import { getRetailerConfigByHostname, inferCategory, looksLikeProductPath } from
 import type { ProductContext } from "../types";
 
 /**
- * Filter lines from material/description text that look fiber-relevant.
+ * Keep a high-recall material excerpt for server-side LLM parsing.
+ * We intentionally avoid strict keyword-only filtering so we don't drop
+ * uncommon fiber names and retailer-specific composition phrasing.
  */
 const gatherFiberText = (materialText: string, descriptionText: string): string => {
-  const relevantLines = `${materialText}\n${descriptionText}`
+  const materialSignalPattern =
+    /%|material|composition|fabric|made of|contains|shell|lining|body|trim|outer|inner|recycled|organic|cotton|linen|polyester|wool|rayon|viscose|nylon|spandex|acrylic|hemp|lyocell|tencel|silk|modal|cashmere|elastane|pfas|formaldehyde/i;
+
+  const materialLines = materialText
     .split(/\n+/)
     .map((line) => line.trim())
-    .filter((line) => /%|cotton|linen|polyester|wool|rayon|viscose|nylon|spandex|acrylic|hemp|lyocell|tencel|silk|modal|cashmere|elastane|pfas|formaldehyde/i.test(line));
+    .filter((line) => line.length > 1);
 
-  return relevantLines.join("\n");
+  const descriptionLines = descriptionText
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 1 && materialSignalPattern.test(line));
+
+  return [...materialLines, ...descriptionLines].join("\n");
+};
+
+const MAX_MATERIAL_EXCERPT_CHARS = 12_000;
+
+const GENERIC_FIBER_SELECTORS = [
+  "details, summary",
+  "[id*='material']",
+  "[id*='fabric']",
+  "[id*='composition']",
+  "[class*='material']",
+  "[class*='fabric']",
+  "[class*='composition']",
+  "[data-testid*='material']",
+  "[data-testid*='fabric']",
+  "[data-testid*='composition']",
+  "[itemprop='material']",
+];
+
+const dedupeLines = (value: string): string => {
+  const seen = new Set<string>();
+  const lines: string[] = [];
+
+  for (const rawLine of value.split(/\n+/)) {
+    const line = rawLine.trim();
+    if (!line) {
+      continue;
+    }
+    const normalized = line.toLowerCase();
+    if (seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    lines.push(line);
+  }
+
+  return lines.join("\n");
+};
+
+const truncateForModelInput = (value: string, maxChars = MAX_MATERIAL_EXCERPT_CHARS): string => {
+  if (value.length <= maxChars) {
+    return value;
+  }
+
+  return value.slice(0, maxChars);
 };
 
 /* ------------------------------------------------------------------ */
@@ -220,16 +274,23 @@ export const extractProductContext = (): ProductContext | null => {
     : undefined;
   const brand = jsonLdBrand ?? config.retailer;
 
-  // --- Material/fiber: JSON-LD → Meta → CSS selectors (NO <main> fallback) ---
+  // --- Material/fiber: JSON-LD → Meta → CSS selectors ---
   const jsonLdMaterial = jsonLd ? extractMaterialFromJsonLd(jsonLd) : "";
   const metaMaterial = extractMaterialFromMeta();
   const cssMaterialText = gatherText(config.materialSelectors);
   const descriptionText = jsonLd?.description ?? gatherText(config.descriptionSelectors);
+  const genericMaterialText = gatherText(GENERIC_FIBER_SELECTORS);
 
   // Combine all material sources, giving JSON-LD priority
-  const allMaterialText = [jsonLdMaterial, metaMaterial, cssMaterialText].filter(Boolean).join("\n");
+  const allMaterialText = [
+    jsonLdMaterial,
+    cssMaterialText,
+    metaMaterial,
+    genericMaterialText,
+  ].filter(Boolean).join("\n");
   const fiberText = gatherFiberText(allMaterialText, descriptionText);
   const fiberContent = normalizeFiberComposition(parseFiberComposition(fiberText));
+  const materialExcerpt = truncateForModelInput(dedupeLines(`${allMaterialText}\n${descriptionText}`));
 
   // --- Category: JSON-LD → URL/name inference ---
   const category = jsonLd?.category ?? inferCategory(`${productName} ${pathname}`);
@@ -246,6 +307,7 @@ export const extractProductContext = (): ProductContext | null => {
     retailerDomain: domain,
     descriptionText,
     fiberText,
+    materialExcerpt,
     fiberContent,
     price,
     imageUrl
