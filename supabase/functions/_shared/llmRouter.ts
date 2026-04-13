@@ -17,7 +17,8 @@ interface StructuredJsonResult<T> {
 }
 
 const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
-const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+/** Must exist for `v1beta` `generateContent` — see Google AI Studio model list. */
+const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
 const DEFAULT_GROQ_TIMEOUT_MS = 2_500;
 const DEFAULT_GEMINI_TIMEOUT_MS = 4_000;
 

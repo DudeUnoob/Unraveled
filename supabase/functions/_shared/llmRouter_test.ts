@@ -37,7 +37,7 @@ Deno.test("completeStructuredJson falls back from Groq to Gemini", async () => {
       GROQ_API_KEY: "test-groq",
       GEMINI_API_KEY: "test-gemini",
       GROQ_MODEL: "llama-3.1-8b-instant",
-      GEMINI_MODEL: "gemini-3.1-flash-lite",
+      GEMINI_MODEL: "gemini-2.0-flash",
     },
     async () => {
       const originalFetch = globalThis.fetch;
