@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
+import { getSupabaseFunctionsHeaders, SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
 import { normalizeQueryText } from "@/lib/normalizeQuery";
 import type { AnalysisStore, TrendAnalysisResponse } from "@/types/analysis";
 
@@ -40,6 +40,14 @@ export function useAnalyze() {
         }
 
         const normalizedQuery = normalizeQueryText(query);
+        if (!normalizedQuery.trim()) {
+            setStore((prev) => ({
+                ...prev,
+                state: "error",
+                error: "Enter a product name, trend, or style to analyze.",
+            }));
+            return;
+        }
 
         setStore({ state: "loading", data: null, error: null, query: normalizedQuery, price, wearsPerWeek });
 
@@ -63,7 +71,7 @@ export function useAnalyze() {
 
             const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/trend-analyze`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: getSupabaseFunctionsHeaders(),
                 body: JSON.stringify(body),
             });
 

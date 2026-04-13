@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { getSupabase, SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
+import { getSupabase, getSupabaseFunctionsHeaders, SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
 import type { ImageAnalysisResponse } from "@/types/analysis";
 
 export function useImageUpload() {
@@ -31,7 +31,7 @@ export function useImageUpload() {
   const analyzeImage = useCallback(async (url: string): Promise<ImageAnalysisResponse> => {
     const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/trend-image`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: getSupabaseFunctionsHeaders(),
       body: JSON.stringify({ image_url: url }),
     });
 
