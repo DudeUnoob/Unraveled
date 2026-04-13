@@ -19,6 +19,7 @@ export interface ProductContext {
   retailerDomain: string;
   descriptionText: string;
   fiberText: string;
+  materialExcerpt?: string;
   fiberContent: Record<string, number>;
   price?: number;
   imageUrl?: string;

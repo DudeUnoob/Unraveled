@@ -20,9 +20,24 @@ Use [`.env.example`](/Users/dam_kamani/Downloads/Unraveled/supabase/functions/.e
 - `SERP_API_KEY` — used by all functions for Google Trends (TIMESERIES), Google Search, and Google Shopping
 - `RAPIDAPI_KEY` — TikTok and Pinterest social signal APIs
 - `OPENAI_API_KEY` — image analysis (trend-image function)
+- `GROQ_API_KEY` — optional, LLM trend query + fiber extraction (score + trend-analyze)
+- `GEMINI_API_KEY` — optional fallback if Groq is unavailable (score + trend-analyze)
+- `GEMINI_MODEL` — optional Gemini model override (default: `gemini-3.1-flash-lite`)
+- `GROQ_MODEL` — optional Groq model override (default: `llama-3.1-8b-instant`)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `WEB_APP_BASE_URL`
+
+## Secrets safety
+
+If an API key is ever shared in chat/logs or committed accidentally, rotate it immediately in the provider dashboard and update Supabase secrets plus local env files. Never ship provider keys in the extension bundle or web client.
+
+## Function compatibility notes
+
+- `score` and `trend-analyze` can use Groq/Gemini when keys are present.
+- `alternatives` and `trend-image` are intentionally unchanged by this LLM path.
+- Missing `GROQ_API_KEY` / `GEMINI_API_KEY` does **not** break runtime behavior: both functions fall back to existing heuristic logic.
+- `score` response now reports `model_version: v1.3-llm-inputs` and may include optional `data_sources.llm` metadata. Existing required contract fields remain unchanged.
 
 ## Commands
 

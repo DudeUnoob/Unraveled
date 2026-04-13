@@ -11,7 +11,11 @@ const buildSignature = (value: {
   productUrl: string;
   productName: string;
   fiberContent: Record<string, number>;
-}): string => `${value.productUrl}|${value.productName}|${JSON.stringify(value.fiberContent)}`;
+  materialExcerpt?: string;
+}): string =>
+  `${value.productUrl}|${value.productName}|${JSON.stringify(value.fiberContent)}|${
+    value.materialExcerpt?.slice(0, 240) ?? ""
+  }`;
 
 const getAnchorElement = (): HTMLElement | null => {
   const candidates = [
@@ -122,6 +126,7 @@ const detectAndScore = () => {
     retailer: context.retailerDomain,
     fiberContent: context.fiberContent,
     rawFiberText: context.fiberText,
+    materialExcerpt: context.materialExcerpt,
     extractedAt: new Date().toISOString()
   };
 
