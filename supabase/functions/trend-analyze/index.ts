@@ -694,6 +694,27 @@ async function cacheTrendData(
   }
 }
 
+async function updateCachedSocialSignals(
+  supabaseUrl: string,
+  supabaseKey: string,
+  queryKey: string,
+  tiktokSignal: TikTokSignal,
+  pinterestSignal: PinterestSignal,
+): Promise<void> {
+  try {
+    const client = createClient(supabaseUrl, supabaseKey);
+    await client
+      .from("trend_cache")
+      .update({
+        tiktok_signal: JSON.parse(JSON.stringify(tiktokSignal)),
+        pinterest_signal: JSON.parse(JSON.stringify(pinterestSignal)),
+      })
+      .eq("query_key", queryKey);
+  } catch (err) {
+    console.error("Failed to update cached social signals:", err);
+  }
+}
+
 function fitDecayCurve(
   timeline: TimelinePoint[],
 ): { params: DecayParams; lifespan: TrendLifespan; curveData: CurveDataPoint[] } {
@@ -979,11 +1000,16 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const query = String(body.query ?? "").trim();
-    const inputType = String(body.input_type ?? "text");
+    const payload = body && typeof body === "object"
+      ? body as Record<string, unknown>
+      : {};
+    const query = String(payload.query ?? "").trim();
+    const inputType = String(payload.input_type ?? "text");
+    const skipCache = payload.skip_cache === true || payload.refresh === true;
+    const refreshSocialOnCache = payload.refresh_social !== false;
     const brandInput =
-      typeof body.brand === "string" && body.brand.trim().length > 0
-        ? body.brand.trim()
+      typeof payload.brand === "string" && payload.brand.trim().length > 0
+        ? payload.brand.trim()
         : null;
 
     if (!query) {
@@ -1045,23 +1071,46 @@ Deno.serve(async (req: Request) => {
       normalized_score: 0,
     };
 
-    const candidateCacheKeys = uniqQueries([queryKey, ...trendQueryCandidates]);
-
-    if (supabaseUrl && supabaseKey) {
-      for (const cacheKey of candidateCacheKeys) {
-        const cached = await getCachedTimeline(supabaseUrl, supabaseKey, cacheKey);
-        if (cached) {
-          console.log(`Trend cache hit for: "${cacheKey}"`);
-          timeline = cached.timeline;
-          fromCache = true;
-          if (cached.meta.tiktok_signal) {
-            tiktokResult = cached.meta.tiktok_signal as TikTokSignal;
-          }
-          if (cached.meta.pinterest_signal) {
-            pinterestResult = cached.meta.pinterest_signal as PinterestSignal;
-          }
-          break;
+    if (!skipCache && supabaseUrl && supabaseKey) {
+      const cached = await getCachedTimeline(supabaseUrl, supabaseKey, queryKey);
+      if (cached) {
+        console.log(`Trend cache hit for exact key: "${queryKey}"`);
+        timeline = cached.timeline;
+        fromCache = true;
+        if (cached.meta.tiktok_signal) {
+          tiktokResult = cached.meta.tiktok_signal as TikTokSignal;
         }
+        if (cached.meta.pinterest_signal) {
+          pinterestResult = cached.meta.pinterest_signal as PinterestSignal;
+        }
+      }
+    }
+
+    if (skipCache) {
+      console.log(`Trend cache bypass requested for: "${queryKey}"`);
+    }
+
+    if (fromCache && rapidApiKey && refreshSocialOnCache) {
+      const [refreshedTikTok, refreshedPinterest] = await Promise.all([
+        fetchTikTokSignal(query, rapidApiKey),
+        fetchPinterestSignal(query, rapidApiKey),
+      ]);
+
+      tiktokResult = refreshedTikTok.available || !tiktokResult.available
+        ? refreshedTikTok
+        : tiktokResult;
+      pinterestResult = refreshedPinterest.available || !pinterestResult.available
+        ? refreshedPinterest
+        : pinterestResult;
+
+      if (supabaseUrl && supabaseKey) {
+        await updateCachedSocialSignals(
+          supabaseUrl,
+          supabaseKey,
+          queryKey,
+          tiktokResult,
+          pinterestResult,
+        );
       }
     }
 

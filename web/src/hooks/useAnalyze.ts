@@ -5,6 +5,11 @@ import { SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
 import { normalizeQueryText } from "@/lib/normalizeQuery";
 import type { AnalysisStore, TrendAnalysisResponse } from "@/types/analysis";
 
+interface AnalyzeOptions {
+    skipCache?: boolean;
+    refreshSocial?: boolean;
+}
+
 const INITIAL_STATE: AnalysisStore & { price?: number; wearsPerWeek?: number } = {
     state: "idle",
     data: null,
@@ -23,6 +28,7 @@ export function useAnalyze() {
         price?: number,
         wearsPerWeek?: number,
         brand?: string | null,
+        options?: AnalyzeOptions,
     ) => {
         if (!query.trim()) {
             setStore((prev) => ({
@@ -47,6 +53,12 @@ export function useAnalyze() {
             }
             if (brand && brand.trim()) {
                 body.brand = brand.trim();
+            }
+            if (options?.skipCache === true) {
+                body.skip_cache = true;
+            }
+            if (typeof options?.refreshSocial === "boolean") {
+                body.refresh_social = options.refreshSocial;
             }
 
             const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/trend-analyze`, {
