@@ -35,3 +35,14 @@ make supabase-serve-trend-analyze
 make supabase-secrets-push
 make supabase-deploy
 ```
+
+## `trend-analyze` request options
+
+The `trend-analyze` Edge Function accepts JSON POST bodies with:
+
+- `query` (required)
+- `input_type` (optional)
+- `brand` (optional)
+- `skip_cache` (optional boolean): bypasses `trend_cache` reads and forces a fresh Google Trends fetch path.
+- `refresh` (optional boolean): legacy alias for `skip_cache`.
+- `refresh_social` (optional boolean, default `true`): when Google Trends comes from cache, controls whether TikTok/Pinterest are refreshed and written back to cache.
