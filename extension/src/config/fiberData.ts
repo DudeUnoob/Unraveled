@@ -26,8 +26,6 @@ export const FIBER_RANKS: Record<string, number> = {
   "triacetate": 0.42,
 
   // Conventional Natural
-  "cotton": 0.65,
-  "linen": 0.8,
   "flax": 0.8,
 
   // Conventional Synthetics
@@ -140,8 +138,6 @@ export const FIBER_DURABILITY_WEARS: Record<string, number> = {
   "triacetate": 42,
 
   // Conventional Natural
-  "cotton": 62,
-  "linen": 85,
   "flax": 85,
 
   // Conventional Synthetics

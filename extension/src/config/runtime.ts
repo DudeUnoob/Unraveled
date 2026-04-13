@@ -51,3 +51,18 @@ export const UNRAVEL_SCORE_ENDPOINT = `${UNRAVEL_API_BASE_URL}/functions/v1/scor
 export const UNRAVEL_SCORE_TIMEOUT_MS = parseTimeout(import.meta.env.VITE_UNRAVEL_SCORE_TIMEOUT_MS);
 export const UNRAVEL_WEB_APP_BASE_URL = resolveWebAppBaseUrl();
 
+/** Optional; required when Supabase enables JWT verification on the score function. */
+const UNRAVEL_SUPABASE_ANON_KEY =
+  import.meta.env.VITE_UNRAVEL_SUPABASE_ANON_KEY?.trim() ?? "";
+
+export const getScoreRequestHeaders = (): Record<string, string> => {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (UNRAVEL_SUPABASE_ANON_KEY) {
+    headers.Authorization = `Bearer ${UNRAVEL_SUPABASE_ANON_KEY}`;
+    headers.apikey = UNRAVEL_SUPABASE_ANON_KEY;
+  }
+  return headers;
+};
+

@@ -17,12 +17,35 @@ interface StructuredJsonResult<T> {
 }
 
 const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
-const DEFAULT_GEMINI_MODEL = "gemini-3.1-flash-lite";
+/** Must exist for `v1beta` `generateContent` — see Google AI Studio model list. */
+const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
 const DEFAULT_GROQ_TIMEOUT_MS = 2_500;
 const DEFAULT_GEMINI_TIMEOUT_MS = 4_000;
 
 const trimForLog = (value: string, maxChars = 400): string =>
   value.length <= maxChars ? value : `${value.slice(0, maxChars)}...`;
+
+/**
+ * Gemini `generationConfig.responseSchema` accepts a JSON-Schema-like subset and
+ * rejects keys like `additionalProperties` (OpenAPI-style) anywhere in the tree.
+ */
+const stripJsonSchemaUnsupportedForGemini = (node: unknown): unknown => {
+  if (node === null || typeof node !== "object") {
+    return node;
+  }
+  if (Array.isArray(node)) {
+    return node.map(stripJsonSchemaUnsupportedForGemini);
+  }
+  const o = node as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(o)) {
+    if (key === "additionalProperties") {
+      continue;
+    }
+    out[key] = stripJsonSchemaUnsupportedForGemini(value);
+  }
+  return out;
+};
 
 const parseJsonPayload = (raw: unknown): unknown | null => {
   if (raw && typeof raw === "object") {
@@ -65,6 +88,12 @@ const callGroqStructuredJson = async (
 ): Promise<unknown | null> => {
   const model = Deno.env.get("GROQ_MODEL") ?? DEFAULT_GROQ_MODEL;
 
+  // Many Groq models do not support `response_format: { type: "json_schema" }`.
+  // `json_object` is widely supported; we validate with the caller's `parse` function.
+  const systemPrompt =
+    `${request.systemPrompt.trim()}\n\n` +
+    "Reply with a single JSON object only (no markdown code fences, no prose).";
+
   const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -77,17 +106,10 @@ const callGroqStructuredJson = async (
       temperature: request.temperature ?? 0.1,
       max_completion_tokens: request.maxTokens ?? 400,
       messages: [
-        { role: "system", content: request.systemPrompt },
+        { role: "system", content: systemPrompt },
         { role: "user", content: request.userPrompt },
       ],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: request.schemaName,
-          schema: request.jsonSchema,
-          strict: true,
-        },
-      },
+      response_format: { type: "json_object" },
     }),
   });
 
@@ -134,6 +156,10 @@ const callGeminiStructuredJson = async (
       encodeURIComponent(apiKey)
     }`;
 
+  const geminiSchema = stripJsonSchemaUnsupportedForGemini(
+    request.jsonSchema,
+  ) as Record<string, unknown>;
+
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -152,7 +178,7 @@ const callGeminiStructuredJson = async (
         temperature: request.temperature ?? 0.1,
         maxOutputTokens: request.maxTokens ?? 400,
         responseMimeType: "application/json",
-        responseSchema: request.jsonSchema,
+        responseSchema: geminiSchema,
       },
     }),
   });
