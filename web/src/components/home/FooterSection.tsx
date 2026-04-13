@@ -5,10 +5,10 @@ import { ASSETS } from "./Assets";
 
 export function FooterSection() {
     return (
-        <section className="relative w-full min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#5f6642] mt-0 pb-20 pt-32 -mt-[1px]">
-            {/* Wavy Top Edge */}
-            <div className="absolute top-[-2px] left-0 w-full overflow-hidden leading-[0] z-20 pointer-events-none">
-                <img src={ASSETS.imgGroup30} alt="Wavy Edge" className="w-full h-auto min-w-[1200px] object-cover object-top" />
+        <section className="relative w-full min-h-[700px] flex flex-col items-center justify-center overflow-hidden bg-[#5c6c47] mt-0 pb-20 pt-32">
+            {/* Wavy Top Edge Transition */}
+            <div className="absolute top-0 left-0 right-0 w-full z-20 pointer-events-none -translate-y-[95%]">
+                <img src={ASSETS.imgVector46} alt="" className="w-full h-auto" />
             </div>
 
             {/* Static Stars */}

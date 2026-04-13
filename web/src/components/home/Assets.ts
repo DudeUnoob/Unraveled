@@ -27,6 +27,11 @@ export const ASSETS = {
   imgGoogle: "https://www.figma.com/api/mcp/asset/1d497a03-1cb2-4f12-a7ee-e6310a31305e", 
   imgImage32: "https://www.figma.com/api/mcp/asset/1f6220d2-4cfd-4a13-9df3-8bd0d05c6573", 
   imgImage34: "https://www.figma.com/api/mcp/asset/6810c17a-d848-46b2-aee2-74cc5e8f6f5a", 
-  imgGroup14: "https://www.figma.com/api/mcp/asset/50006035-d677-4e46-9b89-8d61008dd38e", 
-  imgGroup30: "https://www.figma.com/api/mcp/asset/8e6ec0c3-88a2-43f7-a3f2-a6fbe7cd1ede"
+  imgGroup14: "https://www.figma.com/api/mcp/asset/92cb95c9-b2d9-4b41-88a7-df34a57f4415",
+  imgGroup30: "https://www.figma.com/api/mcp/asset/8e6ec0c3-88a2-43f7-a3f2-a6fbe7cd1ede",
+  imgVector45: "https://www.figma.com/api/mcp/asset/6795d68b-3422-433b-b9d7-6fa5352986db",
+  imgVector44: "https://www.figma.com/api/mcp/asset/d0be43d1-cfd4-4df7-b36d-6a1131a6b926",
+  imgVector46: "https://www.figma.com/api/mcp/asset/2ee46c85-9f0b-40c0-98e8-d6b369728596",
+  imgFeatureBackground: "https://www.figma.com/api/mcp/asset/881823d9-d2af-4e4d-8796-9fc35f2f2503",
+  imgLine285: "https://www.figma.com/api/mcp/asset/ee4038ce-ea62-4430-8719-c95ad1728d4b"
 };

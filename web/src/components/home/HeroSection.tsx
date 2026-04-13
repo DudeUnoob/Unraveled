@@ -4,7 +4,7 @@ import Link from "next/link";
 import { MagneticButton } from "@/components/ui/MagneticButton";
 export function HeroSection() {
     return (
-        <section className="relative w-full h-[90vh] min-h-[700px] flex items-center justify-center overflow-hidden bg-white mt-[64px]">
+        <section className="relative w-full h-[90vh] min-h-[700px] flex items-center justify-center overflow-hidden bg-white z-10">
             {/* Radial Gradient Background */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_#ecf9d8_0%,_#ffffff_70%)]" />

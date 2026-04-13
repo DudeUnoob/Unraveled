@@ -32,20 +32,30 @@ const FEATURES = [
 
 export function FeaturesSection() {
     return (
-        <section className="relative w-full flex flex-col items-center justify-center z-20 py-16 -mt-[1px] bg-cream">
+        <section className="relative w-full flex flex-col items-center justify-center z-20 py-16 bg-cream">
+            {/* Extended Background Pattern for the entire section */}
+            <div className="absolute inset-[-15%] pointer-events-none overflow-hidden z-0">
+                <img 
+                    src={ASSETS.imgFeatureBackground} 
+                    alt="Gingham Pattern Background" 
+                    className="w-full h-full object-cover opacity-80" 
+                />
+            </div>
+
+            {/* Fabric Rip Overlay (contains both top and bottom jagged edges) */}
+            <div className="absolute inset-[-8%] z-60 pointer-events-none origin-center">
+                <img 
+                    src={ASSETS.imgGroup14} 
+                    alt="" 
+                    className="w-full h-full object-fill scale-y-[1.1]"
+                />
+            </div>
+
             {/* 
               The container now fills the full width of the desktop as requested, 
               removing the rounded corners and max-width.
             */}
-            <div className="relative w-full min-h-[661px] overflow-hidden flex flex-col items-center justify-center py-20">
-                <div className="absolute inset-0 pointer-events-none overflow-hidden">
-                    <img 
-                        src={ASSETS.imgRoundedRectangle} 
-                        alt="Gingham Pattern" 
-                        className="absolute h-[350.22%] left-[-8.97%] max-w-none top-[-69.82%] w-[117.96%] object-cover" 
-                    />
-                </div>
-
+            <div className="relative w-full min-h-[661px] overflow-hidden flex flex-col items-center justify-center pt-8 pb-20">
                 <div className="relative z-30 w-full max-w-[1200px] px-4 md:px-8 flex flex-col md:flex-row items-center justify-center gap-8 mx-auto">
                     {FEATURES.map((feature, i) => (
                         <motion.div

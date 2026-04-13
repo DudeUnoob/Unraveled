@@ -23,7 +23,7 @@ const TELEMETRY_FEATURES = [
 
 export function TelemetrySection() {
     return (
-        <section className="relative w-full flex flex-col items-center justify-center bg-white z-10 pt-[60px] pb-0 -mt-[1px]">
+        <section className="relative w-full flex flex-col items-center justify-center bg-white z-40 pt-[100px] pb-0">
             {/* Title sits on the white background */}
             <h2 className="font-serif text-[2.5rem] md:text-[3.25rem] text-[#5f6642] text-center mb-12 relative z-10">
                 Drive better decisions

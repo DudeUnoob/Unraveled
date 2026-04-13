@@ -39,7 +39,7 @@ const BRANDS: BrandLogo[] = [
 
 export function BrandsSection() {
   return (
-    <section className="w-full bg-white py-16 flex flex-col items-center justify-center relative z-10">
+    <section className="w-full bg-white pt-16 pb-48 flex flex-col items-center justify-center relative z-50">
       <motion.h2
         initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}

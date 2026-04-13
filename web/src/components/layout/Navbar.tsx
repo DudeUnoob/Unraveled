@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
+import { ASSETS } from "../home/Assets";
 
 const NAV_ASSETS = {
   logoImage: "https://www.figma.com/api/mcp/asset/1f6220d2-4cfd-4a13-9df3-8bd0d05c6573",
@@ -23,7 +24,7 @@ export function Navbar() {
     const pathname = usePathname();
 
     return (
-      <header className="w-full relative h-[80px] flex items-end px-4 md:px-8 z-50 pt-6">
+      <header className="w-full absolute top-0 left-0 h-[68px] flex items-end px-4 md:px-8 z-50 pt-2">
         {/* Logo */}
         <Link href="/" className="absolute left-4 md:left-8 top-4 w-[45px] h-[41px] hover:opacity-80 transition-opacity">
           <img src={NAV_ASSETS.logoImage} alt="Logo" className="w-full h-full object-contain" />
@@ -80,8 +81,8 @@ export function Navbar() {
         </div>
 
         {/* Bottom Line */}
-        <div className="absolute bottom-0 left-0 w-full">
-          <img src={NAV_ASSETS.lineNavbar} alt="" className="w-full h-[2px] object-cover" />
+        <div className="absolute bottom-[-1px] left-0 w-full h-[2px]">
+          <img src={ASSETS.imgLine285} alt="" className="w-full h-full object-cover" />
         </div>
       </header>
     );
