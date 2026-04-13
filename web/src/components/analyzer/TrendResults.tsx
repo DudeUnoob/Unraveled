@@ -2,16 +2,14 @@
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import type { TrendAnalysisResponse, ExtensionData, CpwData } from "@/types/analysis";
+import type { TrendAnalysisResponse, ExtensionData } from "@/types/analysis";
 import { TrendLifespanBar } from "./TrendLifespanBar";
 import { DecayCurveChart } from "./DecayCurveChart";
 import { ShareButton } from "./ShareButton";
 import { AlternativesSection } from "./AlternativesSection";
 import { ExtensionDataBanner } from "./ExtensionDataBanner";
-import { CpwProjection } from "./CpwProjection";
-import { ComparisonCallout } from "./ComparisonCallout";
 import { SustainabilityScore } from "./SustainabilityScore";
-import { TrendUp, Clock, ChartLine, BookmarkSimple } from "@phosphor-icons/react";
+import { BookmarkSimple, Info } from "@phosphor-icons/react";
 import { useUser } from "@/hooks/useUser";
 import { useSavedAnalyses } from "@/hooks/useSavedAnalyses";
 
@@ -25,10 +23,10 @@ interface TrendResultsProps {
 function getPhaseColor(label: string): string {
     switch (label) {
         case "Timeless": return "#2C4A3E";
-        case "Trending": return "#7A9E8E";
-        case "Fading": return "#D4883C";
-        case "Dead": return "#C84B31";
-        default: return "#7A9E8E";
+        case "Trending": return "#5c6c47";
+        case "Fading": return "#C84B31";
+        case "Dead": return "#1C1C1C";
+        default: return "#5c6c47";
     }
 }
 
@@ -47,44 +45,32 @@ function getPhaseVerdict(label: string, weeksRemaining: number): string {
     }
 }
 
-import { getStandardWears, DEFAULT_WEARS_PER_WEEK } from "@/lib/durability";
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.2
+        }
+    }
+};
 
-// PRD §6.4: CPW = price / min(standard_wears, wears_before_trend_death)
-// wears_before_trend_death = wears_per_week × weeks_remaining
-function computeWears(
-    weeksRemaining: number,
-    trendLabel: string,
-    standardWears: number,
-    wearsPerWeek: number,
-): { standard: number; adjusted: number } {
-    const wearsBeforeDeath = wearsPerWeek * weeksRemaining;
-    const adjusted = trendLabel === "Timeless"
-        ? standardWears                                    // no penalty for timeless
-        : Math.min(standardWears, Math.max(1, wearsBeforeDeath)); // capped by trend lifespan
-    return {
-        standard: standardWears,
-        adjusted,
-    };
-}
-
-const sectionVariants = {
-    hidden: { opacity: 0, y: 24 },
-    visible: (i: number) => ({
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
         opacity: 1,
         y: 0,
         transition: {
-            delay: i * 0.15,
-            duration: 0.6,
-            ease: [0.16, 1, 0.3, 1] as const,
-        },
-    }),
+            duration: 0.8,
+            ease: [0.16, 1, 0.3, 1] as const
+        }
+    }
 };
 
 export const TrendResults = memo(function TrendResults({
     data,
     extensionData,
-    price,
-    wearsPerWeek: wearsPerWeekProp,
 }: TrendResultsProps) {
     const phaseColor = getPhaseColor(data.trend_lifespan.label);
     const verdict = getPhaseVerdict(
@@ -94,43 +80,6 @@ export const TrendResults = memo(function TrendResults({
     const isFallback = data.trend_curve.model_type === "keyword_fallback"
         || !data.data_sources.google_trends.available;
 
-    // Build CPW data if price is available
-    const effectivePrice = price ?? extensionData?.price ?? null;
-    const effectiveWearsPerWeek = wearsPerWeekProp ?? DEFAULT_WEARS_PER_WEEK;
-    const smartStandardWears = extensionData?.fiberDurabilityWears && extensionData.fiberDurabilityWears > 0
-        ? extensionData.fiberDurabilityWears
-        : getStandardWears(data.query_normalized);
-    let cpwData: CpwData | null = null;
-
-    if (effectivePrice && effectivePrice > 0) {
-        const wears = computeWears(data.trend_lifespan.weeks_remaining, data.trend_lifespan.label, smartStandardWears, effectiveWearsPerWeek);
-
-        // Use extension CPW if available, otherwise compute
-        if (extensionData?.cpw && extensionData.cpw > 0) {
-            cpwData = {
-                price: effectivePrice,
-                currency: extensionData.currency || "USD",
-                standardCpw: extensionData.cpw,
-                standardWears: wears.standard,
-                trendAdjustedCpw: extensionData.cpwAdjusted || extensionData.cpw,
-                trendAdjustedWears: wears.adjusted,
-                trendLabel: data.trend_lifespan.label,
-            };
-        } else {
-            cpwData = {
-                price: effectivePrice,
-                currency: extensionData?.currency || "USD",
-                standardCpw: Math.round((effectivePrice / wears.standard) * 100) / 100,
-                standardWears: wears.standard,
-                trendAdjustedCpw: Math.round((effectivePrice / wears.adjusted) * 100) / 100,
-                trendAdjustedWears: wears.adjusted,
-                trendLabel: data.trend_lifespan.label,
-            };
-        }
-    }
-
-    let sectionIndex = 0;
-
     const { user } = useUser();
     const { isSaved, save, unsave } = useSavedAnalyses();
     const bookmarked = isSaved(data.analysis_id);
@@ -139,92 +88,85 @@ export const TrendResults = memo(function TrendResults({
         if (bookmarked) {
             await unsave(data.analysis_id);
         } else {
-            await save(
-                data.analysis_id,
-                data.query_normalized,
-                data.trend_lifespan.label,
-            );
+            await save(data.analysis_id, data.query_normalized, data.trend_lifespan.label);
         }
     };
 
     return (
-        <div className="w-full">
-            {/* Extension Banner */}
-            {extensionData && (
-                <motion.div
-                    custom={sectionIndex++}
-                    initial="hidden"
-                    animate="visible"
-                    variants={sectionVariants}
-                >
-                    <ExtensionDataBanner extensionData={extensionData} />
-                </motion.div>
-            )}
-
-            {/* Verdict Banner */}
-            <motion.div
-                custom={sectionIndex++}
-                initial="hidden"
-                animate="visible"
-                variants={sectionVariants}
-                className="mb-10 pb-8 border-b border-charcoal/[0.06]"
-            >
-                <div className="flex items-start gap-4">
-                    <div
-                        className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: `${phaseColor}15` }}
-                    >
-                        {data.trend_lifespan.label === "Timeless" ? (
-                            <Clock weight="duotone" className="w-6 h-6" style={{ color: phaseColor }} />
-                        ) : data.trend_lifespan.label === "Dead" ? (
-                            <TrendUp weight="duotone" className="w-6 h-6 rotate-180" style={{ color: phaseColor }} />
-                        ) : (
-                            <ChartLine weight="duotone" className="w-6 h-6" style={{ color: phaseColor }} />
-                        )}
-                    </div>
-                    <div className="flex-1">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <h2 className="font-sans text-xl font-semibold text-charcoal mb-1 tracking-tight">
-                                    <span className="capitalize">{data.query_normalized}</span>
-                                    <span className="mx-2 text-charcoal/20">/</span>
-                                    <span style={{ color: phaseColor }}>{data.trend_lifespan.label}</span>
-                                </h2>
-                                <p className="font-sans text-sm text-charcoal/50 leading-relaxed max-w-lg">
-                                    {verdict}
-                                </p>
+        <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="w-full flex flex-col gap-12"
+        >
+            {/* Header / Verdict Section */}
+            <motion.div variants={itemVariants} className="w-full pb-12 mb-8 border-b border-forest/10">
+                <div className="flex flex-col md:flex-row gap-8 items-start">
+                    {/* Product Image (if available) */}
+                    {extensionData && extensionData.productUrl && (
+                        <div className="w-[240px] shrink-0">
+                            {/* Placeholder for actual product image logic. We use a placeholder matching the design's aspect ratio */}
+                            <div className="w-[180px] h-[240px] bg-forest/5 rounded-2xl overflow-hidden border-2 border-forest">
+                                <img src="/hero-product-1.png" className="w-full h-full object-cover" alt="Product" />
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
+                        </div>
+                    )}
+                    
+                    {/* Header Info */}
+                    <div className="flex-1 flex flex-col gap-4">
+                        <div className="flex items-center justify-between w-full">
+                            <div className="flex flex-col gap-1">
+                                {(extensionData?.brand || data.brand_info?.name) && (
+                                    <span className="font-serif text-[18px] text-[#5c6c47] uppercase tracking-wide">
+                                        {extensionData?.brand || data.brand_info?.name}
+                                    </span>
+                                )}
+                                <div className="flex flex-wrap items-center gap-4">
+                                    <h2 className="font-serif text-4xl font-bold text-[#5c6c47]">
+                                        {extensionData?.productName || data.query_normalized}
+                                    </h2>
+                                    <div className="px-5 py-1.5 bg-[#d494ac] text-white rounded-full font-serif text-[20px] font-bold">
+                                        {data.trend_lifespan.label.toLowerCase()}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
                                 {user && (
                                     <motion.button
-                                        whileTap={{ scale: 0.9 }}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={handleBookmark}
-                                        title={bookmarked ? "Remove from saved" : "Save to collection"}
-                                        className="p-2 rounded-full hover:bg-stone-100 transition-colors"
+                                        className="flex items-center gap-2 px-5 py-3 rounded-full bg-[#dce2c5] text-forest font-sans text-xs font-bold transition-colors"
                                     >
-                                        <BookmarkSimple
-                                            weight={bookmarked ? "fill" : "regular"}
-                                            className={`w-5 h-5 transition-colors ${bookmarked ? "text-charcoal" : "text-charcoal/40"}`}
-                                        />
+                                        <BookmarkSimple weight={bookmarked ? "fill" : "bold"} className="w-4 h-4" />
+                                        {bookmarked ? "Saved" : "Save"}
                                     </motion.button>
                                 )}
                                 <ShareButton shareableUrl={data.shareable_url} />
                             </div>
                         </div>
+                        <p className="font-serif text-2xl text-[#5c6c47] leading-relaxed max-w-[800px] mt-4">
+                            {verdict}
+                        </p>
                     </div>
                 </div>
             </motion.div>
 
-            {/* Data Quality Warning */}
+            {/* Extension Data Banner (If active) */}
+            {extensionData && (
+                <motion.div variants={itemVariants}>
+                    <ExtensionDataBanner extensionData={extensionData} />
+                </motion.div>
+            )}
+
+            {/* Warning Callout */}
             {isFallback && (
                 <motion.div
-                    custom={sectionIndex++}
-                    initial="hidden"
-                    animate="visible"
-                    variants={sectionVariants}
-                    className="mb-6 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200"
+                    variants={itemVariants}
+                    className="flex items-start gap-4 p-6 rounded-[1.5rem] bg-rust/5 border border-rust/10"
                 >
-                    <p className="font-mono text-[11px] text-amber-800 leading-relaxed">
+                    <Info weight="fill" className="w-6 h-6 text-rust shrink-0 mt-0.5" />
+                    <p className="font-sans text-sm text-rust/80 leading-relaxed">
                         {data.data_sources.google_trends.serp_key_configured === false
                             ? "⚠️ Real-time trend data unavailable. Metrics below are keyword-based estimates, not derived from Google Trends. Configure SerpAPI (SERP_API_KEY) for live analysis."
                             : "⚠️ Google Trends has insufficient data for this query. Metrics below are keyword-based estimates — try a broader search term for live analysis."}
@@ -232,113 +174,38 @@ export const TrendResults = memo(function TrendResults({
                 </motion.div>
             )}
 
-            {/* W-1.5: Trend Lifespan Bar */}
-            <motion.div
-                custom={sectionIndex++}
-                initial="hidden"
-                animate="visible"
-                variants={sectionVariants}
-                className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-            >
-                <TrendLifespanBar lifespan={data.trend_lifespan} />
-            </motion.div>
-
-            {/* W-1.8: Decay Curve Chart */}
-            <motion.div
-                custom={sectionIndex++}
-                initial="hidden"
-                animate="visible"
-                variants={sectionVariants}
-                className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-            >
-                <DecayCurveChart curve={data.trend_curve} phaseColor={phaseColor} data_sources={data.data_sources} />
-            </motion.div>
-
-            {/* W-1.6: CPW Projection */}
-            {cpwData && (
-                <motion.div
-                    custom={sectionIndex++}
-                    initial="hidden"
-                    animate="visible"
-                    variants={sectionVariants}
-                    className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-                >
-                    <CpwProjection cpw={cpwData} />
+            {/* Main Content Area - Vertically Stacked */}
+            <div className="w-full flex flex-col gap-12">
+                 {/* Sustainability Score */}
+                <motion.div variants={itemVariants} className="w-full">
+                    <SustainabilityScore
+                        extensionData={extensionData}
+                        trendLabel={data.trend_lifespan.label}
+                        weeksRemaining={data.trend_lifespan.weeks_remaining}
+                        brandInfo={data.brand_info}
+                    />
                 </motion.div>
-            )}
 
-            {/* W-1.7: Comparison Callout */}
-            {cpwData && (
-                <motion.div
-                    custom={sectionIndex++}
-                    initial="hidden"
-                    animate="visible"
-                    variants={sectionVariants}
-                    className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-                >
-                    <ComparisonCallout cpw={cpwData} query={data.query_normalized} />
+                <div className="w-full h-px bg-forest/10" />
+
+                {/* Trend Lifespan Stats */}
+                <motion.div variants={itemVariants} className="w-full">
+                    <TrendLifespanBar lifespan={data.trend_lifespan} />
                 </motion.div>
-            )}
 
-            {/* W-1.10: Sustainability Score Display */}
-            <motion.div
-                custom={sectionIndex++}
-                initial="hidden"
-                animate="visible"
-                variants={sectionVariants}
-                className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-            >
-                <SustainabilityScore
-                    extensionData={extensionData}
-                    trendLabel={data.trend_lifespan.label}
-                    weeksRemaining={data.trend_lifespan.weeks_remaining}
-                    brandInfo={data.brand_info}
-                />
-            </motion.div>
+                {/* Decay Curve Chart */}
+                <motion.div variants={itemVariants} className="w-full bg-[#eaf1d7] rounded-[20px] p-8 md:p-12 shadow-sm border border-[#5c6c47]/10">
+                    <DecayCurveChart curve={data.trend_curve} phaseColor={phaseColor} data_sources={data.data_sources} />
+                </motion.div>
 
-            {/* Model Details */}
-            <motion.div
-                custom={sectionIndex++}
-                initial="hidden"
-                animate="visible"
-                variants={sectionVariants}
-                className="mb-10 pb-10 border-b border-charcoal/[0.06]"
-            >
-                <h3 className="font-sans text-sm font-semibold text-charcoal/60 uppercase tracking-widest mb-4">
-                    Decay model parameters
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {[
-                        { label: "Peak (K)", value: data.decay_params.K.toFixed(0) },
-                        { label: "Growth rate", value: isFallback ? "—" : data.decay_params.r.toFixed(3) },
-                        { label: "Decay rate (λ)", value: isFallback ? "—" : data.decay_params.lambda.toFixed(3) },
-                        { label: "R² fit", value: isFallback ? "N/A" : `${(data.decay_params.r_squared * 100).toFixed(1)}%` },
-                    ].map((param) => (
-                        <div key={param.label}>
-                            <span className="block font-mono text-[10px] text-charcoal/35 uppercase tracking-wider mb-1">
-                                {param.label}
-                            </span>
-                            <span className="font-mono text-base font-semibold text-charcoal tabular-nums">
-                                {param.value}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
-
-            {/* Sustainable Alternatives */}
-            <motion.div
-                custom={4}
-                initial="hidden"
-                animate="visible"
-                variants={sectionVariants}
-                className="mt-10 pt-10 border-t border-charcoal/[0.06]"
-            >
-                <AlternativesSection
-                    query={data.query_normalized}
-                    trendLabel={data.trend_lifespan.label}
-                />
-            </motion.div>
-        </div>
+                {/* Sustainable Alternatives */}
+                <motion.div variants={itemVariants} className="w-full pt-12 border-t border-forest/10">
+                    <AlternativesSection
+                        query={data.query_normalized}
+                        trendLabel={data.trend_lifespan.label}
+                    />
+                </motion.div>
+            </div>
+        </motion.div>
     );
 });

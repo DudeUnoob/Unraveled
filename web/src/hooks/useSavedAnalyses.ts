@@ -28,7 +28,7 @@ export function useSavedAnalyses() {
   }, [supabase]);
 
   useEffect(() => {
-    fetchSaved();
+    setTimeout(() => { fetchSaved(); }, 0);
   }, [fetchSaved]);
 
   const save = useCallback(

@@ -11,7 +11,7 @@ export function InteractiveExtensionMock({ activeFeature = 0 }: { activeFeature?
 
     useEffect(() => {
         if (activeFeature === 0) {
-            setScanState("IDLE");
+            setTimeout(() => setScanState("IDLE"), 0);
             const t1 = setTimeout(() => setScanState("SCANNING"), 1000);
             const t2 = setTimeout(() => setScanState("WARNING"), 2500);
             return () => { clearTimeout(t1); clearTimeout(t2); };
@@ -112,7 +112,7 @@ export function InteractiveExtensionMock({ activeFeature = 0 }: { activeFeature?
                                     transition={{ duration: 2, delay: 0.5 }}
                                     className="font-sans text-[13px] text-charcoal/60 leading-relaxed border-l-2 border-charcoal/10 pl-4 italic"
                                 >
-                                    "This beautiful summer blouse is crafted carefully from 85% recycled polyester and 15% elastane. Made in our partner facilities in Bangladesh. Machine wash cold."
+                                    &quot;This beautiful summer blouse is crafted carefully from 85% recycled polyester and 15% elastane. Made in our partner facilities in Bangladesh. Machine wash cold.&quot;
                                 </motion.p>
 
                                 {/* Structured Pills appearing */}

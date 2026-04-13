@@ -1,21 +1,16 @@
 "use client";
-
 import { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const GAUGE_LABELS = ["TIMELESS", "CLASSIC", "TRENDING", "FADING", "DEAD"];
-
+// const GAUGE_LABELS = ["TIMELESS", "CLASSIC", "TRENDING", "FADING", "DEAD"];
 interface GaugeWidgetProps {
     score: number; // 0 to 100
     trendFeed: string;
 }
-
 export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: GaugeWidgetProps) {
     // Map score (0-100) to rotation (-90 to 90)
     // 100 score (Timeless) = -90 (far left)
     // 0 score (Dead) = 90 (far right)
     const rotation = -90 + ((100 - score) / 100) * 180;
-
     return (
         <div className="flex flex-col h-full bg-transparent pt-8 pb-8">
             {/* Live Indicator */}
@@ -28,7 +23,6 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                     Live Trend Feed
                 </span>
             </div>
-
             {/* Semicircular Arc Gauge */}
             <div className="relative w-full px-2 lg:px-6 object-contain aspect-[2/1] overflow-visible mb-10 mt-2">
                 <svg viewBox="0 0 200 100" className="w-full h-full overflow-visible">
@@ -40,7 +34,6 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                             <stop offset="100%" stopColor="#C84B31" /> {/* Rust */}
                         </linearGradient>
                     </defs>
-
                     {/* Background Track */}
                     <path
                         d="M 20 100 A 80 80 0 0 1 180 100"
@@ -49,7 +42,6 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                         strokeWidth="12"
                         strokeLinecap="round"
                     />
-
                     {/* Foreground Colored Arc */}
                     <path
                         d="M 20 100 A 80 80 0 0 1 180 100"
@@ -61,7 +53,6 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                         strokeDashoffset={251.2 - (251.2 * (100 - score)) / 100}
                         style={{ transition: 'stroke-dashoffset 1s ease-out' }}
                     />
-
                     {/* Animated Needle Line */}
                     <motion.g
                         animate={{ rotate: rotation }}
@@ -76,7 +67,6 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                     </motion.g>
                     {/* Center Dot (on top of line) */}
                     <circle cx="100" cy="100" r="6" fill="#1C1C1C" />
-
                     {/* SVG text labels that scale perfectly with the gauge */}
                     {/* Font size 9.5 is mathematically the largest size possible on 1 line for these 5 specific words */}
                     <g fill="#1C1C1C" opacity="0.4" fontFamily="var(--font-mono)" fontSize="9.5" letterSpacing="0" className="uppercase font-medium">
@@ -88,7 +78,6 @@ export const GaugeWidget = memo(function GaugeWidget({ score, trendFeed }: Gauge
                     </g>
                 </svg>
             </div>
-
             {/* Typewriter text feed */}
             <div className="px-8 font-mono text-[11px] md:text-xs text-charcoal leading-relaxed min-h-[64px] pb-3 relative">
                 <AnimatePresence mode="wait">
