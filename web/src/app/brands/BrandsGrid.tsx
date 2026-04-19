@@ -2,219 +2,200 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight } from "@phosphor-icons/react";
 import type { BrandProfile, RatingTier } from "@/types/user";
-import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
-// Figma asset — denim texture background
-const DENIM_BG = "https://www.figma.com/api/mcp/asset/623b2d93-690e-4507-a3ad-ea9f0464896b";
-const FOOTER_WAVE = "https://www.figma.com/api/mcp/asset/ce120e3b-e6a5-4ae4-aecb-923b28dc08c2";
+const ASSETS = {
+  imgMainBackground: "https://www.figma.com/api/mcp/asset/664fdd5e-c61e-44b8-a11b-29258aac1273",
+  imgVector46: "https://www.figma.com/api/mcp/asset/062d9222-9772-4c4d-9d72-79d6687c59d6",
+  imgImageBadge: "https://www.figma.com/api/mcp/asset/543d7ebd-b15f-409f-a360-25ac6834a738",
+  imgStitchedBadge: "https://www.figma.com/api/mcp/asset/f44e6157-4c66-4183-8f16-e75eb92e382e",
+  imgMainBadge: "https://www.figma.com/api/mcp/asset/c1036459-1e60-41d9-9efa-55cb0716966a",
+  imgBrandLogo: "https://www.figma.com/api/mcp/asset/d136affe-e40e-44dc-9046-9f793ed25a99",
+  imgBrandIcon: "https://www.figma.com/api/mcp/asset/908065be-2e9d-4d23-ac82-e5178258d2bf",
+  imgBrandLogo1: "https://www.figma.com/api/mcp/asset/eeece263-adf2-4ac7-ae67-280deb5c1e22",
+  imgBrandLogo2: "https://www.figma.com/api/mcp/asset/9980dddf-93a8-4e57-91fd-93fff49beeae",
+  imgBrandIcon1: "https://www.figma.com/api/mcp/asset/00894b63-d0b7-4150-bcb5-ca9dce753bc8",
+  imgBrandLogo3: "https://www.figma.com/api/mcp/asset/00102358-0bf5-4de6-b0ac-9ab8a0cb3490",
+};
 
-function tierToScore(tier: RatingTier | null): number | null {
-  if (!tier) return null;
-  const map: Record<RatingTier, number> = {
-    Great: 5,
-    Good: 4,
-    "It's a Start": 3,
-    "Not Good Enough": 2,
-    "We Avoid": 1,
-  };
-  return map[tier] ?? null;
+const BRAND_CATEGORIES: Record<string, string> = {
+  patagonia: "OUTDOOR & PERFORMANCE",
+  reformation: "FEMININE & SUSTAINABLE",
+  everlane: "BASICS & TRANSPARENCY",
+  "eileen-fisher": "LUXURY & CIRCULARITY",
+  veja: "FOOTWEAR & ETHICS",
+  "eco-step": "FOOTWEAR & SUSTAINABILITY",
+  green: "FOOTWEAR & INNOVATION",
+};
+
+function ratingToScore(tier: RatingTier | null): string {
+  switch (tier) {
+    case "Great": return "5/5";
+    case "Good": return "4/5";
+    case "It's a Start": return "3/5";
+    case "Not Good Enough": return "2/5";
+    case "We Avoid": return "1/5";
+    default: return "0/5";
+  }
 }
 
-function gradeInfo(score: number): { label: string; bg: string } {
+function scoreToGradeLabel(score: number): { grade: string; label: string; color: string } {
   const s = Math.round(score * 100);
-  if (s >= 90) return { label: "A - Great", bg: "#5c614d" };
-  if (s >= 75) return { label: "B - Good", bg: "#5c614d" };
-  if (s >= 60) return { label: "B - Very Good", bg: "#5c614d" };
-  if (s >= 50) return { label: "C - Average", bg: "#9e422c" };
-  if (s >= 25) return { label: "D - Poor", bg: "#9e422c" };
-  return { label: "F - Avoid", bg: "#9e422c" };
-}
-
-function scoreColor(score: number): string {
-  return score >= 3 ? "#5c614d" : "#9e422c";
+  if (s >= 90) return { grade: "A", label: "Great", color: "bg-[#5c614d] text-[#f6fae1]" };
+  if (s >= 75) return { grade: "B", label: "Good", color: "bg-[rgba(92,97,77,0.9)] text-[#f6fae1]" };
+  if (s >= 50) return { grade: "C", label: "Average", color: "bg-[#9e422c] text-[#fff7f6]" };
+  if (s >= 25) return { grade: "D", label: "Poor", color: "bg-[#9e422c] text-[#fff7f6]" };
+  return { grade: "F", label: "Avoid", color: "bg-[#9e422c] text-[#fff7f6]" };
 }
 
 export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
   return (
-    <main className="flex min-h-[100dvh] flex-col w-full overflow-hidden bg-cream text-charcoal">
-      <Navbar />
+    <div className="min-h-screen bg-white relative overflow-x-hidden">
+      {/* Denim Background */}
+      <div className="absolute top-[188px] left-1/2 -translate-x-1/2 w-[1417px] h-[2520px] pointer-events-none z-0">
+        <img src={ASSETS.imgMainBackground} alt="" className="w-full h-full object-cover" />
+      </div>
 
-      {/* Hero — cream background */}
-      <section className="w-full pt-32 pb-8 px-8 bg-cream">
-        <div className="max-w-[1280px] mx-auto text-center">
-          <motion.h1
+      <main className="relative z-10 pt-32 pb-20 max-w-[1280px] mx-auto px-6">
+        {/* Header */}
+        <div className="text-center mb-24">
+          <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="font-serif font-bold text-[48px] leading-tight text-forest-dark tracking-tight"
+            className="font-stix text-[48px] font-bold text-[#5c6c47] mb-4"
           >
             Brand Profiles
           </motion.h1>
-          <motion.p
+          <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="font-drama text-[24px] not-italic text-forest-dark max-w-[965px] mx-auto leading-snug mt-2"
+            transition={{ delay: 0.1 }}
+            className="font-adamina text-[24px] text-[#5c6c47] max-w-4xl mx-auto leading-relaxed"
           >
             Data-backed sustainability ratings for major fashion brands. Aggregated from Good On You, B Corp, Fashion Transparency Index, and more.
           </motion.p>
         </div>
-      </section>
 
-      {/* Denim background section */}
-      <div className="relative w-full flex-1">
-        {/* Denim texture fills entire section */}
-        <div className="absolute inset-0 overflow-hidden">
-          <img
-            src={DENIM_BG}
-            alt=""
-            className="w-full h-full object-cover"
-          />
+        {/* Brands Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+          {brands.map((brand, i) => {
+            const { grade, label, color } = scoreToGradeLabel(brand.brand_score);
+            const category = BRAND_CATEGORIES[brand.slug] ?? "FASHION & APPAREL";
+            
+            return (
+              <motion.div
+                key={brand.slug}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+                <Link
+                  href={`/brands/${brand.slug}`}
+                  className="group block relative bg-[#f1e9c1] rounded-[20px] p-8 shadow-sm hover:shadow-md transition-all h-full"
+                >
+                  {/* Grade Badge */}
+                  <div className={`absolute top-2.5 right-2.5 px-4 py-2 rounded-full font-stix font-bold text-[18px] z-10 ${color} shadow-sm`}>
+                    {grade} - {label}
+                  </div>
+
+                  <div className="flex flex-col h-full">
+                    {/* Header */}
+                    <div className="mb-6">
+                      <h2 className="font-stix font-bold text-[30px] text-[#373313] tracking-tight leading-tight">
+                        {brand.name}
+                      </h2>
+                      <p className="font-stix font-semibold text-[14px] text-[#65603c] tracking-[0.7px] uppercase mt-1">
+                        {category}
+                      </p>
+                    </div>
+
+                    {/* Ratings */}
+                    <div className="grid grid-cols-3 gap-2 mb-6">
+                      <div className="bg-white/40 rounded-[16px] p-3 text-center">
+                        <p className="font-manrope font-bold text-[10px] text-[#827b55] uppercase mb-1">ENV</p>
+                        <p className="font-epilogue font-extrabold text-[20px] text-[#5c614d]">{ratingToScore(brand.environment_rating)}</p>
+                      </div>
+                      <div className="bg-white/40 rounded-[16px] p-3 text-center">
+                        <p className="font-manrope font-bold text-[10px] text-[#827b55] uppercase mb-1">LABOR</p>
+                        <p className="font-epilogue font-extrabold text-[20px] text-[#5c614d]">{ratingToScore(brand.labor_rating)}</p>
+                      </div>
+                      <div className="bg-white/40 rounded-[16px] p-3 text-center">
+                        <p className="font-manrope font-bold text-[10px] text-[#827b55] uppercase mb-1">ANIMAL</p>
+                        <p className="font-epilogue font-extrabold text-[20px] text-[#5c614d]">{ratingToScore(brand.animal_rating)}</p>
+                      </div>
+                    </div>
+
+                    {/* Badges */}
+                    <div className="flex flex-wrap gap-2 mt-auto">
+                      {brand.bcorp_certified && (
+                        <span className="bg-[#e5e4ca] px-3 py-1 rounded-full font-manrope font-bold text-[12px] text-[#52533f]">
+                          B Corp
+                        </span>
+                      )}
+                      {brand.certifications.slice(0, 3).map((cert) => (
+                        <span key={cert} className="bg-[#e5e4ca] px-3 py-1 rounded-full font-manrope font-bold text-[12px] text-[#52533f]">
+                          {cert}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Card grid */}
-        <div className="relative z-10 w-full px-8 md:px-[87px] pt-12 pb-16">
-          <div className="max-w-[1200px] mx-auto">
-            {brands.length === 0 ? (
-              <p className="font-sans text-sm text-white/70 text-center py-20">
-                No brand profiles available yet.
-              </p>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[24px]">
-                {brands.map((brand, i) => (
-                  <motion.div
-                    key={brand.slug}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    whileHover={{ scale: 1.01, y: -3 }}
-                  >
-                    <Link href={`/brands/${brand.slug}`} className="block">
-                      <BrandCard brand={brand} />
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+        {/* Decorative Assets */}
+        <div className="absolute left-[-19px] top-[-26px] w-[120px] h-[120px] pointer-events-none rotate-[-22deg]">
+          {/* Main Logo Icon or similar */}
+        </div>
+      </main>
+
+      {/* CTA Section (Figma style) */}
+      <section className="relative w-full mt-24">
+        {/* Wavy Separator */}
+        <div className="absolute top-0 left-0 right-0 w-full z-20 pointer-events-none -translate-y-[95%]">
+          <img src={ASSETS.imgVector46} alt="" className="w-full h-auto" />
+        </div>
+
+        <div className="bg-[#5c6c47] pt-24 pb-32 flex flex-col items-center justify-center relative overflow-hidden">
+          {/* Badge Assets */}
+          <div className="absolute left-[11px] top-[40px] w-[164px] h-[164px] opacity-40">
+            <img src={ASSETS.imgImageBadge} alt="" className="w-full h-full object-contain" />
           </div>
-        </div>
-      </div>
+          <div className="absolute left-[123px] top-[98px] w-[150px] h-[150px] opacity-30">
+            <img src={ASSETS.imgStitchedBadge} alt="" className="w-full h-full object-contain" />
+          </div>
+          <div className="absolute left-[133px] top-0 w-[130px] h-[131px] opacity-40">
+            <img src={ASSETS.imgMainBadge} alt="" className="w-full h-full object-contain" />
+          </div>
 
-      {/* Footer wave + UNRAVELED */}
-      <div className="relative w-full">
-        <img
-          src={FOOTER_WAVE}
-          alt=""
-          className="w-full h-auto min-h-[60px] object-cover object-top"
-        />
-        <div className="bg-forest w-full pb-20 pt-8 relative overflow-hidden">
-          <div className="max-w-[800px] mx-auto text-center text-white relative z-10">
-            <h2 className="font-serif text-5xl md:text-[80px] font-bold mb-4 tracking-wide">
+          <div className="relative z-10 text-center px-4">
+            <h2 className="font-serif font-semibold text-[80px] text-white tracking-wide mb-8">
               UNRAVELED
             </h2>
-            <p className="font-sans font-bold text-xl md:text-[23px] max-w-[600px] mx-auto leading-tight mb-8">
-              Empowering consumers with material truth.
-              <br />
-              End the cycle of fast fashion.
-            </p>
-            <a
-              href="/extension-redirect"
-              className="inline-flex items-center gap-3 bg-white text-forest-dark font-sans font-bold text-[24px] px-10 py-4 rounded-[30px] hover:bg-cream transition-colors"
+            <div className="font-serif font-bold text-[23px] text-white max-w-xl mx-auto mb-12 flex flex-col gap-1">
+              <p>Empowering consumers with material truth.</p>
+              <p>End the cycle of fast fashion.</p>
+            </div>
+            <Link 
+              href="/extension-redirect" 
+              className="inline-block bg-white text-[#5f6642] rounded-[30px] px-12 py-4 font-serif font-bold text-[24px] hover:bg-[#f6f5f1] transition-all"
             >
               Get Extension Now
-              <ArrowRight weight="bold" className="w-5 h-5" />
-            </a>
+            </Link>
           </div>
-          <img src="/analyze/star-blue.png" className="absolute bottom-10 right-10 w-32 h-auto hidden md:block opacity-80" alt="" />
-          <img src="/analyze/star-green.png" className="absolute bottom-24 right-32 w-24 h-auto hidden md:block opacity-80" alt="" />
-          <img src="/analyze/star-orange.png" className="absolute bottom-10 left-10 w-28 h-auto hidden md:block opacity-80" alt="" />
-          <img src="/analyze/star-green.png" className="absolute bottom-32 left-32 w-20 h-auto hidden md:block opacity-80" alt="" />
-        </div>
-      </div>
-    </main>
-  );
-}
 
-function BrandCard({ brand }: { brand: BrandProfile }) {
-  const { label: gradeLabel, bg: gradeBg } = gradeInfo(brand.brand_score);
-  const envScore = tierToScore(brand.environment_rating);
-  const laborScore = tierToScore(brand.labor_rating);
-  const animalScore = tierToScore(brand.animal_rating);
-
-  return (
-    <div className="bg-[#f1e9c1] rounded-[20px] overflow-hidden relative flex flex-col gap-6 p-8">
-      {/* Grade pill — top right */}
-      <div
-        className="absolute top-[10px] right-[14px] px-4 py-2 rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
-        style={{ backgroundColor: gradeBg }}
-      >
-        <span className="font-serif font-bold text-[#f6fae1] text-[18px] leading-7 whitespace-nowrap">
-          {gradeLabel}
-        </span>
-      </div>
-
-      {/* Brand name + category */}
-      <div className="flex flex-col pr-28">
-        <h2
-          className="font-serif font-bold text-[#373313] text-[30px] leading-9 tracking-[-0.75px]"
-        >
-          {brand.name}
-        </h2>
-        {brand.description && (
-          <span className="font-serif font-semibold text-[#65603c] text-[14px] tracking-[0.7px] uppercase leading-5 mt-0.5">
-            {brand.description.length > 30
-              ? brand.description.slice(0, 30).toUpperCase()
-              : brand.description.toUpperCase()}
-          </span>
-        )}
-      </div>
-
-      {/* ENV / LABOR / ANIMAL score modules */}
-      <div className="grid grid-cols-3 gap-2">
-        {[
-          { label: "ENV", score: envScore },
-          { label: "LABOR", score: laborScore },
-          { label: "ANIMAL", score: animalScore },
-        ].map(({ label, score }) => (
-          <div
-            key={label}
-            className="bg-white/60 rounded-[16px] p-3 flex flex-col items-center gap-[3.5px]"
-          >
-            <span
-              className="font-sans font-bold text-[#827b55] text-[10px] uppercase tracking-wide text-center"
-            >
-              {label}
-            </span>
-            <span
-              className="font-sans font-extrabold text-[20px] leading-7 text-center"
-              style={{ color: score !== null ? scoreColor(score) : "#827b55" }}
-            >
-              {score !== null ? `${score}/5` : "–"}
-            </span>
+          {/* Right side badges */}
+          <div className="absolute right-[42px] top-[157px] w-[230px] h-[230px] rotate-[57deg] opacity-20">
+            <img src={ASSETS.imgImageBadge} alt="" className="w-full h-full object-contain" />
           </div>
-        ))}
-      </div>
-
-      {/* Certifications */}
-      {brand.certifications.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {brand.certifications.slice(0, 4).map((cert) => (
-            <span
-              key={cert}
-              className="bg-[#e5e4ca] text-[#52533f] font-sans font-bold text-[12px] leading-4 px-3 py-1 rounded-full whitespace-nowrap"
-            >
-              {cert}
-            </span>
-          ))}
-          {brand.bcorp_certified && !brand.certifications.includes("B Corp") && (
-            <span className="bg-[#e5e4ca] text-[#52533f] font-sans font-bold text-[12px] leading-4 px-3 py-1 rounded-full whitespace-nowrap">
-              B Corp
-            </span>
-          )}
+          <div className="absolute right-[13px] bottom-[40px] w-[210px] h-[210px] rotate-[57deg] opacity-20">
+            <img src={ASSETS.imgStitchedBadge} alt="" className="w-full h-full object-contain" />
+          </div>
         </div>
-      )}
+      </section>
     </div>
   );
 }
