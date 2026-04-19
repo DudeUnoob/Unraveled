@@ -1,43 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { RuntimeMessage, TabScoreState } from "../types";
 
+// ─── asset imports (Vite resolves these to hashed URLs at build time) ─────────
+import logoUrl from "./assets/logo.png";
+import buttonsUrl from "./assets/buttons.png";
+import fabricUrl from "./assets/fabric.png";
+
+// ─── helpers ──────────────────────────────────────────────────────────────────
 type LoadState = "loading" | "ready" | "fatal";
-type ActiveTabContext = {
-  url: string;
-  title: string;
-};
 
 const currencyFormatter = (currency: string) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   });
-
-const gradeColor = (grade: string): string => {
-  if (grade === "A" || grade === "B") return "bg-emerald-600";
-  if (grade === "C" || grade === "D") return "bg-amber-500";
-  return "bg-rose-700";
-};
-
-const progressBarColor = (grade: string): string => {
-  if (grade === "A" || grade === "B") return "bg-emerald-500";
-  if (grade === "C" || grade === "D") return "bg-amber-400";
-  return "bg-rose-600";
-};
-
-const gradeCircle = (grade: string): string => {
-  if (grade === "A") return "🟢";
-  if (grade === "B") return "🟡";
-  if (grade === "C" || grade === "D") return "🟠";
-  return "🔴";
-};
-
-const healthIcon = (label: string): string => {
-  if (label === "Safe") return "✅";
-  if (label === "Caution") return "⚠️";
-  return "🚫";
-};
 
 const FIBER_DURABILITY_WEARS: Record<string, number> = {
   "organic linen": 90,
@@ -61,43 +38,45 @@ const resolveDurabilityWears = (fiber: string): number | null => {
   return FIBER_DURABILITY_WEARS[canonical] ?? null;
 };
 
-const formatTimestamp = (value: string): string => {
-  const parsed = Date.parse(value);
-  if (Number.isNaN(parsed)) {
-    return "Unknown";
-  }
+// ─── grade helpers ─────────────────────────────────────────────────────────────
+const gradeLabel = (grade: string) =>
+  grade === "A" ? "Excellent"
+  : grade === "B" ? "Good"
+  : grade === "C" ? "Average"
+  : grade === "D" ? "Below Average"
+  : "Poor";
 
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  }).format(new Date(parsed));
-};
+/** Cream for high grades, warm salmon/pink for mid-low grades */
+const gradeBadgeBg = (grade: string) =>
+  grade === "A" || grade === "B" ? "#d8e6cf" : "#e8c8c8";
 
+const gradeBadgeColor = (grade: string) =>
+  grade === "A" || grade === "B" ? "#2d4a2d" : "#7a2d2d";
+
+// ─── component ────────────────────────────────────────────────────────────────
 const App = () => {
   const [tabId, setTabId] = useState<number | null>(null);
-  const [activeTabContext, setActiveTabContext] = useState<ActiveTabContext | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [tabScoreState, setTabScoreState] = useState<TabScoreState | null>(null);
-  const [manualFiberText, setManualFiberText] = useState("");
   const [manualProductName, setManualProductName] = useState("");
-  const [manualPrice, setManualPrice] = useState("");
-  const [manualBrand, setManualBrand] = useState("");
-  const [manualSubmitting, setManualSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [manualError, setManualError] = useState("");
 
+  // Inject CSS custom properties so popup.css (.popup-border etc.) can use them
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--logo-url", `url("${logoUrl}")`);
+    root.style.setProperty("--buttons-bg", `url("${buttonsUrl}")`);
+    root.style.setProperty(
+      "--fabric-border",
+      `url("${fabricUrl}") 40 round`
+    );
+  }, []);
+
   const applyTabState = (state: TabScoreState | null) => {
     setTabScoreState(state);
-
-    if (!state?.payload) {
-      return;
-    }
-
-    setManualFiberText(state.payload.product.fiberText || "");
+    if (!state?.payload) return;
     setManualProductName(state.payload.product.productName);
-    setManualPrice(state.payload.product.price ? String(state.payload.product.price) : "");
   };
 
   const loadCurrentTabScore = async () => {
@@ -110,26 +89,18 @@ const App = () => {
     }
 
     setTabId(tab.id);
-    setActiveTabContext({
-      url: tab.url ?? "",
-      title: tab.title ?? "Manual Product"
-    });
-
-    if (!manualProductName) {
-      setManualProductName(tab.title ?? "Manual Product");
-    }
+    if (!manualProductName) setManualProductName(tab.title ?? "Manual Product");
 
     const message: RuntimeMessage = {
       type: "UNRAVEL_GET_SCORE_FOR_TAB",
-      tabId: tab.id
+      tabId: tab.id,
     };
 
     chrome.runtime.sendMessage(message, (response) => {
       if (chrome.runtime.lastError || !response?.ok) {
-        setLoadState("ready"); // show manual entry even on error
+        setLoadState("ready");
         return;
       }
-
       applyTabState((response.data as TabScoreState | null) ?? null);
       setLoadState("ready");
     });
@@ -140,71 +111,23 @@ const App = () => {
   }, []);
 
   const refreshScore = () => {
-    if (!tabId) {
-      return;
-    }
-
+    if (!tabId) return;
     setRefreshing(true);
     setManualError("");
 
     const message: RuntimeMessage = {
       type: "UNRAVEL_REFRESH_SCORE_FOR_TAB",
-      tabId
+      tabId,
     };
 
     chrome.runtime.sendMessage(message, (response) => {
       setRefreshing(false);
-
       if (chrome.runtime.lastError || !response?.ok || !response?.data) {
         setManualError("Could not refresh this product score.");
         return;
       }
-
       const nextState = response.data as TabScoreState;
       applyTabState(nextState);
-      if (nextState.status === "error") {
-        setManualError(nextState.errorMessage ?? "Backend score unavailable.");
-      }
-    });
-  };
-
-  const submitManualFiber = () => {
-    if (!tabId || !manualFiberText.trim()) {
-      return;
-    }
-
-    const parsedManualPrice = Number(manualPrice);
-    const safeManualPrice = Number.isFinite(parsedManualPrice) ? parsedManualPrice : undefined;
-
-    setManualSubmitting(true);
-    setManualError("");
-
-    const message: RuntimeMessage = {
-      type: "UNRAVEL_SCORE_MANUAL_FIBERS",
-      tabId,
-      fiberText: manualFiberText,
-      seed: tabScoreState?.payload
-        ? undefined
-        : {
-          productUrl: activeTabContext?.url ?? "",
-          productName: manualProductName || "Manual Product",
-          brand: manualBrand || undefined,
-          price: safeManualPrice
-        }
-    };
-
-    chrome.runtime.sendMessage(message, (response) => {
-      setManualSubmitting(false);
-
-      if (chrome.runtime.lastError || !response?.ok || !response?.data) {
-        setManualError(response?.error ?? "Could not score with manual fiber input.");
-        return;
-      }
-
-      const nextState = response.data as TabScoreState;
-      applyTabState(nextState);
-      setLoadState("ready");
-
       if (nextState.status === "error") {
         setManualError(nextState.errorMessage ?? "Backend score unavailable.");
       }
@@ -213,50 +136,65 @@ const App = () => {
 
   const payload = tabScoreState?.payload ?? null;
 
-  const scoreWidth = useMemo(() => {
-    if (!payload) {
-      return "0%";
-    }
+  // const insightTip = useMemo(() => {
+  //   if (!payload?.product.price) return null;
+  //   const breakdown =
+  //     payload.score.sustainabilityScore.featureContributions.fiberComposition
+  //       .breakdown;
+  //   if (breakdown.length === 0) return null;
+  //   const dominant = breakdown.reduce((a, b) => (b.pct > a.pct ? b : a));
+  //   const durabilityWears = resolveDurabilityWears(dominant.fiber);
+  //   if (!durabilityWears) return null;
+  //   return {
+  //     fiberName: dominant.fiber,
+  //     wears: durabilityWears,
+  //     cpw: payload.product.price / durabilityWears,
+  //   };
+  // }, [payload]);
 
-    return `${Math.max(0, Math.min(100, payload.score.sustainabilityScore.value))}%`;
-  }, [payload]);
-
-  const insightTip = useMemo(() => {
-    if (!payload?.product.price) return null;
-
-    const breakdown = payload.score.sustainabilityScore.featureContributions.fiberComposition.breakdown;
-    if (breakdown.length === 0) return null;
-
-    const dominant = breakdown.reduce((a, b) => (b.pct > a.pct ? b : a));
-    const durabilityWears = resolveDurabilityWears(dominant.fiber);
-    if (!durabilityWears) return null;
-
-    const idealCpw = payload.product.price / durabilityWears;
-
-    return {
-      fiberName: dominant.fiber,
-      wears: durabilityWears,
-      cpw: idealCpw
-    };
-  }, [payload]);
-
+  // ── loading ──────────────────────────────────────────────────────────────────
   if (loadState === "loading") {
     return (
-      <div className="popup-shell flex flex-col items-center justify-center gap-3 py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-300 border-t-unravel-accent" />
-        <p className="text-xs text-slate-500">Analyzing this product...</p>
+      <div
+        className="popup-shell"
+        style={{
+          background: "#E2E6C1",
+          justifyContent: "center",
+          gap: 12,
+        }}
+      >
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            border: "3px solid #b8c9a8",
+            borderTopColor: "#3d5c3a",
+            animation: "spin 0.8s linear infinite",
+          }}
+        />
+        <p style={{ margin: 0, fontSize: 12, color: "#5a7a5a" }}>
+          Analyzing this product…
+        </p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     );
   }
 
+  // ── fatal ─────────────────────────────────────────────────────────────────────
   if (loadState === "fatal") {
     return (
-      <div className="popup-shell flex flex-col gap-2 py-6">
-        <p className="text-sm font-semibold text-unravel-ink">Could not load tab</p>
-        <p className="text-xs text-slate-600">Open a supported retailer page, then click the extension icon.</p>
+      <div className="popup-shell" style={{ background: "#E2E6C1", gap: 8, paddingTop: 32 }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#2d4a2d" }}>
+          Could not load tab
+        </p>
+        <p style={{ margin: 0, fontSize: 12, color: "#5a7a5a", textAlign: "center" }}>
+          Open a supported retailer page, then click the extension icon.
+        </p>
         <button
           type="button"
-          className="mt-2 w-full rounded-md border border-slate-300 px-2 py-1.5 text-xs font-semibold"
+          className="action-btn-primary"
+          style={{ marginTop: 16 }}
           onClick={() => void loadCurrentTabScore()}
         >
           Retry
@@ -265,293 +203,485 @@ const App = () => {
     );
   }
 
+  // ── no payload yet — landing / "Get Score" screen ────────────────────────────
   if (!payload) {
-    const isUnavailable = tabScoreState?.status === "error" &&
-      (tabScoreState.errorCode === "source_unavailable" || tabScoreState.errorCode === "http_status");
-
     return (
-      <div className="popup-shell">
-        <h1 className="text-lg font-semibold text-unravel-ink">Unravel</h1>
-        <p className="mt-2 text-sm text-slate-700">
-          {isUnavailable
-            ? "Live Google Trends + ESG scoring is currently unavailable."
-            : "Auto-extraction has not produced a score yet. You can still score manually from the visible composition text."}
+      <div
+        className="popup-border"
+        style={{
+          width: 360,
+          minHeight: 560,
+          background: "#E2E6C1",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          padding: "32px 24px",
+          boxSizing: "border-box",
+          fontFamily: '"STIX Two Text", Georgia, serif',
+        }}
+      >
+        {/* Logo row */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+          <img
+            src={logoUrl}
+            alt="Unraveled logo"
+            style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }}
+          />
+          <span
+            style={{
+              fontSize: 22,
+              fontWeight: 900,
+              letterSpacing: "0.08em",
+              color: "#3d5c3a",
+            }}
+          >
+            UNRAVELED
+          </span>
+        </div>
+
+        <p
+          style={{
+            color: "#5C6C47",
+            fontSize: 13,
+            textAlign: "center",
+            marginTop: 8,
+            lineHeight: 1.5,
+          }}
+        >
+          The sustainability of your clothes
+          <br />
+          <strong>UNRAVELED.</strong>
         </p>
+
+        <p
+          style={{
+            color: "#5C6C47",
+            fontSize: 13,
+            textAlign: "center",
+            marginTop: 40,
+            lineHeight: 1.6,
+            padding: "0 8px",
+          }}
+        >
+          See how sustainable your current product page is — click below to
+          analyze it.
+        </p>
+
         <button
           type="button"
-          className="mt-3 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold"
-          disabled={refreshing || manualSubmitting}
+          disabled={refreshing}
           onClick={refreshScore}
+          style={{
+            marginTop: 40,
+            fontFamily: '"STIX Two Text", Georgia, serif',
+            background: "#3d5c3a",
+            color: "white",
+            border: "none",
+            borderRadius: 999,
+            padding: "14px 48px",
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: refreshing ? "not-allowed" : "pointer",
+            opacity: refreshing ? 0.7 : 1,
+          }}
         >
-          {refreshing ? "Refreshing..." : "Retry live score"}
+          {refreshing ? "Analyzing…" : "Get Score"}
         </button>
-        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Product Name
-        </label>
-        <input
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-          value={manualProductName}
-          onChange={(event) => setManualProductName(event.target.value)}
-        />
-        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Brand
-        </label>
-        <input
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-          value={manualBrand}
-          onChange={(event) => setManualBrand(event.target.value)}
-          placeholder="e.g. Zara, H&M, Everlane"
-        />
-        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Price (optional)
-        </label>
-        <input
-          className="mt-1 w-full rounded-md border border-slate-300 px-2 py-1.5 text-sm"
-          inputMode="decimal"
-          value={manualPrice}
-          onChange={(event) => setManualPrice(event.target.value)}
-          placeholder="49.90"
-        />
-        <label className="mt-3 block text-xs font-semibold uppercase tracking-wide text-slate-600">
-          Fiber Content
-        </label>
-        <textarea
-          className="mt-1 h-20 w-full resize-none rounded-md border border-slate-300 px-2 py-2 text-xs"
-          value={manualFiberText}
-          onChange={(event) => setManualFiberText(event.target.value)}
-          placeholder="55% linen, 30% cotton, 15% polyester"
-        />
-        {manualError ? <p className="mt-1 text-xs text-rose-700">{manualError}</p> : null}
-        <button
-          type="button"
-          onClick={submitManualFiber}
-          disabled={manualSubmitting || !manualFiberText.trim()}
-          className="mt-2 w-full rounded-md bg-unravel-accent px-2 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-        >
-          {manualSubmitting ? "Scoring..." : "Score with manual fiber input"}
-        </button>
+
+        {manualError && (
+          <p style={{ color: "#b04040", fontSize: 12, marginTop: 12, textAlign: "center" }}>
+            {manualError}
+          </p>
+        )}
       </div>
     );
   }
 
+  // ── scored result ─────────────────────────────────────────────────────────────
   const grade = payload.score.sustainabilityScore.grade;
-  const priceDisplay = payload.product.price
-    ? currencyFormatter(payload.product.currency).format(payload.product.price)
-    : "Price unavailable";
-
-  const isManualMode = payload.manualMode === true ||
-    payload.score.sustainabilityScore.scoringMode === "fiber_only";
-  const hasFiberData = payload.score.cpwEstimate.fiberDataAvailable;
-  const hasBrandData = payload.score.sustainabilityScore.featureContributions.brandReputation.brandDataAvailable;
-
-  const esgSource = payload.score.sustainabilityScore.featureContributions.brandReputation.sources.esgApi;
+  const scoreValue = payload.score.sustainabilityScore.value;
 
   return (
-    <main className="popup-shell">
-      <header className="mb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-unravel-accent">
-          🧵 UNRAVEL
-        </p>
-        <h1 className="line-clamp-2 text-base font-semibold text-unravel-ink">{payload.product.productName}</h1>
-        <p className="text-xs text-slate-600">
-          {payload.product.brand} · {priceDisplay}
-        </p>
-      </header>
-
-      {tabScoreState?.status === "stale" ? (
-        <section className="mb-3 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
-          Showing last real score (cached). Data may be stale.
-        </section>
-      ) : null}
-
-      <section className="rounded-xl bg-unravel-card p-3 shadow-card">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-          Sustainability Score
-        </p>
-        <div className="mt-2 flex items-end justify-between">
-          <p className="text-3xl font-bold text-unravel-ink">
-            {payload.score.sustainabilityScore.value}
-            <span className="ml-1 text-lg">
-              / {grade} {gradeCircle(grade)}
-            </span>
-          </p>
+    <main
+      className="popup-border"
+      style={{
+        background: "#d6dfc8",
+        width: 360,
+        minHeight: 560,
+        fontFamily: '"STIX Two Text", Georgia, serif',
+        padding: "0 0 8px",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        boxSizing: "border-box",
+      }}
+    >
+      {/* ── Top bar ── */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          padding: "12px 16px",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <img
+            src={logoUrl}
+            alt="logo"
+            style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }}
+          />
           <span
-            className={`rounded-full px-2 py-1 text-xs font-semibold text-white ${gradeColor(grade)}`}
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              color: "#2d4a2d",
+            }}
           >
-            Grade {grade}
+            UNRAVELED
           </span>
         </div>
-        <div className="mt-3 h-2 rounded-full bg-slate-200">
+        <button
+          type="button"
+          aria-label="Settings"
+          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: 18 }}
+        >
+          ⚙️
+        </button>
+      </div>
+
+      {/* ── Product info ── */}
+      <div style={{ width: "100%", padding: "0 16px", boxSizing: "border-box" }}>
+        {payload.product.brand && (
+          <p
+            style={{
+              margin: 0,
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#5a7a5a",
+              letterSpacing: "0.05em",
+            }}
+          >
+            {payload.product.brand.toUpperCase()}
+          </p>
+        )}
+        <h2
+          style={{
+            margin: "2px 0 0",
+            fontSize: 22,
+            fontWeight: 700,
+            color: "#2d4a2d",
+            lineHeight: 1.2,
+          }}
+        >
+          {payload.product.productName}
+        </h2>
+      </div>
+
+      {/* ── Sustainability score card ── */}
+      <div style={{ width: "100%", padding: "10px 16px 0", boxSizing: "border-box" }}>
+        <div
+          style={{
+            background: "#f5f0e8",
+            borderRadius: 16,
+            padding: "14px 16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          {/* score number */}
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                color: "#5a7a5a",
+              }}
+            >
+              SUSTAINABILITY SCORE
+            </p>
+            <p
+              style={{
+                margin: "4px 0 0",
+                fontSize: 38,
+                fontWeight: 700,
+                color: "#2d4a2d",
+                lineHeight: 1,
+              }}
+            >
+              {scoreValue}
+              <span style={{ fontSize: 14, fontWeight: 400, color: "#5a7a5a" }}>
+                {" "}
+                /100
+              </span>
+            </p>
+          </div>
+
+          {/* grade badge */}
           <div
-            className={`h-2 rounded-full ${progressBarColor(grade)}`}
-            style={{ width: scoreWidth }}
-          />
+            style={{
+              background: gradeBadgeBg(grade),
+              borderRadius: 12,
+              padding: "10px 18px",
+              textAlign: "center",
+              minWidth: 72,
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: 24,
+                fontWeight: 700,
+                color: gradeBadgeColor(grade),
+              }}
+            >
+              {grade}
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 11, color: gradeBadgeColor(grade) }}>
+              {gradeLabel(grade)}
+            </p>
+          </div>
         </div>
-        <p className="mt-2 text-xs text-slate-600">
-          Fiber {payload.score.sustainabilityScore.featureContributions.fiberComposition.featureValue.toFixed(2)}
-          {!isManualMode && (
-            <> · Brand {payload.score.sustainabilityScore.featureContributions.brandReputation.featureValue.toFixed(2)}</>
-          )}
-          {" "}· Trend {payload.score.sustainabilityScore.featureContributions.microTrendLongevity.featureValue.toFixed(2)}
-          {isManualMode && (
-            <span className="ml-1 text-slate-400">(fiber-only mode)</span>
-          )}
-        </p>
-      </section>
+      </div>
 
-      {insightTip ? (
-        <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card text-xs text-slate-700">
-          <span className="font-semibold">{insightTip.fiberName}</span> fiber lasts ~{insightTip.wears} wears.
-          Ideal CPW: {currencyFormatter(payload.product.currency).format(insightTip.cpw)}.
-        </section>
-      ) : null}
+      {/* ── Trend Velocity + Cost/Wear cards ── */}
+      <div
+        className="score-cards-row"
+        style={{ padding: "0 16px", marginTop: 10 }}
+      >
+        {/* Trend velocity */}
+        <div
+          className="score-card"
+          style={{
+            backgroundImage: `url("${buttonsUrl}")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* slight overlay so text stays readable */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(238,242,230,0.55)",
+              borderRadius: 14,
+            }}
+          />
+          <p
+            style={{
+              margin: 0,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              color: "#2d4a2d",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            📈 TREND VELOCITY
+          </p>
+          <p
+            style={{
+              margin: "6px 0 0",
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#2d4a2d",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            Trending ~{payload.score.trendScore.lifespanWeeks} weeks
+          </p>
+        </div>
 
-      <section className="mt-3 grid grid-cols-2 gap-2">
-        <article className="rounded-xl bg-unravel-card p-3 shadow-card">
-          <p className="text-[11px] uppercase tracking-wide text-slate-600">Trend</p>
-          <p className="mt-1 text-base font-semibold text-unravel-ink">{payload.score.trendScore.label}</p>
-          <p className="text-xs text-slate-600">~{payload.score.trendScore.lifespanWeeks} weeks</p>
-        </article>
-
-        <article className="rounded-xl bg-unravel-card p-3 shadow-card">
-          <p className="text-[11px] uppercase tracking-wide text-slate-600">Cost / Wear</p>
-          {hasFiberData ? (
+        {/* Cost / wear */}
+        <div
+          className="score-card"
+          style={{
+            backgroundImage: `url("${buttonsUrl}")`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: "rgba(238,242,230,0.55)",
+              borderRadius: 14,
+            }}
+          />
+          <p
+            style={{
+              margin: 0,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              color: "#2d4a2d",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            🪡 COST / WEAR
+          </p>
+          {payload.score.cpwEstimate.fiberDataAvailable ? (
             <>
-              <p className="mt-1 text-base font-semibold text-unravel-ink">
-                {currencyFormatter(payload.product.currency).format(payload.score.cpwEstimate.costPerWear)}
+              <p
+                style={{
+                  margin: "6px 0 0",
+                  fontSize: 20,
+                  fontWeight: 700,
+                  color: "#2d4a2d",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                {currencyFormatter(payload.product.currency).format(
+                  payload.score.cpwEstimate.costPerWear
+                )}
               </p>
-              <p className="text-xs text-slate-600">
-                adj {currencyFormatter(payload.product.currency).format(payload.score.cpwEstimate.trendAdjustedCpw)}
+              <p
+                style={{
+                  margin: "2px 0 0",
+                  fontSize: 10,
+                  color: "#5a7a5a",
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              >
+                Based on standard product lifecycle
               </p>
             </>
           ) : (
-            <>
-              <p className="mt-1 text-base font-semibold text-slate-400">N/A</p>
-              <p className="text-xs text-slate-500">Fiber data unavailable</p>
-            </>
-          )}
-        </article>
-      </section>
-
-      <section className="mt-3 rounded-xl bg-unravel-card p-3 shadow-card">
-        <p className="text-[11px] uppercase tracking-wide text-slate-600">Health</p>
-        <p className="mt-1 text-base font-semibold text-unravel-ink">
-          {healthIcon(payload.score.healthScore.label)} {payload.score.healthScore.label}
-        </p>
-        {payload.score.healthScore.flags.length > 0 ? (
-          <p className="mt-1 text-xs text-slate-600">Flags: {payload.score.healthScore.flags.join(", ")}</p>
-        ) : (
-          <p className="mt-1 text-xs text-slate-600">No known concern flags detected.</p>
-        )}
-      </section>
-
-      <button
-        type="button"
-        className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg bg-unravel-accent px-3 py-2 text-sm font-semibold text-white"
-        onClick={() => {
-          void chrome.tabs.create({ url: payload.score.webAppDeepLink });
-        }}
-      >
-        🔍 See Full Trend Analysis →
-      </button>
-
-      <button
-        type="button"
-        className="mt-2 w-full cursor-not-allowed rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-400"
-        disabled
-        title="Coming soon in Stage 2"
-      >
-        👕 See Better Alternatives →
-      </button>
-
-      <button
-        type="button"
-        className="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-        onClick={() => {
-          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-            const activeTab = tabs[0];
-
-            if (typeof activeTab?.id !== "number") {
-              console.warn("Unable to download fiber data: no active tab found");
-              return;
-            }
-
-            chrome.tabs.sendMessage(activeTab.id, { type: "UNRAVEL_DOWNLOAD_FIBER_DATA" }, (response) => {
-              if (response?.ok) {
-                console.log(`Downloaded ${response.count} fiber data entries`);
-              }
-            });
-          });
-        }}
-      >
-        💾 Download Fiber Data →
-      </button>
-
-      <details className="mt-3">
-        <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-          Data Sources
-        </summary>
-        <div className="mt-1 rounded-xl bg-unravel-card p-3 shadow-card">
-          <p className="text-xs text-slate-700">
-            Trend: Google Trends · Updated {formatTimestamp(payload.score.trendScore.lastUpdated)}
-          </p>
-          {!isManualMode && hasBrandData && (
-            <p className="mt-1 text-xs text-slate-700">
-              ESG: {esgSource.provider} · Updated {formatTimestamp(esgSource.lastUpdated)}
-            </p>
-          )}
-          {!isManualMode && !hasBrandData && (
-            <p className="mt-1 text-xs text-slate-400">
-              ESG: No brand data found — using default score
+            <p
+              style={{
+                margin: "6px 0 0",
+                fontSize: 12,
+                color: "#5a7a5a",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              Based on standard product lifecycle
             </p>
           )}
         </div>
-      </details>
+      </div>
 
-      <section className="mt-3 rounded-xl border border-dashed border-slate-300 p-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] uppercase tracking-wide text-slate-600">Manual Fiber Input</p>
-          <button
-            type="button"
-            className="rounded-md border border-slate-300 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-slate-700"
-            onClick={refreshScore}
-            disabled={refreshing || manualSubmitting}
+      {/* ── Health & Safety card ── */}
+      <div style={{ width: "100%", padding: "10px 16px 0", boxSizing: "border-box" }}>
+        <div className="health-card">
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "#3d5c3a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
           >
-            {refreshing ? "Refreshing..." : "Retry live score"}
-          </button>
+            <span style={{ color: "white", fontSize: 14, lineHeight: 1 }}>✓</span>
+          </div>
+          <div>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                color: "#5a7a5a",
+              }}
+            >
+              HEALTH &amp; SAFETY
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 13, color: "#2d4a2d" }}>
+              {payload.score.healthScore.label}
+              {": "}
+              {payload.score.healthScore.flags.length > 0
+                ? payload.score.healthScore.flags.join(", ")
+                : "No known concern flags"}
+            </p>
+          </div>
         </div>
-        <p className="mt-1 text-xs text-slate-600">
-          If extraction is wrong, paste text like: <span className="font-medium">55% linen, 30% cotton, 15% polyester</span>.
-        </p>
-        <textarea
-          className="mt-2 h-20 w-full resize-none rounded-md border border-slate-300 px-2 py-2 text-xs"
-          value={manualFiberText}
-          onChange={(event) => setManualFiberText(event.target.value)}
-        />
-        {manualError ? <p className="mt-1 text-xs text-rose-700">{manualError}</p> : null}
-        <button
-          type="button"
-          onClick={submitManualFiber}
-          disabled={manualSubmitting || !manualFiberText.trim()}
-          className="mt-2 w-full rounded-md border border-slate-400 px-2 py-1.5 text-xs font-semibold disabled:opacity-50"
-        >
-          {manualSubmitting ? "Scoring..." : "Re-score with manual fiber content"}
-        </button>
-      </section>
+      </div>
 
-      <footer className="mt-4 flex items-center justify-between border-t border-slate-200 pt-2 text-[10px] text-slate-500">
-        <span>Powered by Unravel</span>
+      {/* ── Action buttons ── */}
+      <div style={{ width: "100%", padding: "0 16px", boxSizing: "border-box" }}>
         <button
           type="button"
-          className="flex items-center gap-1 text-slate-500 hover:text-slate-700"
-          title="Settings — coming soon"
+          className="action-btn-primary"
           onClick={() => {
-            /* Future: chrome.runtime.openOptionsPage() */
+            void chrome.tabs.create({ url: payload.score.webAppDeepLink });
           }}
         >
-          Settings ⚙️
+          SEE FULL TREND ANALYSIS
         </button>
-      </footer>
+
+        <div style={{ display: "flex", gap: 10, marginTop: 10 }}>
+          <button type="button" className="action-btn-secondary">
+            ♻️ ALTERNATIVES
+          </button>
+          <button type="button" className="action-btn-secondary">
+            🧵 FIBER DATA
+          </button>
+        </div>
+      </div>
+
+      {manualError && (
+        <p
+          style={{
+            color: "#b04040",
+            fontSize: 12,
+            margin: "8px 16px 0",
+            textAlign: "center",
+          }}
+        >
+          {manualError}
+        </p>
+      )}
+
+      {/* ── Bottom nav ── */}
+      <div className="bottom-nav">
+        <button
+          type="button"
+          aria-label="Home"
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 4 }}
+        >
+          🏠
+        </button>
+
+        {/* active tab indicator */}
+        <div
+          style={{
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            background: "#3d5c3a",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <span style={{ fontSize: 20 }}>📊</span>
+        </div>
+
+        <button
+          type="button"
+          aria-label="Profile"
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 4 }}
+        >
+          👤
+        </button>
+      </div>
     </main>
   );
 };

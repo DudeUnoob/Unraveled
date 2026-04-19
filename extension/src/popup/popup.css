@@ -1,9 +1,12 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  color-scheme: light;
+.popup-shell {
+  padding: 20px 16px;
+  width: 360px;
+  min-height: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 html,
@@ -11,11 +14,115 @@ body {
   margin: 0;
   width: 360px;
   min-height: 560px;
-  background: linear-gradient(160deg, #f9f6ef 0%, #f3ede0 100%);
-  color: #1f2522;
-  font-family: "Avenir Next", "Avenir", "Segoe UI", sans-serif;
+  background: #E2E6C1;
+  color: #4a4a3a;
+  font-family: "STIX Two Text", Georgia, serif;
 }
 
-.popup-shell {
-  padding: 14px;
+.popup-border {
+  border: 16px solid transparent;
+  border-image: var(--fabric-border) 40 round;
+}
+
+.score-ring {
+  position: relative;
+  width: 140px;
+  height: 140px;
+}
+
+.score-ring svg {
+  transform: rotate(-90deg);
+}
+
+.score-ring-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+@font-face {
+  font-family: "STIX Two Text";
+  src: url("./assets/STIXTwoText-Regular.ttf") format("truetype");
+  font-weight: 400;
+}
+@font-face {
+  font-family: "STIX Two Text";
+  src: url("./assets/STIXTwoText-Bold.ttf") format("truetype");
+  font-weight: 700;
+}
+
+.buttons-bg {
+  background-image: var(--buttons-bg);
+  background-size: cover;
+  background-position: center;
+}
+
+.score-cards-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.score-card {
+  background: #eef2e6;
+  border-radius: 14px;
+  padding: 12px;
+  position: relative;
+  overflow: hidden;
+  min-height: 100px;
+}
+
+.health-card {
+  background: #eef2e6;
+  border-radius: 14px;
+  padding: 12px 14px;
+  width: 100%;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.action-btn-primary {
+  width: 100%;
+  background: #3d5c3a;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  font-family: "STIX Two Text", Georgia, serif;
+  margin-top: 12px;
+}
+
+.action-btn-secondary {
+  flex: 1;
+  background: #eef2e6;
+  color: #2d4a2d;
+  border: 1.5px solid #3d5c3a;
+  border-radius: 999px;
+  padding: 11px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  font-family: "STIX Two Text", Georgia, serif;
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  padding: 10px 0 4px;
+  margin-top: auto;
+  border-top: 1px solid #b8c9a8;
 }
