@@ -9,13 +9,46 @@
 html,
 body {
   margin: 0;
-  width: 360px;
-  min-height: 560px;
-  background: linear-gradient(160deg, #f9f6ef 0%, #f3ede0 100%);
-  color: #1f2522;
-  font-family: "Avenir Next", "Avenir", "Segoe UI", sans-serif;
+  width: 358px;
+  min-height: 600px;
+  background: #e8e4d8;
+  color: #373313;
+  font-family: "STIX Two Text", Georgia, serif;
 }
 
-.popup-shell {
-  padding: 14px;
+#root {
+  width: 358px;
+  min-height: 600px;
+}
+
+.popup-container {
+  width: 358px;
+  background: white;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0px 20px 48px 0px rgba(55, 51, 19, 0.12);
+  position: relative;
+}
+
+/* Decorative buttons/fabric background pattern */
+.buttons-pattern {
+  background-image:
+    radial-gradient(circle 6px at 50% 50%, #b8c9d9 60%, transparent 60%),
+    radial-gradient(circle 2px at 35% 35%, white 80%, transparent 80%),
+    radial-gradient(circle 2px at 65% 35%, white 80%, transparent 80%),
+    radial-gradient(circle 2px at 35% 65%, white 80%, transparent 80%),
+    radial-gradient(circle 2px at 65% 65%, white 80%, transparent 80%);
+  background-size: 28px 28px;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
+}
+
+.buttons-pattern-pink {
+  background-image:
+    radial-gradient(circle 6px at 50% 50%, #e8c4c8 60%, transparent 60%),
+    radial-gradient(circle 2px at 35% 35%, white 80%, transparent 80%),
+    radial-gradient(circle 2px at 65% 35%, white 80%, transparent 80%),
+    radial-gradient(circle 2px at 35% 65%, white 80%, transparent 80%),
+    radial-gradient(circle 2px at 65% 65%, white 80%, transparent 80%);
+  background-size: 28px 28px;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
 }
