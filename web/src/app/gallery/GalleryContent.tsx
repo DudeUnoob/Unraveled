@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Navbar } from "@/components/layout/Navbar";
 import { TrendGalleryCard } from "@/components/gallery/TrendGalleryCard";
 import { ArrowRight } from "@phosphor-icons/react";
 
@@ -24,8 +23,6 @@ interface GalleryContentProps {
 export function GalleryContent({ analyses }: GalleryContentProps) {
   return (
     <main className="flex min-h-[100dvh] flex-col w-full overflow-hidden bg-cream text-charcoal selection:bg-forest/30">
-      <Navbar />
-
       {/* ── Hero header ── */}
       <section className="w-full pt-32 pb-4 px-8 md:px-16 bg-cream">
         <div className="max-w-[1280px] mx-auto">
@@ -179,3 +176,4 @@ export function GalleryContent({ analyses }: GalleryContentProps) {
     </main>
   );
 }
+

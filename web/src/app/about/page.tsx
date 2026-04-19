@@ -26,10 +26,9 @@ const ASSETS = {
 export default function AboutPage() {
   return (
     <main className="flex min-h-[100dvh] flex-col w-full overflow-hidden bg-white text-charcoal selection:bg-rust/30 pb-0">
-      
-      <Navbar />
 
       {/* Hero Section */}
+
       <section className="relative w-full pt-20 pb-12 px-6 flex flex-col items-center z-10 bg-white">
         <div className="w-full max-w-[1100px] mt-10">
           <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6 tracking-tight flex flex-wrap items-center justify-center md:justify-start gap-4">

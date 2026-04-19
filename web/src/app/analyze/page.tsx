@@ -56,7 +56,6 @@ function AnalyzerContent() {
                     }} 
                 />
             </div>
-            <Navbar />
             <div className="relative z-10 w-full max-w-[1200px] px-4 md:px-8 pt-32 pb-32">
                 <div className="bg-white rounded-[40px] shadow-sm border border-forest/10 p-8 md:p-12 lg:p-16 flex flex-col items-center w-full relative overflow-hidden">
                     
@@ -215,7 +214,7 @@ export default function AnalyzePage() {
         <Suspense
             fallback={
                 <main className="flex min-h-[100dvh] flex-col items-center w-full bg-cream">
-                    <Navbar />
+                    
                     <div className="flex-1 flex items-center justify-center">
                         <div className="w-12 h-12 border-4 border-forest/10 border-t-forest rounded-full animate-spin" />
                     </div>
