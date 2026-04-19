@@ -3,38 +3,52 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "@phosphor-icons/react";
-import type { BrandProfile } from "@/types/user";
+import type { BrandProfile, RatingTier } from "@/types/user";
 import { Navbar } from "@/components/layout/Navbar";
 
-function scoreToLabel(score: number): string {
-  const s = Math.round(score * 100);
-  if (s >= 90) return "Excellent";
-  if (s >= 75) return "Good";
-  if (s >= 50) return "Average";
-  if (s >= 25) return "Poor";
-  return "Avoid";
+// Figma asset — denim texture background
+const DENIM_BG = "https://www.figma.com/api/mcp/asset/623b2d93-690e-4507-a3ad-ea9f0464896b";
+const FOOTER_WAVE = "https://www.figma.com/api/mcp/asset/ce120e3b-e6a5-4ae4-aecb-923b28dc08c2";
+
+function tierToScore(tier: RatingTier | null): number | null {
+  if (!tier) return null;
+  const map: Record<RatingTier, number> = {
+    Great: 5,
+    Good: 4,
+    "It's a Start": 3,
+    "Not Good Enough": 2,
+    "We Avoid": 1,
+  };
+  return map[tier] ?? null;
 }
 
-function scoreToPillBg(score: number): string {
+function gradeInfo(score: number): { label: string; bg: string } {
   const s = Math.round(score * 100);
-  if (s >= 75) return "bg-[#5c6c47]";
-  if (s >= 50) return "bg-[#8a7c4e]";
-  return "bg-[#2e2d2d]";
+  if (s >= 90) return { label: "A - Great", bg: "#5c614d" };
+  if (s >= 75) return { label: "B - Good", bg: "#5c614d" };
+  if (s >= 60) return { label: "B - Very Good", bg: "#5c614d" };
+  if (s >= 50) return { label: "C - Average", bg: "#9e422c" };
+  if (s >= 25) return { label: "D - Poor", bg: "#9e422c" };
+  return { label: "F - Avoid", bg: "#9e422c" };
+}
+
+function scoreColor(score: number): string {
+  return score >= 3 ? "#5c614d" : "#9e422c";
 }
 
 export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
   return (
-    <main className="flex min-h-[100dvh] flex-col w-full overflow-hidden bg-cream text-charcoal selection:bg-forest/30">
+    <main className="flex min-h-[100dvh] flex-col w-full overflow-hidden bg-cream text-charcoal">
       <Navbar />
 
-      {/* Hero header */}
-      <section className="w-full pt-32 pb-4 px-8 md:px-16 bg-cream">
-        <div className="max-w-[1280px] mx-auto">
+      {/* Hero — cream background */}
+      <section className="w-full pt-32 pb-8 px-8 bg-cream">
+        <div className="max-w-[1280px] mx-auto text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-            className="font-serif font-bold text-[48px] leading-tight text-forest-dark mb-3"
+            className="font-serif font-bold text-[48px] leading-tight text-forest-dark tracking-tight"
           >
             Brand Profiles
           </motion.h1>
@@ -42,52 +56,40 @@ export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="font-drama text-[24px] not-italic text-forest-dark max-w-[1047px] leading-snug"
+            className="font-drama text-[24px] not-italic text-forest-dark max-w-[965px] mx-auto leading-snug mt-2"
           >
-            Data-backed sustainability ratings for major fashion brands.
-            Aggregated from Good On You, B Corp, Fashion Transparency Index, and more.
+            Data-backed sustainability ratings for major fashion brands. Aggregated from Good On You, B Corp, Fashion Transparency Index, and more.
           </motion.p>
         </div>
       </section>
 
-      {/* Sky scene */}
-      <div className="relative w-full">
-        {/* Sky background */}
+      {/* Denim background section */}
+      <div className="relative w-full flex-1">
+        {/* Denim texture fills entire section */}
         <div className="absolute inset-0 overflow-hidden">
           <img
-            src="/gallery/sky-bg.png"
+            src={DENIM_BG}
             alt=""
-            className="w-full h-full object-cover object-top"
+            className="w-full h-full object-cover"
           />
         </div>
 
-        {/* Top wave */}
-        <img
-          src="/gallery/wave-top.png"
-          alt=""
-          className="relative z-10 w-full pointer-events-none select-none"
-          style={{ marginTop: -8 }}
-        />
-
-        {/* Brand card grid */}
-        <section className="relative z-10 w-full px-8 md:px-[114px] pb-0">
-          <div className="max-w-[1280px] mx-auto">
+        {/* Card grid */}
+        <div className="relative z-10 w-full px-8 md:px-[87px] pt-12 pb-16">
+          <div className="max-w-[1200px] mx-auto">
             {brands.length === 0 ? (
               <p className="font-sans text-sm text-white/70 text-center py-20">
                 No brand profiles available yet.
               </p>
             ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                style={{ columnGap: 104, rowGap: 51 }}
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[24px]">
                 {brands.map((brand, i) => (
                   <motion.div
                     key={brand.slug}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    whileHover={{ scale: 1.02, y: -4 }}
+                    whileHover={{ scale: 1.01, y: -3 }}
                   >
                     <Link href={`/brands/${brand.slug}`} className="block">
                       <BrandCard brand={brand} />
@@ -97,46 +99,15 @@ export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
               </div>
             )}
           </div>
-        </section>
-
-        {/* Bottom grass */}
-        <img
-          src="/gallery/grass-bottom.png"
-          alt=""
-          className="relative z-10 w-full pointer-events-none select-none mt-8"
-        />
+        </div>
       </div>
 
-      {/* CTA */}
-      <section className="w-full bg-cream px-8 md:px-16 py-16">
-        <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <h2 className="font-serif font-bold text-[48px] leading-tight text-forest-dark text-center md:text-left">
-            Ready to analyze a trend?
-          </h2>
-          <Link
-            href="/analyze"
-            className="group flex items-center gap-4 bg-forest text-white rounded-[30px] hover:bg-forest-dark transition-colors"
-            style={{ paddingLeft: 30, paddingRight: 16, height: 55 }}
-          >
-            <span className="font-serif font-medium text-[30px] whitespace-nowrap">
-              Analyze a trend
-            </span>
-            <div className="w-[38px] h-[38px] flex items-center justify-center">
-              <ArrowRight
-                weight="bold"
-                className="w-6 h-6 group-hover:translate-x-1 transition-transform"
-              />
-            </div>
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <div className="relative w-full mt-auto">
+      {/* Footer wave + UNRAVELED */}
+      <div className="relative w-full">
         <img
-          src="/analyze/footer-wave.png"
+          src={FOOTER_WAVE}
           alt=""
-          className="w-full h-auto min-h-[120px] object-cover object-top"
+          className="w-full h-auto min-h-[60px] object-cover object-top"
         />
         <div className="bg-forest w-full pb-20 pt-8 relative overflow-hidden">
           <div className="max-w-[800px] mx-auto text-center text-white relative z-10">
@@ -150,9 +121,10 @@ export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
             </p>
             <a
               href="/extension-redirect"
-              className="inline-block bg-white text-forest-dark font-sans font-bold text-[24px] px-10 py-4 rounded-[30px] hover:bg-cream transition-colors"
+              className="inline-flex items-center gap-3 bg-white text-forest-dark font-sans font-bold text-[24px] px-10 py-4 rounded-[30px] hover:bg-cream transition-colors"
             >
               Get Extension Now
+              <ArrowRight weight="bold" className="w-5 h-5" />
             </a>
           </div>
           <img src="/analyze/star-blue.png" className="absolute bottom-10 right-10 w-32 h-auto hidden md:block opacity-80" alt="" />
@@ -166,44 +138,83 @@ export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
 }
 
 function BrandCard({ brand }: { brand: BrandProfile }) {
-  const scoreLabel = scoreToLabel(brand.brand_score);
-  const pillBg = scoreToPillBg(brand.brand_score);
-  const score = Math.round(brand.brand_score * 100);
-
-  const isMuted = scoreLabel === "Poor" || scoreLabel === "Avoid";
+  const { label: gradeLabel, bg: gradeBg } = gradeInfo(brand.brand_score);
+  const envScore = tierToScore(brand.environment_rating);
+  const laborScore = tierToScore(brand.labor_rating);
+  const animalScore = tierToScore(brand.animal_rating);
 
   return (
-    <div
-      className={`${isMuted ? "bg-[#a0a784]" : "bg-[#a0a784]"} rounded-[30px] shadow-[0px_4px_5.5px_0px_rgba(0,0,0,0.25)] flex flex-col text-white border-[14px] border-solid border-white/25`}
-      style={{ width: 280, height: 286 }}
-    >
-      {/* Score badge — top */}
-      <div className="pt-5 px-5 flex items-center justify-between">
-        <span className="font-serif text-[18px] opacity-80">{score}/100</span>
-        {brand.bcorp_certified && (
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white">
-            B Corp
+    <div className="bg-[#f1e9c1] rounded-[20px] overflow-hidden relative flex flex-col gap-6 p-8">
+      {/* Grade pill — top right */}
+      <div
+        className="absolute top-[10px] right-[14px] px-4 py-2 rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)]"
+        style={{ backgroundColor: gradeBg }}
+      >
+        <span className="font-serif font-bold text-[#f6fae1] text-[18px] leading-7 whitespace-nowrap">
+          {gradeLabel}
+        </span>
+      </div>
+
+      {/* Brand name + category */}
+      <div className="flex flex-col pr-28">
+        <h2
+          className="font-serif font-bold text-[#373313] text-[30px] leading-9 tracking-[-0.75px]"
+        >
+          {brand.name}
+        </h2>
+        {brand.description && (
+          <span className="font-serif font-semibold text-[#65603c] text-[14px] tracking-[0.7px] uppercase leading-5 mt-0.5">
+            {brand.description.length > 30
+              ? brand.description.slice(0, 30).toUpperCase()
+              : brand.description.toUpperCase()}
           </span>
         )}
       </div>
 
-      {/* Brand name — center, grows */}
-      <div className="flex-1 flex items-center justify-center px-5 py-2">
-        <h3 className="font-serif font-bold text-[26px] leading-tight text-center capitalize line-clamp-3">
-          {brand.name}
-        </h3>
+      {/* ENV / LABOR / ANIMAL score modules */}
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { label: "ENV", score: envScore },
+          { label: "LABOR", score: laborScore },
+          { label: "ANIMAL", score: animalScore },
+        ].map(({ label, score }) => (
+          <div
+            key={label}
+            className="bg-white/60 rounded-[16px] p-3 flex flex-col items-center gap-[3.5px]"
+          >
+            <span
+              className="font-sans font-bold text-[#827b55] text-[10px] uppercase tracking-wide text-center"
+            >
+              {label}
+            </span>
+            <span
+              className="font-sans font-extrabold text-[20px] leading-7 text-center"
+              style={{ color: score !== null ? scoreColor(score) : "#827b55" }}
+            >
+              {score !== null ? `${score}/5` : "–"}
+            </span>
+          </div>
+        ))}
       </div>
 
-      {/* Status + pill — bottom */}
-      <div className="pb-5 px-5 flex items-center justify-between">
-        <span className="font-serif text-[20px]">{scoreLabel}</span>
-        <div
-          className={`${pillBg} rounded-[20px] flex items-center justify-center`}
-          style={{ height: 38, width: 116 }}
-        >
-          <span className="font-serif text-[16px] text-white">View profile</span>
+      {/* Certifications */}
+      {brand.certifications.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {brand.certifications.slice(0, 4).map((cert) => (
+            <span
+              key={cert}
+              className="bg-[#e5e4ca] text-[#52533f] font-sans font-bold text-[12px] leading-4 px-3 py-1 rounded-full whitespace-nowrap"
+            >
+              {cert}
+            </span>
+          ))}
+          {brand.bcorp_certified && !brand.certifications.includes("B Corp") && (
+            <span className="bg-[#e5e4ca] text-[#52533f] font-sans font-bold text-[12px] leading-4 px-3 py-1 rounded-full whitespace-nowrap">
+              B Corp
+            </span>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
