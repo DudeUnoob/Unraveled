@@ -84,7 +84,7 @@ function SageCard({
 }) {
   return (
     <div
-      className="bg-[#c2c8ac] rounded-[30px] shadow-[0px_4px_5.5px_0px_rgba(0,0,0,0.25)] flex flex-col text-white"
+      className="bg-[#a0a784] rounded-[30px] shadow-[0px_4px_5.5px_0px_rgba(0,0,0,0.25)] flex flex-col text-white border-[14px] border-solid border-white/25"
       style={{ width: 280, height: 286 }}
     >
       {/* Date — top */}
@@ -127,7 +127,7 @@ function TombstoneCard({
       className="relative overflow-hidden shadow-[0px_4px_5.5px_0px_rgba(0,0,0,0.25)] flex flex-col text-white"
       style={{
         width: 280,
-        height: 340,
+        height: 286,
         borderTopLeftRadius: 90,
         borderTopRightRadius: 90,
         borderBottomLeftRadius: 4,
