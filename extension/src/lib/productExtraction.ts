@@ -1,6 +1,24 @@
-import { gatherText, firstImageSrc, firstNonEmptyText, inferCurrency, parsePrice } from "./dom";
+import {
+  extractMetaProductPrice,
+  firstImageSrc,
+  firstMetaContent,
+  firstNonEmptyText,
+  gatherText,
+  inferCurrency,
+  parsePrice,
+  scanMainForPriceText,
+} from "./dom";
 import { normalizeFiberComposition, parseFiberComposition } from "./fiberParser";
-import { getRetailerConfigByHostname, inferCategory, looksLikeProductPath } from "./url";
+import {
+  extractJsonLdBundleFromDocument,
+  extractPriceFromProductRecord,
+} from "./jsonLdProduct";
+import {
+  getRetailerConfigByHostname,
+  inferCategory,
+  looksLikeGenericProductPath,
+  looksLikeProductPath,
+} from "./url";
 import type { ProductContext } from "../types";
 
 /**
@@ -26,6 +44,8 @@ const gatherFiberText = (materialText: string, descriptionText: string): string 
 };
 
 const MAX_MATERIAL_EXCERPT_CHARS = 12_000;
+/** Bounded visible text for server-side price LLM when DOM/JSON-LD price is missing */
+const MAX_PAGE_TEXT_SNIPPET_CHARS = 12_000;
 
 const GENERIC_FIBER_SELECTORS = [
   "details, summary",
@@ -39,6 +59,53 @@ const GENERIC_FIBER_SELECTORS = [
   "[data-testid*='fabric']",
   "[data-testid*='composition']",
   "[itemprop='material']",
+];
+
+/** Used when the hostname is not in retailerSelectors.json */
+const GENERIC_NAME_SELECTORS = [
+  "[data-product-title]",
+  "h1[itemprop=name]",
+  "[itemprop=name]",
+  "[data-testid='product-title']",
+  "main h1",
+  "article h1",
+  "#ProductInfo h1",
+  "h1",
+];
+
+const GENERIC_PRICE_SELECTORS = [
+  "[itemprop=price]",
+  "[data-product-price]",
+  "[data-price]",
+  "[data-testid*='price']",
+  "[data-testid='product-price']",
+  "[data-testid='product-page-price']",
+  "[class*='product-price']",
+  "[class*='ProductPrice']",
+  "[class*='current-price']",
+  "[class*='sales-price']",
+  "[class*='price-current']",
+  ".a-price .a-offscreen",
+  "#priceblock_ourprice",
+  "#priceblock_dealprice",
+  "span[data-price]",
+  "[class*='PurchasePrice']",
+  "[class*='price__regular']",
+];
+
+const GENERIC_DESCRIPTION_SELECTORS = [
+  "[itemprop=description]",
+  "[data-product-description]",
+  ".product-description",
+  "[class*='product-details']",
+  "main article",
+];
+
+const GENERIC_IMAGE_SELECTORS = [
+  "[itemprop=image]",
+  "img[itemprop=image]",
+  "[data-testid='product-image'] img",
+  "main picture img",
 ];
 
 const dedupeLines = (value: string): string => {
@@ -70,7 +137,7 @@ const truncateForModelInput = (value: string, maxChars = MAX_MATERIAL_EXCERPT_CH
 };
 
 /* ------------------------------------------------------------------ */
-/*  JSON-LD extraction — the most reliable source of product data     */
+/*  JSON-LD shape (legacy helpers for material / image)               */
 /* ------------------------------------------------------------------ */
 
 interface JsonLdProduct {
@@ -79,13 +146,7 @@ interface JsonLdProduct {
   description?: string;
   material?: string;
   image?: string | string[] | { url?: string };
-  offers?: {
-    price?: number | string;
-    priceCurrency?: string;
-  } | Array<{
-    price?: number | string;
-    priceCurrency?: string;
-  }>;
+  offers?: unknown;
   additionalProperty?: Array<{
     name?: string;
     value?: string;
@@ -96,60 +157,13 @@ interface JsonLdProduct {
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/**
- * Extract product data from JSON-LD `<script type="application/ld+json">` tags.
- *
- * Retailers like Zara, H&M, ASOS, Nordstrom, and Target embed structured
- * product data in JSON-LD. This is far more reliable than CSS selectors
- * because it's machine-readable and consistent across redesigns.
- */
-const extractJsonLdProduct = (): JsonLdProduct | null => {
-  const scripts = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
-
-  for (const script of scripts) {
-    try {
-      const data = JSON.parse(script.textContent ?? "");
-      const candidates: unknown[] = Array.isArray(data) ? data : [data];
-
-      for (const item of candidates) {
-        if (!isObject(item)) {
-          continue;
-        }
-
-        // Direct Product type
-        if (item["@type"] === "Product" || item["@type"] === "ClothingStore") {
-          return item as unknown as JsonLdProduct;
-        }
-
-        // Product nested inside @graph
-        if (Array.isArray(item["@graph"])) {
-          for (const graphItem of item["@graph"]) {
-            if (isObject(graphItem) && graphItem["@type"] === "Product") {
-              return graphItem as unknown as JsonLdProduct;
-            }
-          }
-        }
-      }
-    } catch {
-      // Malformed JSON-LD — skip
-    }
-  }
-
-  return null;
-};
-
-/**
- * Extract material text from JSON-LD product data.
- */
 const extractMaterialFromJsonLd = (product: JsonLdProduct): string => {
   const parts: string[] = [];
 
-  // Direct material field
   if (typeof product.material === "string" && product.material.trim()) {
     parts.push(product.material);
   }
 
-  // additionalProperty (common on ASOS, H&M)
   if (Array.isArray(product.additionalProperty)) {
     for (const prop of product.additionalProperty) {
       const propName = (prop.name ?? "").toLowerCase();
@@ -169,31 +183,6 @@ const extractMaterialFromJsonLd = (product: JsonLdProduct): string => {
   return parts.join("\n");
 };
 
-/**
- * Extract price from JSON-LD offers.
- */
-const extractPriceFromJsonLd = (product: JsonLdProduct): { price?: number; currency: string } => {
-  const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
-  if (!offers) {
-    return { currency: "USD" };
-  }
-
-  const rawPrice = offers.price;
-  const price = typeof rawPrice === "number"
-    ? rawPrice
-    : typeof rawPrice === "string"
-      ? parseFloat(rawPrice)
-      : undefined;
-
-  return {
-    price: price && Number.isFinite(price) ? price : undefined,
-    currency: offers.priceCurrency ?? "USD"
-  };
-};
-
-/**
- * Extract image URL from JSON-LD.
- */
 const extractImageFromJsonLd = (product: JsonLdProduct): string | undefined => {
   if (typeof product.image === "string") {
     return product.image;
@@ -207,21 +196,13 @@ const extractImageFromJsonLd = (product: JsonLdProduct): string | undefined => {
   return undefined;
 };
 
-/* ------------------------------------------------------------------ */
-/*  Meta tag extraction — secondary fallback                          */
-/* ------------------------------------------------------------------ */
-
-/**
- * Extract material information from `<meta>` tags.
- * Some retailers put material info in meta description or product-specific meta tags.
- */
 const extractMaterialFromMeta = (): string => {
   const parts: string[] = [];
 
   const metaSelectors = [
     'meta[property="product:material"]',
     'meta[name="product:material"]',
-    'meta[property="og:description"]'
+    'meta[property="og:description"]',
   ];
 
   for (const selector of metaSelectors) {
@@ -234,82 +215,152 @@ const extractMaterialFromMeta = (): string => {
   return parts.join("\n");
 };
 
-/* ------------------------------------------------------------------ */
-/*  Main extraction pipeline                                          */
-/* ------------------------------------------------------------------ */
+const titleFromPage = (): string =>
+  firstNonEmptyText(GENERIC_NAME_SELECTORS) ||
+  firstMetaContent(['meta[property="og:title"]', 'meta[name="og:title"]']) ||
+  document.title.trim();
 
 export const extractProductContext = (): ProductContext | null => {
-  const retailerInfo = getRetailerConfigByHostname(window.location.hostname);
-  if (!retailerInfo) {
-    return null;
-  }
-
-  const { config, domain } = retailerInfo;
+  const pageUrl = window.location.href;
   const pathname = window.location.pathname;
+  const hostname = window.location.hostname.toLowerCase();
 
-  if (!looksLikeProductPath(pathname, config.productUrlPatterns)) {
+  const retailerInfo = getRetailerConfigByHostname(hostname);
+  const bundle = extractJsonLdBundleFromDocument(document, pageUrl);
+  const jsonLdRecord = bundle.product;
+  const legacyProduct = jsonLdRecord as unknown as JsonLdProduct | null;
+
+  const jsonLdMoney = jsonLdRecord
+    ? extractPriceFromProductRecord(jsonLdRecord, bundle.idMap)
+    : { currency: "USD" as string };
+
+  const metaMoney = extractMetaProductPrice();
+
+  const config = retailerInfo?.config;
+  const nameSelectors = config?.nameSelectors ?? GENERIC_NAME_SELECTORS;
+  const priceSelectors = config?.priceSelectors ?? GENERIC_PRICE_SELECTORS;
+  const materialSelectors = config?.materialSelectors ?? GENERIC_FIBER_SELECTORS;
+  const descriptionSelectors = config?.descriptionSelectors ?? GENERIC_DESCRIPTION_SELECTORS;
+  const imageSelectors = config?.imageSelectors ?? GENERIC_IMAGE_SELECTORS;
+
+  const retailerPathOk =
+    retailerInfo != null && looksLikeProductPath(pathname, retailerInfo.config.productUrlPatterns);
+
+  const jsonLdHasName =
+    jsonLdRecord != null &&
+    typeof jsonLdRecord.name === "string" &&
+    jsonLdRecord.name.trim().length > 0;
+
+  const rawPriceProbe = firstNonEmptyText(priceSelectors);
+  const hasPriceSignal =
+    jsonLdMoney.price != null ||
+    metaMoney.price != null ||
+    rawPriceProbe.length > 0;
+
+  const productTitleFallback = titleFromPage();
+
+  const canExtract =
+    retailerPathOk ||
+    jsonLdHasName ||
+    (looksLikeGenericProductPath(pathname) && productTitleFallback.length > 0) ||
+    (hasPriceSignal && productTitleFallback.length > 0);
+
+  if (!canExtract) {
     return null;
   }
 
-  // --- Try JSON-LD first (most reliable) ---
-  const jsonLd = extractJsonLdProduct();
+  const productName =
+    (typeof jsonLdRecord?.name === "string" && jsonLdRecord.name.trim()) ||
+    firstNonEmptyText(nameSelectors) ||
+    productTitleFallback;
 
-  // --- Product name: JSON-LD → CSS selectors ---
-  const productName = jsonLd?.name ?? firstNonEmptyText(config.nameSelectors);
-  if (!productName) {
+  if (!productName.trim()) {
     return null;
   }
 
-  // --- Price: JSON-LD → CSS selectors ---
-  const jsonLdPrice = jsonLd ? extractPriceFromJsonLd(jsonLd) : null;
-  const rawPriceText = firstNonEmptyText(config.priceSelectors);
-  const price = jsonLdPrice?.price ?? parsePrice(rawPriceText);
-  const currency = jsonLdPrice?.currency ?? inferCurrency(rawPriceText);
+  const rawPriceText = firstNonEmptyText(priceSelectors);
+  const domParsed = parsePrice(rawPriceText);
+  const mainScanPrice = domParsed != null && domParsed > 0 ? undefined : scanMainForPriceText();
 
-  // --- Brand: JSON-LD → retailer config ---
-  const jsonLdBrand = jsonLd?.brand
-    ? typeof jsonLd.brand === "string"
-      ? jsonLd.brand
-      : jsonLd.brand.name
+  const price = jsonLdMoney.price ?? metaMoney.price ?? domParsed ?? mainScanPrice;
+
+  let currency = "USD";
+  if (jsonLdMoney.price != null) {
+    currency = jsonLdMoney.currency || "USD";
+  } else if (metaMoney.price != null) {
+    currency = metaMoney.currency || "USD";
+  } else {
+    const currencyHint =
+      rawPriceText ||
+      (price === mainScanPrice ? (document.body?.innerText ?? "").slice(0, 6000) : "");
+    currency = inferCurrency(currencyHint);
+  }
+
+  const jsonLdBrand = legacyProduct?.brand
+    ? typeof legacyProduct.brand === "string"
+      ? legacyProduct.brand
+      : legacyProduct.brand.name
     : undefined;
-  const brand = jsonLdBrand ?? config.retailer;
 
-  // --- Material/fiber: JSON-LD → Meta → CSS selectors ---
-  const jsonLdMaterial = jsonLd ? extractMaterialFromJsonLd(jsonLd) : "";
+  const brand =
+    (jsonLdBrand && String(jsonLdBrand).trim()) ||
+    (config?.retailer) ||
+    hostname.replace(/^www\./, "");
+
+  const jsonLdMaterial = legacyProduct ? extractMaterialFromJsonLd(legacyProduct) : "";
   const metaMaterial = extractMaterialFromMeta();
-  const cssMaterialText = gatherText(config.materialSelectors);
-  const descriptionText = jsonLd?.description ?? gatherText(config.descriptionSelectors);
+  const cssMaterialText = gatherText(materialSelectors);
+  const descriptionText =
+    (typeof legacyProduct?.description === "string" && legacyProduct.description) ||
+    gatherText(descriptionSelectors);
   const genericMaterialText = gatherText(GENERIC_FIBER_SELECTORS);
 
-  // Combine all material sources, giving JSON-LD priority
-  const allMaterialText = [
-    jsonLdMaterial,
-    cssMaterialText,
-    metaMaterial,
-    genericMaterialText,
-  ].filter(Boolean).join("\n");
+  const allMaterialText = [jsonLdMaterial, cssMaterialText, metaMaterial, genericMaterialText]
+    .filter(Boolean)
+    .join("\n");
   const fiberText = gatherFiberText(allMaterialText, descriptionText);
   const fiberContent = normalizeFiberComposition(parseFiberComposition(fiberText));
   const materialExcerpt = truncateForModelInput(dedupeLines(`${allMaterialText}\n${descriptionText}`));
 
-  // --- Category: JSON-LD → URL/name inference ---
-  const category = jsonLd?.category ?? inferCategory(`${productName} ${pathname}`);
+  const category =
+    (typeof jsonLdRecord?.category === "string" && jsonLdRecord.category) ||
+    inferCategory(`${productName} ${pathname}`);
 
-  // --- Image: JSON-LD → CSS selectors ---
-  const imageUrl = (jsonLd ? extractImageFromJsonLd(jsonLd) : undefined) ?? firstImageSrc(config.imageSelectors);
+  const ogImage = firstMetaContent([
+    "meta[property='og:image']",
+    "meta[property='og:image:url']",
+    "meta[name='twitter:image']",
+  ]);
+  const imageUrl =
+    (legacyProduct ? extractImageFromJsonLd(legacyProduct) : undefined) ??
+    firstImageSrc(imageSelectors) ??
+    (ogImage || undefined);
+
+  const retailerDomain = retailerInfo?.domain ?? hostname.replace(/^www\./, "");
+
+  const rootForText =
+    document.querySelector("main") ??
+    document.querySelector("[role='main']") ??
+    document.body;
+  const visiblePageText = rootForText ? dedupeLines(rootForText.innerText ?? "") : "";
+  const pageTextSnippet =
+    price == null || !(price > 0)
+      ? truncateForModelInput(visiblePageText, MAX_PAGE_TEXT_SNIPPET_CHARS)
+      : undefined;
 
   return {
-    productUrl: window.location.href,
+    productUrl: pageUrl,
     productName,
     brand,
     category,
     currency,
-    retailerDomain: domain,
+    retailerDomain,
     descriptionText,
     fiberText,
     materialExcerpt,
     fiberContent,
     price,
-    imageUrl
+    pageTextSnippet,
+    imageUrl,
   };
 };

@@ -47,3 +47,25 @@ export const looksLikeProductPath = (
   const normalized = pathname.toLowerCase();
   return patterns.some((pattern) => normalized.includes(pattern.toLowerCase()));
 };
+
+/** Path hints common to PDPs across Shopify, WooCommerce, marketplaces, etc. */
+export const GENERIC_PRODUCT_PATH_PATTERNS = [
+  "/products/",
+  "/product/",
+  "/product-",
+  "/p/",
+  "/dp/",
+  "/gp/product",
+  "/item/",
+  "/prd/",
+  "/shop/",
+  "/goods/",
+  "/catalog/",
+  "/buy/",
+  "/itm/", // eBay
+];
+
+export const looksLikeGenericProductPath = (pathname: string): boolean => {
+  const normalized = pathname.toLowerCase();
+  return GENERIC_PRODUCT_PATH_PATTERNS.some((p) => normalized.includes(p));
+};

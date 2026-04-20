@@ -22,6 +22,8 @@ export interface ProductContext {
   materialExcerpt?: string;
   fiberContent: Record<string, number>;
   price?: number;
+  /** Sent to score API when price is missing so the server can try LLM extraction. */
+  pageTextSnippet?: string;
   imageUrl?: string;
 }
 
@@ -98,6 +100,8 @@ export interface ScoreResult {
     trendAdjustedWears: number;
     trendAdjustedCpw: number;
     fiberDataAvailable: boolean;
+    /** False when item price was not provided — CPW numeric values are 0 but not meaningful. */
+    priceAvailable?: boolean;
   };
   dataSources: {
     googleTrends: {

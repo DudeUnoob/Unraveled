@@ -1,4 +1,5 @@
 import "./overlay.css";
+import { isCpwPriceAvailable } from "../lib/cpwUi";
 import { extractProductContext } from "../lib/productExtraction";
 import type { RuntimeMessage, ScoredProductPayload, TabScoreState } from "../types";
 
@@ -89,9 +90,13 @@ const renderOverlay = (payload: ScoredProductPayload) => {
   badge.type = "button";
   badge.setAttribute("data-grade", payload.score.sustainabilityScore.grade);
 
+  const cpwLine = isCpwPriceAvailable(payload.score.cpwEstimate, payload.product)
+    ? `${formatCpw(payload.score.cpwEstimate.costPerWear, payload.product.currency)}/wear`
+    : "CPW: price not detected · add in extension";
+
   badge.innerHTML = [
     `<strong>🧵 Sust: ${payload.score.sustainabilityScore.value}/${payload.score.sustainabilityScore.grade}</strong>`,
-    `${formatCpw(payload.score.cpwEstimate.costPerWear, payload.product.currency)}/wear`,
+    cpwLine,
     "Click the Unravel icon for details"
   ].join("<br>");
 

@@ -4,6 +4,7 @@ import {
   UNRAVEL_SCORE_ENDPOINT,
   UNRAVEL_SCORE_TIMEOUT_MS,
 } from "../config/runtime";
+import { mergePriceOverride } from "../lib/priceOverrides";
 import { ScoreApiError, mapScoreApiResponse } from "../lib/scoreApi";
 import { getRetailerConfigByHostname } from "../lib/url";
 import type {
@@ -131,6 +132,11 @@ const scoreProductRemotely = async (product: ProductContext, manualMode = false)
         image_url: product.imageUrl,
         brand: product.brand,
         category: product.category,
+        ...(!product.price &&
+        product.pageTextSnippet &&
+        product.pageTextSnippet.trim().length >= 12
+          ? { page_text_snippet: product.pageTextSnippet }
+          : {}),
         manual_mode: manualMode
       })
     });
@@ -211,9 +217,10 @@ const getFreshProductCache = async (productUrl: string): Promise<ProductCacheEnt
 
 const scoreProductForTab = async (tabId: number, product: ProductContext, manualMode = false): Promise<TabScoreState> => {
   try {
-    const score = await scoreProductRemotely(product, manualMode);
+    const productForScore = await mergePriceOverride(product);
+    const score = await scoreProductRemotely(productForScore, manualMode);
     const payload: ScoredProductPayload = {
-      product,
+      product: productForScore,
       score,
       scoredAt: new Date().toISOString(),
       manualMode
@@ -225,7 +232,7 @@ const scoreProductForTab = async (tabId: number, product: ProductContext, manual
       cachedAt: payload.scoredAt
     };
 
-    await persistProductCache(product.productUrl, payload);
+    await persistProductCache(productForScore.productUrl, payload);
     await persistTabState(tabId, state);
     await setBadgeForState(tabId, state);
 

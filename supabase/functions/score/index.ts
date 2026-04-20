@@ -325,6 +325,72 @@ async function extractFiberCompositionWithLlm(
   };
 }
 
+const parseLlmPriceResult = (
+  raw: unknown,
+): { price: number; currency: string } | null => {
+  if (typeof raw !== "object" || raw === null) {
+    return null;
+  }
+  const o = raw as { found?: unknown; price?: unknown; currency?: unknown };
+  if (o.found !== true) {
+    return null;
+  }
+  const p = typeof o.price === "number" ? o.price : Number(o.price);
+  if (!Number.isFinite(p) || p <= 0) {
+    return null;
+  }
+  const curRaw = typeof o.currency === "string" ? o.currency.trim().toUpperCase() : "";
+  const currency = curRaw.length === 3 ? curRaw : "USD";
+  return { price: p, currency };
+};
+
+async function extractProductPriceWithLlm(
+  productName: string,
+  brand: string,
+  pageSnippet: string,
+): Promise<{ price: number; currency: string; provider: "groq" | "gemini" } | null> {
+  const trimmed = pageSnippet.trim();
+  if (trimmed.length < 12) {
+    return null;
+  }
+
+  const llmResult = await completeStructuredJson(
+    {
+      schemaName: "product_price",
+      systemPrompt:
+        "You read e-commerce product page text and extract the current selling price for one item. " +
+        "Prefer the main listed price over crossed-out MSRP or 'was' prices. " +
+        "Express price as a decimal number in the same currency units shown (e.g. 49.99 for $49.99). " +
+        "currency must be ISO 4217 (USD, EUR, GBP). If no clear price exists, return {\"found\":false}. " +
+        "Reply with JSON only.",
+      userPrompt:
+        `Product: ${productName}\nBrand: ${brand}\n\nPage text excerpt:\n${trimmed.slice(0, 14_000)}`,
+      jsonSchema: {
+        type: "object",
+        properties: {
+          found: { type: "boolean" },
+          price: { type: "number", minimum: 0 },
+          currency: { type: "string" },
+        },
+        required: ["found"],
+      },
+      maxTokens: 200,
+      temperature: 0,
+    },
+    parseLlmPriceResult,
+  );
+
+  if (!llmResult) {
+    return null;
+  }
+
+  return {
+    price: llmResult.data.price,
+    currency: llmResult.data.currency,
+    provider: llmResult.provider,
+  };
+}
+
 interface TikTokSignal {
   available: boolean;
   hashtag_views: number | null;
@@ -942,6 +1008,7 @@ function computeCpw(
   trend_adjusted_wears: number;
   trend_adjusted_cpw: number;
   fiber_data_available: boolean;
+  price_available: boolean;
 } {
   let totalWears = 0;
   let totalPct = 0;
@@ -979,6 +1046,7 @@ function computeCpw(
     trend_adjusted_wears: trendAdjustedWears,
     trend_adjusted_cpw: Math.round(trendAdjustedCpw * 100) / 100,
     fiber_data_available: fiberDataAvailable,
+    price_available: hasPrice,
   };
 }
 
@@ -999,6 +1067,8 @@ function buildDeepLink(
   cpw: number,
   adjCpw: number,
   healthLabel: string,
+  effectivePrice?: number,
+  effectiveCurrency?: string,
 ): string {
   const params = new URLSearchParams({
     source: "extension",
@@ -1013,9 +1083,18 @@ function buildDeepLink(
     cpw_adjusted: adjCpw.toFixed(2),
     health_label: healthLabel,
   });
-  if (body.price) {
-    params.set("price", String(body.price));
-    params.set("currency", String(body.currency ?? "USD"));
+  const priceVal =
+    typeof effectivePrice === "number" && effectivePrice > 0
+      ? effectivePrice
+      : typeof body.price === "number" && body.price > 0
+      ? body.price
+      : undefined;
+  if (priceVal != null && priceVal > 0) {
+    params.set("price", String(priceVal));
+    params.set(
+      "currency",
+      String(effectiveCurrency ?? body.currency ?? "USD"),
+    );
   }
   return `${WEB_APP_BASE_URL}/analyze?${params.toString()}`;
 }
@@ -1105,9 +1184,14 @@ Deno.serve(async (req: Request) => {
       ? body.fiber_content
       : {};
     const clientFiberContent = canonicalizeFiberContentInput(rawFiberInput);
-    const price: number | undefined =
+    let resolvedPrice: number | undefined =
       typeof body.price === "number" && body.price > 0 ? body.price : undefined;
+    let resolvedCurrency =
+      typeof body.currency === "string" && body.currency.trim().length >= 3
+        ? String(body.currency).trim().toUpperCase().slice(0, 3)
+        : "USD";
     const manualMode = body.manual_mode === true;
+    const pageTextSnippet = String(body.page_text_snippet ?? "");
 
     const fiberExcerpt = buildFiberExcerpt(descriptionText, materialExcerpt);
     let normalizedFiberContent = clientFiberContent;
@@ -1123,6 +1207,20 @@ Deno.serve(async (req: Request) => {
       if (llmFiberResult) {
         normalizedFiberContent = llmFiberResult.composition;
         llmFiberProvider = llmFiberResult.provider;
+      }
+    }
+
+    let llmPriceProvider: "groq" | "gemini" | null = null;
+    if (!manualMode && resolvedPrice == null && pageTextSnippet.trim().length >= 12) {
+      const llmPriceResult = await extractProductPriceWithLlm(
+        productName,
+        brand,
+        pageTextSnippet,
+      );
+      if (llmPriceResult) {
+        resolvedPrice = llmPriceResult.price;
+        resolvedCurrency = llmPriceResult.currency;
+        llmPriceProvider = llmPriceResult.provider;
       }
     }
 
@@ -1156,7 +1254,7 @@ Deno.serve(async (req: Request) => {
 
     const health = computeHealthScore(normalizedFiberContent, descriptionText);
     const cpw = computeCpw(
-      price,
+      resolvedPrice,
       normalizedFiberContent,
       trend.label,
       category,
@@ -1172,6 +1270,8 @@ Deno.serve(async (req: Request) => {
       cpw.cost_per_wear,
       cpw.trend_adjusted_cpw,
       health.label,
+      resolvedPrice,
+      resolvedCurrency,
     );
 
     const now = new Date().toISOString();
@@ -1184,6 +1284,10 @@ Deno.serve(async (req: Request) => {
     if (llmFiberProvider) {
       llmUsage.push("fiber_extraction");
       llmProviders.add(llmFiberProvider);
+    }
+    if (llmPriceProvider) {
+      llmUsage.push("price_extraction");
+      llmProviders.add(llmPriceProvider);
     }
 
     const response = {

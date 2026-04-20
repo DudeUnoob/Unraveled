@@ -12,16 +12,8 @@ const resolveApiHostPermission = (): string => {
   }
 };
 
-const retailerHostPermissions = [
-  "https://www.zara.com/*",
-  "https://www2.hm.com/*",
-  "https://www.asos.com/*",
-  "https://us.shein.com/*",
-  "https://www.shein.com/*",
-  "https://www.amazon.com/*",
-  "https://www.uniqlo.com/*",
-  "https://www.urbanoutfitters.com/*"
-];
+/** Run on any HTTPS/HTTP page so JSON-LD + generic PDP extraction works on all stores. */
+const universalPageMatches = ["https://*/*", "http://*/*"];
 
 
 export default defineManifest({
@@ -30,7 +22,7 @@ export default defineManifest({
   description: "The sustainability of your clothes, unraveled right where you shop.",
   version: "0.1.0",
   permissions: ["activeTab", "storage", "sidePanel"],
-  host_permissions: [...new Set([...retailerHostPermissions, resolveApiHostPermission()])],
+  host_permissions: [...new Set([...universalPageMatches, resolveApiHostPermission()])],
   action: {
     default_title: "Unravel",
     default_popup: "src/popup/index.html"
@@ -44,16 +36,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      matches: [
-        "https://www.zara.com/*",
-        "https://www2.hm.com/*",
-        "https://www.asos.com/*",
-        "https://us.shein.com/*",
-        "https://www.shein.com/*",
-        "https://www.amazon.com/*",
-        "https://www.uniqlo.com/*",
-        "https://www.urbanoutfitters.com/*"
-      ],
+      matches: universalPageMatches,
       js: ["src/content/content-script.ts"],
       run_at: "document_idle"
     }
