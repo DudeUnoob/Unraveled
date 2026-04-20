@@ -5,7 +5,7 @@ module.exports = {
     extend: {
       colors: {
         unravel: {
-          bg: "#f6f2eb",
+          bg: "#E2E6C1",
           card: "#fffef9",
           ink: "#1f2522",
           accent: "#136f50",
