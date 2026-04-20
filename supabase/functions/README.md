@@ -22,7 +22,7 @@ Use [`.env.example`](/Users/dam_kamani/Downloads/Unraveled/supabase/functions/.e
 - `OPENAI_API_KEY` — image analysis (trend-image function)
 - `GROQ_API_KEY` — optional, LLM trend query + fiber extraction (score + trend-analyze)
 - `GEMINI_API_KEY` — optional fallback if Groq is unavailable (score + trend-analyze)
-- `GEMINI_MODEL` — optional Gemini model override (default: `gemini-3.1-flash-lite`)
+- `GEMINI_MODEL` — optional Gemini model override (default: `gemini-2.0-flash`; must support `generateContent` on the Generative Language API)
 - `GROQ_MODEL` — optional Groq model override (default: `llama-3.1-8b-instant`)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`

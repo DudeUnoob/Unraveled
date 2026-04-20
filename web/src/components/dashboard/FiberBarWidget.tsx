@@ -1,29 +1,23 @@
 "use client";
-
-import { useEffect, useState, memo, useRef } from "react";
+import { useEffect, useState, memo, } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-
 export type GarmentData = {
     name: string;
     score: number;
     fibers: { name: string; percent: number; color: string }[];
 };
-
 interface FiberBarWidgetProps {
     garment: GarmentData;
 }
-
 export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBarWidgetProps) {
     const [animatedScore, setAnimatedScore] = useState(0);
-
     // Score counter animation
     useEffect(() => {
         let startTimestamp: number;
         const duration = 1000;
         const startValue = animatedScore;
         const endValue = garment.score;
-
         const step = (timestamp: number) => {
             if (!startTimestamp) startTimestamp = timestamp;
             const progress = Math.min((timestamp - startTimestamp) / duration, 1);
@@ -35,14 +29,12 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
             }
         };
         window.requestAnimationFrame(step);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [garment.score]);
-
     // Interpolate score color (Rust for low, Sage for mid, Forest for high)
     const scoreColor = garment.score < 40 ? "text-[#C84B31]" : garment.score < 70 ? "text-[#899A8B]" : "text-[#4A6741]";
-
     return (
         <div className="flex flex-col h-full bg-transparent pt-8 pb-8 px-8 md:px-12">
-
             {/* Garment Label Crossfade */}
             <div className="h-8 relative mb-6">
                 <AnimatePresence mode="wait">
@@ -58,7 +50,6 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
                     </motion.h3>
                 </AnimatePresence>
             </div>
-
             {/* Fiber Stack Bar */}
             <div className="w-full h-8 flex rounded-[4px] overflow-hidden mb-8 bg-[#EAE8E3] relative">
                 <AnimatePresence mode="popLayout">
@@ -84,7 +75,6 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
                     ))}
                 </AnimatePresence>
             </div>
-
             {/* Score Output */}
             <div className="mt-auto">
                 <p className="font-mono text-[10px] text-charcoal/50 uppercase tracking-[0.2em] mb-2 font-semibold">
@@ -97,7 +87,6 @@ export const FiberBarWidget = memo(function FiberBarWidget({ garment }: FiberBar
                     <span className="font-mono text-xl text-charcoal/30 font-light">/100</span>
                 </div>
             </div>
-
         </div>
     );
 });

@@ -1,8 +1,5 @@
 "use client";
-
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "@phosphor-icons/react";
-
 const newsItems = [
     {
         title: "The Reality of Recycled Polyester: Greenwashing or Progress?",
@@ -23,12 +20,10 @@ const newsItems = [
         image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=800&h=600"
     }
 ];
-
 export function NewsSection() {
     return (
         <section className="w-full bg-[#f6f5f1] pt-24 pb-32 flex justify-center border-t border-charcoal/5 pointer-events-auto">
             <div className="w-full max-w-[1000px] mx-auto px-4 lg:px-0">
-
                 {/* Header */}
                 <div className="flex justify-between items-end mb-12">
                     <h2 className="font-sans text-[2.25rem] md:text-[3rem] tracking-[-0.05em] font-normal leading-[1.1] text-[#1b0624]">
@@ -38,7 +33,6 @@ export function NewsSection() {
                         See more
                     </button>
                 </div>
-
                 {/* Cards Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
                     {newsItems.map((item, i) => (
@@ -59,12 +53,10 @@ export function NewsSection() {
                                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
                                 />
                             </div>
-
                             {/* Content */}
                             <h3 className="font-sans font-medium text-[16px] leading-[1.35] text-charcoal mb-4">
                                 {item.title}
                             </h3>
-
                             <div className="flex items-center gap-2 font-mono text-[10px] tracking-wider uppercase text-charcoal/40 mt-auto">
                                 <span>{item.category}</span>
                                 <span className="w-3 border-t border-charcoal/20"></span>
@@ -73,13 +65,11 @@ export function NewsSection() {
                         </motion.div>
                     ))}
                 </div>
-
                 <div className="mt-12 flex justify-center md:hidden">
                     <button className="flex items-center gap-1.5 font-sans text-[13px] font-semibold text-charcoal transition-colors hover:text-charcoal/70">
                         See more
                     </button>
                 </div>
-
             </div>
         </section>
     );

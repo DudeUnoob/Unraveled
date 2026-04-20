@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Bookmark, TShirt } from "@phosphor-icons/react";
 import type { User } from "@supabase/supabase-js";
-import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SavedAnalysesTab } from "@/components/saved/SavedAnalysesTab";
 import { WardrobeTab } from "@/components/wardrobe/WardrobeTab";
@@ -34,8 +33,6 @@ export function DashboardContent({ user }: { user: User }) {
 
   return (
     <div className="min-h-screen bg-cream">
-      <Navbar />
-
       <main className="max-w-6xl mx-auto px-6 pt-32 pb-20">
         {/* Header */}
         <motion.div
@@ -87,3 +84,4 @@ export function DashboardContent({ user }: { user: User }) {
     </div>
   );
 }
+

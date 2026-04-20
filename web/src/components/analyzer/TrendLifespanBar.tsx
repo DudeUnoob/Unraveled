@@ -1,15 +1,7 @@
 "use client";
-
 import { memo } from "react";
 import { motion } from "framer-motion";
 import type { TrendLifespan } from "@/types/analysis";
-
-const PHASES = [
-    { label: "Timeless", color: "#2C4A3E", position: 0 },
-    { label: "Trending", color: "#7A9E8E", position: 33 },
-    { label: "Fading", color: "#D4883C", position: 66 },
-    { label: "Dead", color: "#C84B31", position: 100 },
-] as const;
 
 function getPhasePosition(label: string): number {
     switch (label) {
@@ -20,124 +12,102 @@ function getPhasePosition(label: string): number {
         default: return 50;
     }
 }
-
 function getPhaseColor(label: string): string {
     switch (label) {
-        case "Timeless": return "#2C4A3E";
-        case "Trending": return "#7A9E8E";
-        case "Fading": return "#D4883C";
-        case "Dead": return "#C84B31";
-        default: return "#7A9E8E";
+        case "Timeless": return "#5c6c47";
+        case "Trending": return "#9fa586";
+        case "Fading": return "#C84B31";
+        case "Dead": return "#1C1C1C";
+        default: return "#9fa586";
     }
 }
-
 interface TrendLifespanBarProps {
     lifespan: TrendLifespan;
 }
-
 export const TrendLifespanBar = memo(function TrendLifespanBar({
     lifespan,
 }: TrendLifespanBarProps) {
     const position = getPhasePosition(lifespan.label);
-    const phaseColor = getPhaseColor(lifespan.label);
-
+//     const phaseColor = getPhaseColor(lifespan.label);
     return (
-        <div className="w-full">
-            {/* Header */}
-            <div className="flex items-baseline justify-between mb-6">
-                <h3 className="font-sans text-sm font-semibold text-charcoal/60 uppercase tracking-widest">
-                    Trend Lifespan
-                </h3>
-                <div className="flex items-center gap-2">
-                    <span
-                        className="inline-block w-2 h-2 rounded-full"
-                        style={{ backgroundColor: phaseColor }}
-                    />
-                    <span className="font-sans text-sm font-semibold text-charcoal">
-                        {lifespan.label}
-                    </span>
-                    <span className="font-mono text-xs text-charcoal/40 tabular-nums">
-                        · {lifespan.score}/100
-                    </span>
-                </div>
-            </div>
-
-            {/* Progress Track */}
-            <div className="relative w-full h-2.5 bg-charcoal/[0.06] rounded-full overflow-visible">
-                {/* Gradient fill up to position */}
+        <div className="w-full flex flex-col h-full gap-8">
+            <h3 className="font-serif text-3xl md:text-4xl font-bold text-[#5c6c47]">
+                Trend Life Span
+            </h3>
+            {/* Premium Progress Track */}
+            <div className="relative w-full h-6 flex items-center mt-4">
+                {/* Background Track */}
+                <div className="absolute w-full h-full bg-[#e2e3dc] rounded-full overflow-hidden" />
+                
+                {/* Animated fill */}
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${position}%` }}
-                    transition={{ type: "spring", stiffness: 60, damping: 18, delay: 0.2 }}
-                    className="absolute inset-y-0 left-0 rounded-full"
-                    style={{
-                        background: `linear-gradient(90deg, #2C4A3E 0%, #7A9E8E 40%, #D4883C 70%, #C84B31 100%)`,
-                    }}
+                    transition={{ type: "spring", stiffness: 40, damping: 15, delay: 0.2 }}
+                    className="absolute h-full rounded-full overflow-hidden bg-[#e6cfd8]"
                 />
-
-                {/* "You are here" indicator */}
+                {/* "You are here" indicator - Magnetic feeling */}
                 <motion.div
                     initial={{ left: "0%", scale: 0 }}
                     animate={{ left: `${position}%`, scale: 1 }}
-                    transition={{ type: "spring", stiffness: 80, damping: 15, delay: 0.5 }}
-                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-10"
+                    transition={{ type: "spring", stiffness: 60, damping: 12, delay: 0.6 }}
+                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 z-20"
                 >
-                    <div
-                        className="w-5 h-5 rounded-full border-[3px] border-cream shadow-md"
-                        style={{ backgroundColor: phaseColor }}
-                    />
+                    <div className="relative">
+                        <div className="w-6 h-6 rounded-full bg-[#d494ac] shadow-sm flex items-center justify-center border-2 border-white">
+                             <div className="w-2 h-2 rounded-full bg-white opacity-50" />
+                        </div>
+                    </div>
                 </motion.div>
             </div>
-
-            {/* Phase Labels */}
-            <div className="flex justify-between mt-3">
-                {PHASES.map((phase) => (
-                    <span
-                        key={phase.label}
-                        className={`font-mono text-[10px] tracking-wider uppercase transition-opacity ${phase.label === lifespan.label
-                            ? "text-charcoal font-semibold opacity-100"
-                            : "text-charcoal/30 opacity-70"
-                            }`}
-                    >
-                        {phase.label}
-                    </span>
-                ))}
-            </div>
-
-            {/* Stats row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8 pt-6 border-t border-charcoal/[0.06]">
-                <div>
-                    <span className="block font-mono text-[10px] text-charcoal/40 uppercase tracking-wider mb-1">
+            {/* Stats Grid - Horizontal Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-6">
+                <div className="flex flex-col gap-1">
+                    <span className="font-serif text-sm font-medium text-[#5c6c47]/60">
                         Peaked
                     </span>
-                    <span className="font-mono text-lg font-semibold text-charcoal tabular-nums">
-                        {lifespan.peaked_weeks_ago}w ago
-                    </span>
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-serif text-2xl font-bold text-[#5c6c47]">
+                            {lifespan.peaked_weeks_ago}w ago
+                        </span>
+                    </div>
                 </div>
-                <div>
-                    <span className="block font-mono text-[10px] text-charcoal/40 uppercase tracking-wider mb-1">
+                <div className="flex flex-col gap-1">
+                    <span className="font-serif text-sm font-medium text-[#5c6c47]/60">
                         Remaining
                     </span>
-                    <span className="font-mono text-lg font-semibold tabular-nums" style={{ color: phaseColor }}>
-                        {lifespan.weeks_remaining}w
-                    </span>
+                    <div className="flex items-baseline gap-2">
+                        <motion.span 
+                            animate={{ opacity: [1, 0.7, 1] }}
+                            transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                            className="font-serif text-2xl font-bold text-[#5c6c47]"
+                        >
+                            {lifespan.weeks_remaining}w
+                        </motion.span>
+                    </div>
                 </div>
-                <div>
-                    <span className="block font-mono text-[10px] text-charcoal/40 uppercase tracking-wider mb-1">
+                <div className="flex flex-col gap-1">
+                    <span className="font-serif text-sm font-medium text-[#5c6c47]/60">
                         Confidence
                     </span>
-                    <span className="font-mono text-lg font-semibold text-charcoal tabular-nums">
-                        {Math.round(lifespan.confidence * 100)}%
-                    </span>
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-serif text-2xl font-bold text-[#5c6c47]">
+                            {Math.round(lifespan.confidence * 100)}%
+                        </span>
+                    </div>
                 </div>
-                <div>
-                    <span className="block font-mono text-[10px] text-charcoal/40 uppercase tracking-wider mb-1">
+                <div className="flex flex-col gap-1">
+                    <span className="font-serif text-sm font-medium text-[#5c6c47]/60">
                         Velocity
                     </span>
-                    <span className="font-mono text-lg font-semibold tabular-nums" style={{ color: lifespan.velocity > 0 ? '#2C4A3E' : lifespan.velocity < -2 ? '#C84B31' : '#D4883C' }}>
-                        {lifespan.velocity > 0 ? '↗' : lifespan.velocity < -1 ? '↘' : '→'}{' '}
-                        {Math.abs(lifespan.velocity).toFixed(1)}/wk
-                    </span>
+                    <div className="flex items-baseline gap-2">
+                         <span 
+                            className="font-serif text-2xl font-bold" 
+                            style={{ color: lifespan.velocity > 0 ? '#5c6c47' : lifespan.velocity < -2 ? '#C84B31' : '#5c6c47' }}
+                        >
+                            {lifespan.velocity > 0 ? '+' : ''}{lifespan.velocity.toFixed(1)}/wk
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>

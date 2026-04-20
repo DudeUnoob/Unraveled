@@ -7,6 +7,30 @@ const CORS_HEADERS = {
     "Content-Type, Authorization, apikey, x-client-info",
 };
 
+/** Accept hosted project storage URLs or any URL whose origin matches SUPABASE_URL (local / custom). */
+function isAllowedSupabaseStorageUrl(imageUrl: string): boolean {
+  const envBase = Deno.env.get("SUPABASE_URL")?.replace(/\/+$/, "");
+  try {
+    const parsed = new URL(imageUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return false;
+    }
+    const host = parsed.hostname.toLowerCase();
+    if (host.endsWith(".supabase.co") || host.endsWith(".supabase.in")) {
+      return true;
+    }
+    if (envBase) {
+      const allowed = new URL(envBase);
+      if (parsed.origin === allowed.origin) {
+        return true;
+      }
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
@@ -30,22 +54,17 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    try {
-      const parsed = new URL(imageUrl);
-      if (!parsed.hostname.endsWith(".supabase.co")) {
-        return new Response(
-          JSON.stringify({ detail: "Only Supabase Storage URLs are accepted" }),
-          {
-            status: 400,
-            headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-          },
-        );
-      }
-    } catch {
-      return new Response(JSON.stringify({ detail: "Invalid image URL" }), {
-        status: 400,
-        headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-      });
+    if (!isAllowedSupabaseStorageUrl(imageUrl)) {
+      return new Response(
+        JSON.stringify({
+          detail:
+            "Only Supabase Storage URLs from this project are accepted (same origin as SUPABASE_URL or *.supabase.co).",
+        }),
+        {
+          status: 400,
+          headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const openaiKey = Deno.env.get("OPENAI_API_KEY");

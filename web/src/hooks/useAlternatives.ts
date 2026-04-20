@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
+import { getSupabaseFunctionsHeaders, SUPABASE_FUNCTIONS_URL } from "@/lib/supabase";
 import type { AlternativeProduct, AlternativesResponse } from "@/types/alternatives";
 
 type AlternativesState = "idle" | "loading" | "success" | "error";
@@ -19,7 +19,7 @@ export function useAlternatives() {
       try {
         const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/alternatives`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: getSupabaseFunctionsHeaders(),
           body: JSON.stringify({
             query,
             trend_label: trendLabel,

@@ -1,10 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
-  fetchGoogleSearchResultCount,
   fetchGoogleTrendsTimeline,
+  MAX_GOOGLE_TRENDS_CANDIDATE_ATTEMPTS,
   type TimelinePoint,
 } from "../_shared/serpapi.ts";
+import { fetchPinterestRapidSignal } from "../_shared/pinterestRapid.ts";
 import {
   buildScoreTrendQuerySeed,
   buildTrendQueryCandidates,
@@ -431,43 +432,9 @@ async function fetchTikTokSignal(
 
 interface PinterestSignal {
   available: boolean;
+  board_count: number | null;
   total_results: number | null;
   normalized_score: number;
-}
-
-async function fetchPinterestSignal(
-  query: string,
-  serpApiKey: string,
-): Promise<PinterestSignal> {
-  try {
-    const result = await fetchGoogleSearchResultCount(
-      `site:pinterest.com ${query}`,
-      {
-        apiKey: serpApiKey,
-        hl: "en",
-        gl: "us",
-        num: 10,
-      },
-    );
-
-    if (!result.success || typeof result.totalResults !== "number") {
-      return { available: false, total_results: null, normalized_score: 0 };
-    }
-
-    const normalized = clamp(
-      Math.round((Math.log10(result.totalResults) - 2) * 17),
-      0,
-      100,
-    );
-    return {
-      available: true,
-      total_results: result.totalResults,
-      normalized_score: normalized,
-    };
-  } catch (err) {
-    console.error("Pinterest signal fetch failed:", err);
-    return { available: false, total_results: null, normalized_score: 0 };
-  }
 }
 
 function adjustConfidence(
@@ -760,6 +727,7 @@ async function getCachedTrend(
     };
     const defaultPinterest: PinterestSignal = {
       available: false,
+      board_count: null,
       total_results: null,
       normalized_score: 0,
     };
@@ -836,6 +804,7 @@ async function classifyTrend(
   };
   const defaultPinterest: PinterestSignal = {
     available: false,
+    board_count: null,
     total_results: null,
     normalized_score: 0,
   };
@@ -875,7 +844,11 @@ async function classifyTrend(
   let timeline: TimelinePoint[] = [];
   let queryUsed: string | null = null;
 
-  for (const candidate of trendCandidates) {
+  const candidatesToTry = trendCandidates.slice(
+    0,
+    MAX_GOOGLE_TRENDS_CANDIDATE_ATTEMPTS,
+  );
+  for (const candidate of candidatesToTry) {
     console.log(`Trying Google Trends candidate: "${candidate}"`);
     const attempt = await fetchGoogleTrendsTimeline(candidate, {
       apiKey: serpApiKey,
@@ -891,13 +864,13 @@ async function classifyTrend(
 
   const socialQuery = queryUsed ?? trendCandidates[0] ?? querySeed;
   let tiktokResult = defaultTiktok;
+  let pinterestResult = defaultPinterest;
   if (rapidApiKey) {
-    tiktokResult = await fetchTikTokSignal(socialQuery, rapidApiKey);
+    [tiktokResult, pinterestResult] = await Promise.all([
+      fetchTikTokSignal(socialQuery, rapidApiKey),
+      fetchPinterestRapidSignal(socialQuery, rapidApiKey),
+    ]);
   }
-  const pinterestResult = await fetchPinterestSignal(
-    socialQuery,
-    serpApiKey,
-  );
 
   if (!queryUsed || timeline.length === 0) {
     const fallback = classifyTrendByKeywords(productName, category);
@@ -1295,6 +1268,7 @@ Deno.serve(async (req: Request) => {
           last_updated: now,
           ...(trend.pinterestSignal.available
             ? {
+              board_count: trend.pinterestSignal.board_count,
               total_results: trend.pinterestSignal.total_results,
             }
             : {}),

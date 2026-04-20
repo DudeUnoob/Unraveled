@@ -1,5 +1,9 @@
 import { parseFiberComposition, normalizeFiberComposition } from "../lib/fiberParser";
-import { UNRAVEL_SCORE_ENDPOINT, UNRAVEL_SCORE_TIMEOUT_MS } from "../config/runtime";
+import {
+  getScoreRequestHeaders,
+  UNRAVEL_SCORE_ENDPOINT,
+  UNRAVEL_SCORE_TIMEOUT_MS,
+} from "../config/runtime";
 import { ScoreApiError, mapScoreApiResponse } from "../lib/scoreApi";
 import { getRetailerConfigByHostname } from "../lib/url";
 import type {
@@ -114,9 +118,7 @@ const scoreProductRemotely = async (product: ProductContext, manualMode = false)
   try {
     response = await fetch(UNRAVEL_SCORE_ENDPOINT, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: getScoreRequestHeaders(),
       signal: controller.signal,
       body: JSON.stringify({
         product_url: product.productUrl,

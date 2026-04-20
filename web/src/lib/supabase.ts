@@ -13,3 +13,19 @@ export function getSupabase(): SupabaseClient {
 }
 
 export const SUPABASE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
+
+/**
+ * Headers for direct fetch() to Edge Functions. Supabase may require the anon
+ * key (Authorization + apikey) when JWT verification is enabled in production.
+ */
+export function getSupabaseFunctionsHeaders(): Record<string, string> {
+    const key = (SUPABASE_ANON_KEY || "").trim();
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (key) {
+        headers.Authorization = `Bearer ${key}`;
+        headers.apikey = key;
+    }
+    return headers;
+}

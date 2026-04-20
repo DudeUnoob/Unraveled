@@ -11,6 +11,12 @@ interface SerpApiOptions {
 const SERPAPI_BASE_URL = "https://serpapi.com/search.json";
 const DEFAULT_TIMEOUT_MS = 30_000;
 
+/**
+ * How many trend query strings to try with SerpAPI Google Trends (one call each).
+ * Set to 1 to use only the first candidate (lowest Serp usage).
+ */
+export const MAX_GOOGLE_TRENDS_CANDIDATE_ATTEMPTS = 1;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -110,65 +116,5 @@ export async function fetchGoogleTrendsTimeline(
   } catch (error) {
     console.error("SerpAPI Google Trends request failed:", error);
     return { timeline: [], success: false };
-  }
-}
-
-/**
- * Fetch Google Search result count via SerpAPI.
- *
- * Endpoint: GET https://serpapi.com/search.json?engine=google
- *
- * Used by the score function to estimate Pinterest presence via
- * `site:pinterest.com <query>` search result count.
- */
-export async function fetchGoogleSearchResultCount(
-  query: string,
-  options: SerpApiOptions & {
-    hl?: string;
-    gl?: string;
-    num?: number;
-  },
-): Promise<{ totalResults: number | null; success: boolean }> {
-  try {
-    const params = new URLSearchParams({
-      engine: "google",
-      q: query,
-      hl: options.hl ?? "en",
-      gl: options.gl ?? "us",
-      num: String(options.num ?? 10),
-      api_key: options.apiKey,
-    });
-
-    const url = `${SERPAPI_BASE_URL}?${params.toString()}`;
-
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(options.timeoutMs ?? DEFAULT_TIMEOUT_MS),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("SerpAPI Google Search request failed:", response.status, errorText);
-      return { totalResults: null, success: false };
-    }
-
-    const payload = await response.json();
-
-    // SerpAPI returns: { search_information: { total_results: number } }
-    // In some locales this can be a string-encoded number, so coerce defensively.
-    const rawTotalResults = payload?.search_information?.total_results;
-    const totalResults = rawTotalResults != null ? Number(rawTotalResults) : NaN;
-
-    if (!Number.isFinite(totalResults) || totalResults <= 0) {
-      console.error("SerpAPI Google Search response missing total_results");
-      return { totalResults: null, success: false };
-    }
-
-    return {
-      totalResults,
-      success: true,
-    };
-  } catch (error) {
-    console.error("SerpAPI Google Search request failed:", error);
-    return { totalResults: null, success: false };
   }
 }

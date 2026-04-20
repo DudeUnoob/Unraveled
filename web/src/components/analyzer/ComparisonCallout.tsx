@@ -3,7 +3,7 @@
 import { memo, useState } from "react";
 import { motion } from "framer-motion";
 import type { CpwData } from "@/types/analysis";
-import { ArrowRight, Scales, PencilSimple, Check } from "@phosphor-icons/react";
+import { ArrowRight, Scales, PencilSimple, Check, Warning, ShieldCheck } from "@phosphor-icons/react";
 
 interface ComparisonCalloutProps {
     cpw: CpwData;
@@ -19,7 +19,6 @@ function formatCurrency(value: number, currency = "USD"): string {
     }).format(value);
 }
 
-// Generate a classic equivalent description based on the query
 function getClassicEquivalent(query: string): string {
     const lower = query.toLowerCase();
     if (lower.includes("flat") || lower.includes("shoe") || lower.includes("boot")) {
@@ -62,165 +61,174 @@ export const ComparisonCallout = memo(function ComparisonCallout({
     if (!isSignificant) return null;
 
     return (
-        <div className="w-full">
-            <div className="flex items-baseline justify-between mb-6">
-                <div className="flex items-center gap-3">
-                    <h3 className="font-sans text-sm font-semibold text-charcoal/60 uppercase tracking-widest">
+        <div className="w-full relative z-10">
+            <div className="flex items-center justify-between mb-10">
+                <div className="flex flex-col gap-1">
+                    <h3 className="font-sans text-[10px] font-bold text-cream/30 uppercase tracking-[0.2em]">
                         Trendy vs. Classic
                     </h3>
+                    <p className="font-sans text-xs text-cream/40 font-medium">
+                        Comparing real cost per wear based on trend lifespan.
+                    </p>
+                </div>
+                
+                <div className="flex items-center gap-4">
                     <button
                         onClick={() => setEditMode((p) => !p)}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-charcoal/40 hover:text-charcoal/70 hover:bg-charcoal/[0.04] transition-colors"
-                        title="Customize classic comparison"
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 text-cream/60 hover:text-cream hover:bg-white/20 transition-all duration-300"
                     >
                         {editMode ? (
                             <Check weight="bold" className="w-3 h-3" />
                         ) : (
                             <PencilSimple weight="bold" className="w-3 h-3" />
                         )}
-                        <span className="font-mono text-[10px] uppercase tracking-wider">
-                            {editMode ? "Done" : "Customize"}
+                        <span className="font-mono text-[10px] uppercase font-bold tracking-widest">
+                            {editMode ? "Confirm" : "Adjust Classic"}
                         </span>
                     </button>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <Scales weight="duotone" className="w-3.5 h-3.5 text-charcoal/30" />
-                    <span className="font-mono text-[10px] text-charcoal/35 uppercase tracking-wider">
-                        Side-by-side
-                    </span>
+                    <Scales weight="bold" className="w-5 h-5 text-cream/20" />
                 </div>
             </div>
 
-            {/* Custom inputs */}
+            {/* Custom inputs with Glassmorphism */}
             {editMode && (
                 <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="flex items-center gap-3 mb-4"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex flex-wrap items-center gap-4 mb-10 p-6 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-md"
                 >
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={customClassicPrice}
-                        onChange={(e) => setCustomClassicPrice(e.target.value)}
-                        placeholder={`Classic price ($${autoClassicPrice})`}
-                        className="w-40 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200"
-                    />
-                    <input
-                        type="number"
-                        min="1"
-                        value={customClassicWears}
-                        onChange={(e) => setCustomClassicWears(e.target.value)}
-                        placeholder={`Estimated wears (${autoClassicWears})`}
-                        className="w-44 py-2 px-3 bg-charcoal/[0.04] border border-charcoal/10 rounded-xl font-sans text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:border-forest/40 focus:ring-2 focus:ring-forest/10 transition-all duration-200"
-                    />
+                    <div className="flex flex-col gap-2">
+                        <label className="font-mono text-[9px] uppercase font-bold text-cream/30 tracking-widest">Price</label>
+                        <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={customClassicPrice}
+                            onChange={(e) => setCustomClassicPrice(e.target.value)}
+                            placeholder={`$${autoClassicPrice}`}
+                            className="w-36 py-2 px-4 bg-white/10 border-b border-white/20 rounded-t-lg font-mono text-sm text-cream placeholder:text-cream/20 focus:outline-none focus:border-white transition-all"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <label className="font-mono text-[9px] uppercase font-bold text-cream/30 tracking-widest">Est. Wears</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={customClassicWears}
+                            onChange={(e) => setCustomClassicWears(e.target.value)}
+                            placeholder={String(autoClassicWears)}
+                            className="w-36 py-2 px-4 bg-white/10 border-b border-white/20 rounded-t-lg font-mono text-sm text-cream placeholder:text-cream/20 focus:outline-none focus:border-white transition-all"
+                        />
+                    </div>
                 </motion.div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Trendy Item */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Trendy Item Card */}
                 <motion.div
-                    initial={{ opacity: 0, x: -15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative p-5 rounded-2xl border-2 border-[#C84B31]/20 bg-[#C84B31]/[0.02]"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="relative p-8 rounded-[2rem] bg-rust/10 border border-rust/20 flex flex-col"
                 >
-                    <span className="absolute top-3 right-3 font-mono text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#C84B31]/10 text-[#C84B31]">
-                        Trendy
-                    </span>
-                    <h4 className="font-sans text-sm font-semibold text-charcoal mb-1 capitalize pr-16">
+                    <div className="flex items-center justify-between mb-6">
+                        <span className="font-mono text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-rust/20 text-rust">
+                            Trendy
+                        </span>
+                        <Warning weight="bold" className="w-5 h-5 text-rust/40" />
+                    </div>
+                    
+                    <h4 className="font-sans text-xl font-bold text-cream mb-1 capitalize">
                         {query}
                     </h4>
-                    <p className="font-mono text-xs text-charcoal/40 mb-4">
-                        {formatCurrency(cpw.price, cpw.currency)}
-                    </p>
+                    <span className="font-mono text-xs font-bold text-cream/30 uppercase tracking-widest mb-8">
+                        Price: {formatCurrency(cpw.price, cpw.currency)}
+                    </span>
 
-                    <div className="space-y-2">
-                        <div className="flex items-baseline justify-between">
-                            <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">Wears</span>
-                            <span className="font-mono text-sm font-semibold text-charcoal tabular-nums">
+                    <div className="mt-auto space-y-4 pt-6 border-t border-white/5">
+                        <div className="flex items-center justify-between">
+                            <span className="font-mono text-[10px] text-cream/30 uppercase font-bold tracking-widest">Est. Wears</span>
+                            <span className="font-mono text-sm font-bold text-cream tabular-nums opacity-60">
                                 ~{cpw.trendAdjustedWears}
                             </span>
                         </div>
-                        <div className="flex items-baseline justify-between">
-                            <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">CPW</span>
-                            <span className="font-mono text-lg font-bold text-[#C84B31] tabular-nums">
+                        <div className="flex items-center justify-between">
+                            <span className="font-mono text-[10px] text-cream/30 uppercase font-bold tracking-widest">Cost / Wear</span>
+                            <span className="font-mono text-3xl font-bold text-rust tabular-nums tracking-tighter">
                                 {formatCurrency(cpw.trendAdjustedCpw)}
                             </span>
                         </div>
                     </div>
-
-                    <div className="mt-3 w-full h-1.5 bg-charcoal/[0.06] rounded-full overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: "100%" }}
-                            transition={{ delay: 0.4, duration: 0.8, ease: "easeOut" }}
-                            className="h-full rounded-full bg-[#C84B31]/60"
-                        />
-                    </div>
                 </motion.div>
 
-                {/* Classic Equivalent */}
+                {/* Classic Equivalent Card */}
                 <motion.div
-                    initial={{ opacity: 0, x: 15 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="relative p-5 rounded-2xl border-2 border-[#2C4A3E]/20 bg-[#2C4A3E]/[0.02]"
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    className="relative p-8 rounded-[2rem] bg-white/5 border border-white/10 flex flex-col"
                 >
-                    <span className="absolute top-3 right-3 font-mono text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#2C4A3E]/10 text-[#2C4A3E]">
-                        Classic
-                    </span>
-                    <h4 className="font-sans text-sm font-semibold text-charcoal mb-1 pr-16">
+                    <div className="flex items-center justify-between mb-6">
+                        <span className="font-mono text-[9px] font-extrabold uppercase tracking-widest px-3 py-1 rounded-full bg-white/10 text-cream/60">
+                            Classic
+                        </span>
+                        <ShieldCheck weight="bold" className="w-5 h-5 text-cream/20" />
+                    </div>
+                    
+                    <h4 className="font-sans text-xl font-bold text-cream mb-1">
                         {classicDesc}
                     </h4>
-                    <p className="font-mono text-xs text-charcoal/40 mb-4">
-                        {formatCurrency(classicPrice, cpw.currency)}
-                    </p>
+                    <span className="font-mono text-xs font-bold text-cream/30 uppercase tracking-widest mb-8">
+                        Price: {formatCurrency(classicPrice, cpw.currency)}
+                    </span>
 
-                    <div className="space-y-2">
-                        <div className="flex items-baseline justify-between">
-                            <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">Wears</span>
-                            <span className="font-mono text-sm font-semibold text-charcoal tabular-nums">
+                    <div className="mt-auto space-y-4 pt-6 border-t border-white/5">
+                        <div className="flex items-center justify-between">
+                            <span className="font-mono text-[10px] text-cream/30 uppercase font-bold tracking-widest">Est. Wears</span>
+                            <span className="font-mono text-sm font-bold text-cream tabular-nums opacity-60">
                                 ~{classicWears}
                             </span>
                         </div>
-                        <div className="flex items-baseline justify-between">
-                            <span className="font-mono text-[10px] text-charcoal/40 uppercase tracking-wider">CPW</span>
-                            <span className="font-mono text-lg font-bold text-[#2C4A3E] tabular-nums">
+                        <div className="flex items-center justify-between">
+                            <span className="font-mono text-[10px] text-cream/30 uppercase font-bold tracking-widest">Cost / Wear</span>
+                            <span className="font-mono text-3xl font-bold text-cream tabular-nums tracking-tighter opacity-80">
                                 {formatCurrency(classicCpw)}
                             </span>
                         </div>
                     </div>
-
-                    <div className="mt-3 w-full h-1.5 bg-charcoal/[0.06] rounded-full overflow-hidden">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${cpw.trendAdjustedCpw > 0 ? Math.min(100, (classicCpw / cpw.trendAdjustedCpw) * 100) : 100}%` }}
-                            transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
-                            className="h-full rounded-full bg-[#2C4A3E]/60"
-                        />
-                    </div>
                 </motion.div>
             </div>
 
-            {/* Verdict */}
+            {/* Premium Verdict Banner */}
             {multiplier > 1 && (
                 <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.4 }}
-                    className="mt-4 flex items-center gap-3 p-4 rounded-xl bg-charcoal/[0.03] border border-charcoal/[0.06]"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.4 }}
+                    className="mt-10 flex flex-col md:flex-row items-center gap-6 p-8 rounded-[2rem] bg-white/5 border border-white/10 backdrop-blur-xl overflow-hidden relative"
                 >
-                    <ArrowRight weight="bold" className="w-4 h-4 text-[#C84B31] shrink-0" />
-                    <p className="font-sans text-sm text-charcoal/60 leading-relaxed">
-                        The trendy version costs{" "}
-                        <span className="font-semibold text-[#C84B31]">
-                            {multiplier.toFixed(1)}x more per wear
-                        </span>{" "}
-                        than a classic equivalent with the same material quality.
-                    </p>
+                    <div className="shrink-0 w-12 h-12 rounded-2xl bg-rust/20 flex items-center justify-center">
+                        <ArrowRight weight="bold" className="w-6 h-6 text-rust" />
+                    </div>
+                    
+                    <div className="flex-1 text-center md:text-left">
+                        <p className="font-sans text-lg md:text-xl font-bold text-cream leading-tight mb-1">
+                            The trendy version costs{" "}
+                            <span className="text-rust">
+                                {multiplier.toFixed(1)}x more
+                            </span>{" "}
+                            per wear.
+                        </p>
+                        <p className="font-sans text-xs text-cream/40 font-medium tracking-wide">
+                            Based on projected trend decay and historical usage patterns for similar silhouettes.
+                        </p>
+                    </div>
+
+                    <div className="font-mono text-6xl font-black text-white/5 absolute -right-4 -bottom-4 select-none pointer-events-none tracking-tighter">
+                        {multiplier.toFixed(1)}X
+                    </div>
                 </motion.div>
             )}
         </div>

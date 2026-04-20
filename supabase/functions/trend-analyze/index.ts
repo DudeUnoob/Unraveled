@@ -2,15 +2,19 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   fetchGoogleTrendsTimeline,
+  MAX_GOOGLE_TRENDS_CANDIDATE_ATTEMPTS,
   type TimelinePoint,
 } from "../_shared/serpapi.ts";
+import {
+  fetchPinterestRapidSignal,
+  type PinterestRapidSignal,
+} from "../_shared/pinterestRapid.ts";
 import {
   buildTrendQueryCandidates,
   normalizeQueryKey,
 } from "../_shared/trendQueries.ts";
 
 const TIKTOK_API_BASE = "https://tiktok-api23.p.rapidapi.com";
-const PINTEREST_API_BASE = "https://pinterest-scraper5.p.rapidapi.com";
 const TREND_CACHE_TTL_HOURS = 12;
 const clamp = (v: number, min: number, max: number) =>
   Math.max(min, Math.min(max, v));
@@ -51,12 +55,7 @@ interface TikTokSignal {
   normalized_score: number;
 }
 
-interface PinterestSignal {
-  available: boolean;
-  board_count: number | null;
-  total_results: number | null;
-  normalized_score: number;
-}
+type PinterestSignal = PinterestRapidSignal;
 
 interface BrandLookupResult {
   name: string;
@@ -182,90 +181,6 @@ async function fetchTikTokSignal(
       available: false,
       hashtag_views: null,
       post_count: null,
-      normalized_score: 0,
-    };
-  }
-}
-
-async function fetchPinterestSignal(
-  query: string,
-  rapidApiKey: string,
-): Promise<PinterestSignal> {
-  try {
-    const params = new URLSearchParams({
-      entry: query,
-    });
-
-    const url = `${PINTEREST_API_BASE}/boards?${params.toString()}`;
-    const response = await fetch(url, {
-      headers: {
-        "x-rapidapi-key": rapidApiKey,
-        "x-rapidapi-host": "pinterest-scraper5.p.rapidapi.com",
-      },
-      signal: AbortSignal.timeout(8000),
-    });
-
-    if (!response.ok) {
-      console.error(`Pinterest RapidAPI error: ${response.status}`);
-      return {
-        available: false,
-        board_count: null,
-        total_results: null,
-        normalized_score: 0,
-      };
-    }
-
-    const data = await response.json();
-
-    const boards = data?.data?.boards;
-    if (!Array.isArray(boards) || boards.length === 0) {
-      const responseKeys = data ? Object.keys(data) : [];
-      console.warn(
-        `Pinterest returned no boards. Response keys: ${
-          JSON.stringify(
-            responseKeys,
-          )
-        }`,
-      );
-      return {
-        available: false,
-        board_count: null,
-        total_results: null,
-        normalized_score: 0,
-      };
-    }
-
-    const boardCount = boards.length;
-    let totalPins = 0;
-    for (const board of boards) {
-      if (Array.isArray(board?.objects)) {
-        totalPins += board.objects.length;
-      }
-    }
-
-    let normalized: number;
-    if (boardCount >= 10) {
-      normalized = clamp(Math.round(70 + (boardCount - 10) * 3), 70, 100);
-    } else if (boardCount >= 5) {
-      normalized = clamp(Math.round(50 + (boardCount - 5) * 4), 50, 70);
-    } else if (boardCount >= 3) {
-      normalized = clamp(Math.round(30 + (boardCount - 3) * 10), 30, 50);
-    } else {
-      normalized = boardCount * 10;
-    }
-
-    return {
-      available: true,
-      board_count: boardCount,
-      total_results: totalPins,
-      normalized_score: normalized,
-    };
-  } catch (err) {
-    console.error("Pinterest signal fetch failed:", err);
-    return {
-      available: false,
-      board_count: null,
-      total_results: null,
       normalized_score: 0,
     };
   }
@@ -981,7 +896,7 @@ Deno.serve(async (req: Request) => {
     if (fromCache && rapidApiKey && refreshSocialOnCache) {
       const [refreshedTikTok, refreshedPinterest] = await Promise.all([
         fetchTikTokSignal(query, rapidApiKey),
-        fetchPinterestSignal(query, rapidApiKey),
+        fetchPinterestRapidSignal(query, rapidApiKey),
       ]);
 
       tiktokResult = refreshedTikTok.available || !tiktokResult.available
@@ -1015,7 +930,7 @@ Deno.serve(async (req: Request) => {
         ? fetchTikTokSignal(query, rapidApiKey)
         : Promise.resolve(tiktokResult);
       const pinterestFetchPromise = rapidApiKey
-        ? fetchPinterestSignal(query, rapidApiKey)
+        ? fetchPinterestRapidSignal(query, rapidApiKey)
         : Promise.resolve(pinterestResult);
 
       let googleResult: { timeline: TimelinePoint[]; success: boolean } = {
@@ -1023,7 +938,11 @@ Deno.serve(async (req: Request) => {
         success: false,
       };
 
-      for (const candidate of trendQueryCandidates) {
+      const candidatesToTry = trendQueryCandidates.slice(
+        0,
+        MAX_GOOGLE_TRENDS_CANDIDATE_ATTEMPTS,
+      );
+      for (const candidate of candidatesToTry) {
         console.log(`Trying Google Trends candidate: "${candidate}"`);
         const attempt = await fetchGoogleTrendsTimeline(candidate, {
           apiKey: serpApiKey!,
