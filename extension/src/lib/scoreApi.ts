@@ -165,6 +165,8 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
     ? (sustainabilityScore.scoring_mode as "full" | "fiber_only")
     : "full";
 
+  const costPerWearValue = assertNumber(cpwEstimate.cost_per_wear, "cpw_estimate.cost_per_wear");
+
   return {
     sustainabilityScore: {
       value: Math.round(assertNumber(sustainabilityScore.value, "sustainability_score.value", SCORE_RANGE)),
@@ -253,7 +255,7 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
     },
     cpwEstimate: {
       estimatedWears: Math.round(assertNumber(cpwEstimate.estimated_wears, "cpw_estimate.estimated_wears")),
-      costPerWear: assertNumber(cpwEstimate.cost_per_wear, "cpw_estimate.cost_per_wear"),
+      costPerWear: costPerWearValue,
       trendAdjustedWears: Math.round(
         assertNumber(cpwEstimate.trend_adjusted_wears, "cpw_estimate.trend_adjusted_wears")
       ),
@@ -263,7 +265,11 @@ export const mapScoreApiResponse = (raw: unknown): ScoreResult => {
       ),
       fiberDataAvailable: typeof cpwEstimate.fiber_data_available === "boolean"
         ? cpwEstimate.fiber_data_available
-        : true
+        : true,
+      priceAvailable:
+        typeof cpwEstimate.price_available === "boolean"
+          ? cpwEstimate.price_available
+          : costPerWearValue > 0
     },
     dataSources: {
       googleTrends: {

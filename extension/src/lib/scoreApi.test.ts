@@ -54,7 +54,9 @@ const validResponse = {
     estimated_wears: 52,
     cost_per_wear: 1.15,
     trend_adjusted_wears: 36,
-    trend_adjusted_cpw: 1.67
+    trend_adjusted_cpw: 1.67,
+    fiber_data_available: true,
+    price_available: true
   },
   data_sources: {
     google_trends: {
