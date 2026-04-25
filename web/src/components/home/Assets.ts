@@ -1,37 +1,52 @@
 export const ASSETS = {
-  imgLevis: "https://www.figma.com/api/mcp/asset/280c4cb5-401d-4f4e-a009-8f726035409f",
-  imgRectangle49: "https://www.figma.com/api/mcp/asset/bc243e7a-173a-4494-9f59-60a3602354bf", 
-  imgCalvinKlein: "https://www.figma.com/api/mcp/asset/e4e7d670-d243-4822-b69b-d4de77147e36",
-  imgGap: "https://www.figma.com/api/mcp/asset/20a30b63-549a-4410-8b57-81faed00a1b9",
-  imgVector: "https://www.figma.com/api/mcp/asset/2c38ab6f-5fa1-41ed-b657-94fe1bb147d6", 
-  imgVector1: "https://www.figma.com/api/mcp/asset/2173f16f-c7d9-4cd4-91f3-642d1c87053d", 
-  imgRoundedRectangle: "https://www.figma.com/api/mcp/asset/01a97ab4-8358-4cda-9081-b1901db34397", 
-  imgImage10: "https://www.figma.com/api/mcp/asset/f830e0f1-6e76-4496-b545-fded3f6a6ba0", 
-  imgImage11: "https://www.figma.com/api/mcp/asset/0ab86e38-a192-4239-9e70-77b7c3d9e4bf", 
-  imgImage6: "https://www.figma.com/api/mcp/asset/d0c909a8-72a2-49f0-9650-fc0c440971fb",  
-  imgImage8: "https://www.figma.com/api/mcp/asset/5e294074-b39e-4dda-ac77-fd24506ac844",  
-  imgImage9: "https://www.figma.com/api/mcp/asset/aba4c6a8-5422-4f86-881d-56cfd28761a3",  
-  imgImage12: "https://www.figma.com/api/mcp/asset/6ee4b3fd-cbe9-4b2d-a0aa-d62f46a68726", 
-  imgImage13: "https://www.figma.com/api/mcp/asset/ff554826-122b-46a1-bd0b-34758fb6d1c3", 
-  imgRoundedRectangle1: "https://www.figma.com/api/mcp/asset/0e502bb5-bbd5-4673-b266-4e0e6fd55dd9", 
-  imgRoundedRectangle2: "https://www.figma.com/api/mcp/asset/5a34661f-7c32-4eab-a062-a8516331fa7b", 
-  imgImage17: "https://www.figma.com/api/mcp/asset/81714ccf-e44d-4154-8099-a5b460564620", 
-  imgImage18: "https://www.figma.com/api/mcp/asset/3b462416-e094-4dc5-a442-dcda2b5fa526", 
-  imgRectangle6: "https://www.figma.com/api/mcp/asset/2194dfd5-752e-48aa-9b7c-3bb90515fa8d", 
-  imgDatabase: "https://www.figma.com/api/mcp/asset/d855953e-0a29-4e8a-92ea-10ff9bd9e653",
-  imgConflict: "https://www.figma.com/api/mcp/asset/885820c7-9c2e-4fc4-bbdb-43fa3d287077",
-  imgCash: "https://www.figma.com/api/mcp/asset/1f6f2a65-cc0c-4ce5-a949-c209c332ebf7",
-  imgImage21: "https://www.figma.com/api/mcp/asset/e1516740-502b-49fc-bd57-994fcde61cc2", 
-  imgImage22: "https://www.figma.com/api/mcp/asset/b42305a5-c75b-46f0-beaf-33f7b62dad12", 
-  imgImage20: "https://www.figma.com/api/mcp/asset/861ca09b-4338-4be0-903c-f4467e2dbe87", 
-  imgGoogle: "https://www.figma.com/api/mcp/asset/1d497a03-1cb2-4f12-a7ee-e6310a31305e", 
-  imgImage32: "https://www.figma.com/api/mcp/asset/1f6220d2-4cfd-4a13-9df3-8bd0d05c6573", 
-  imgImage34: "https://www.figma.com/api/mcp/asset/6810c17a-d848-46b2-aee2-74cc5e8f6f5a", 
-  imgGroup14: "https://www.figma.com/api/mcp/asset/92cb95c9-b2d9-4b41-88a7-df34a57f4415",
-  imgGroup30: "https://www.figma.com/api/mcp/asset/8e6ec0c3-88a2-43f7-a3f2-a6fbe7cd1ede",
-  imgVector45: "https://www.figma.com/api/mcp/asset/6795d68b-3422-433b-b9d7-6fa5352986db",
-  imgVector44: "https://www.figma.com/api/mcp/asset/d0be43d1-cfd4-4df7-b36d-6a1131a6b926",
-  imgVector46: "https://www.figma.com/api/mcp/asset/2ee46c85-9f0b-40c0-98e8-d6b369728596",
-  imgFeatureBackground: "https://www.figma.com/api/mcp/asset/881823d9-d2af-4e4d-8796-9fc35f2f2503",
-  imgLine285: "https://www.figma.com/api/mcp/asset/ee4038ce-ea62-4430-8719-c95ad1728d4b"
+  // Hero clothing images
+  imgImage10: "https://www.figma.com/api/mcp/asset/f1a05701-2630-43e7-92a8-db67d614f701",
+  imgImage11: "https://www.figma.com/api/mcp/asset/18fce5a8-bbb1-48ad-9bd7-46939f6685e9",
+  imgImage6: "https://www.figma.com/api/mcp/asset/32a4400f-cc51-4359-a918-afeb186a99d3",
+  imgImage8: "https://www.figma.com/api/mcp/asset/ade0a9af-1d7f-47be-ae33-769ba07646d5",
+  imgImage9: "https://www.figma.com/api/mcp/asset/addb5ac8-4187-41bc-9482-1c1cd928b6a6",
+  imgImage12: "https://www.figma.com/api/mcp/asset/ffb4157e-d949-4d95-90c2-3429d76833f5",
+  imgImage13: "https://www.figma.com/api/mcp/asset/19d927d5-e14e-4923-af55-4dd9ee5d63f2",
+
+  // Brand logos
+  imgLevis: "https://www.figma.com/api/mcp/asset/3ceaec79-e063-497d-b457-95ce493175ab",
+  imgRectangle49: "https://www.figma.com/api/mcp/asset/e43e13d1-4cb9-4d57-b9c2-e6f4de9053a1",
+  imgCalvinKlein: "https://www.figma.com/api/mcp/asset/8eec7334-04ad-4ba2-b228-d5870ef31c95",
+  imgGap: "https://www.figma.com/api/mcp/asset/a488df07-8c4c-420d-8959-a4390fe197d8",
+  imgVector: "https://www.figma.com/api/mcp/asset/35f6ebdc-07cc-4bf7-ba9b-a95edf3a6468",
+  imgVector1: "https://www.figma.com/api/mcp/asset/74a0f90e-25cf-443d-8d0a-6e859044f48f",
+
+  // Features card backgrounds
+  imgRoundedRectangle: "https://www.figma.com/api/mcp/asset/2442e781-e22d-4d5b-b801-de91bc636e24",
+  imgRoundedRectangle1: "https://www.figma.com/api/mcp/asset/a4eb2c29-e800-40bd-a2a5-56488df8f218",
+  imgRoundedRectangle2: "https://www.figma.com/api/mcp/asset/2ad6f579-e9e0-4e2e-84bb-659b521eab26",
+  imgImage17: "https://www.figma.com/api/mcp/asset/e178d6f4-c5f9-4609-9065-f92597f74090",
+  imgImage18: "https://www.figma.com/api/mcp/asset/d3e713cb-0dd2-4053-9293-889b25f0cbd1",
+  imgFeatureBackground: "https://www.figma.com/api/mcp/asset/2442e781-e22d-4d5b-b801-de91bc636e24",
+  imgGroup14: "https://www.figma.com/api/mcp/asset/67baa4c4-720b-43a1-a684-e05a50f88dd6",
+
+  // Telemetry section
+  imgRectangle6: "https://www.figma.com/api/mcp/asset/bdb2374f-fbcf-4ca4-85c0-f15c90a869e5",
+  imgDatabase: "https://www.figma.com/api/mcp/asset/7b85c4a8-f94c-4025-a55f-1ae963a275e3",
+  imgConflict: "https://www.figma.com/api/mcp/asset/10813c05-0363-4a7d-a3db-c56305ceb413",
+  imgCash: "https://www.figma.com/api/mcp/asset/57c57d17-7bb0-489d-8670-7b6fd8294a0e",
+
+  // Footer decorative stars
+  imgImage21: "https://www.figma.com/api/mcp/asset/01d85de3-fd7e-453d-a513-990a1fd8bda3",
+  imgImage22: "https://www.figma.com/api/mcp/asset/886a6d69-2edc-4f7c-acd9-972cfce55c06",
+  imgImage20: "https://www.figma.com/api/mcp/asset/e53af9a1-151b-43f7-8f1f-81941af15db9",
+
+  // Navigation / UI
+  imgGoogle: "https://www.figma.com/api/mcp/asset/ae9ebe8b-1b6f-4eaf-92ba-9289500859c1",
+  imgLine285: "https://www.figma.com/api/mcp/asset/e980133f-ede0-4c46-9256-b07c48da90f4",
+  imgGroup30: "https://www.figma.com/api/mcp/asset/972edaf7-b311-49b0-9e4f-aab10c189496",
+
+  // Wave / transition shapes
+  imgVector45: "https://www.figma.com/api/mcp/asset/27406331-d935-4030-896a-9ad68ba8ad59",
+  imgVector44: "https://www.figma.com/api/mcp/asset/27406331-d935-4030-896a-9ad68ba8ad59",
+  imgVector46: "https://www.figma.com/api/mcp/asset/27406331-d935-4030-896a-9ad68ba8ad59",
+
+  // Logo
+  imgImage32: "https://www.figma.com/api/mcp/asset/c389c507-2a41-455f-aa0c-30401d8a29d0",
+  imgImage34: "https://www.figma.com/api/mcp/asset/c389c507-2a41-455f-aa0c-30401d8a29d0",
 };

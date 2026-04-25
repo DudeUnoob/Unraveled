@@ -7,8 +7,8 @@ import { ASSETS } from "../home/Assets";
 import { motion } from "framer-motion";
 
 const NAV_ASSETS = {
-  logoImage: "https://www.figma.com/api/mcp/asset/1f6220d2-4cfd-4a13-9df3-8bd0d05c6573",
-  googleIcon: "https://www.figma.com/api/mcp/asset/654c7ecb-205b-40a2-88b0-dc257c29c397",
+  logoImage: "https://www.figma.com/api/mcp/asset/c389c507-2a41-455f-aa0c-30401d8a29d0",
+  googleIcon: "https://www.figma.com/api/mcp/asset/ae9ebe8b-1b6f-4eaf-92ba-9289500859c1",
 };
 
 const navLinks = [

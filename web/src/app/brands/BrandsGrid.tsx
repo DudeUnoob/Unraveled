@@ -80,7 +80,8 @@ export function BrandsGrid({ brands }: { brands: BrandProfile[] }) {
         {/* Brands Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
           {brands.map((brand, i) => {
-            const { grade, label, color } = scoreToGradeLabel(brand.brand_score);
+            const displayScore = 0.75 + brand.brand_score * 0.25;
+            const { grade, label, color } = scoreToGradeLabel(displayScore);
             const category = BRAND_CATEGORIES[brand.slug] ?? "FASHION & APPAREL";
             
             return (
